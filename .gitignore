@@ -1,0 +1,11 @@
+# Pycharm
+.idea/*
+
+# venv
+venv
+
+# drivers
+drivers/chromedriver
+
+# config.json.bak
+config.json.bak

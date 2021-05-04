@@ -1,0 +1,13 @@
+{
+  "browserType": "Chrome",
+  "headless": false,
+  "binary": "",
+  "cjy_validation": false,
+  "cjy_username": "",
+  "cjy_password": "",
+  "cjy_soft_id": "",
+  "cjy_kind": 9101,
+  "ws_conn_url": "ws://localhost:5213/ws?user_id=123",
+  "mobile_cookie": "",
+  "users": {}
+}
