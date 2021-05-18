@@ -1,8 +1,6 @@
 # JDMemberCloseAccount
-学习python操作selenium的一个🌰，用来 全自动/半自动 退出加入的所有店铺会员
 
-该项目操作有一定复杂度，如果无法看懂还是请找寻其他解决方案，比如websocket的服务端未提供，因为这个不重要，随便跑一个websocket的Server端Demo
-能做到通信即可，故本项目也可以说是给出了自动退会的一种方案
+学习python操作selenium的一个🌰，用来 全自动/半自动 退出加入的所有店铺会员
 
 ## 要求
 
@@ -12,7 +10,7 @@
    
 3. 操作系统(只在mac上测试了，非M1)
    
-4. 关于手机短信验证码同步到浏览器中，本人采用了websocket来传递验证码，注意websocket传递验证码格式为 `{"sms_code": "123456"}`
+4. 关于手机短信验证码同步到浏览器中，本人采用了websocket来传递验证码
    
 5. 关于如何在手机传递到浏览器，这点只说一下我的方式(达到目的即可)
    
@@ -47,7 +45,7 @@
         "cjy_password": "",
         "cjy_soft_id": "",
         "cjy_kind": 9101,
-        "ws_conn_url": "ws://localhost:5213/ws?user_id=123",
+        "ws_conn_url": "ws://localhost:5201/subscribe",
         "mobile_cookie": "",
         "users": {}
     }
@@ -85,6 +83,28 @@
 6.  执行主程序
 
     在项目目录下执行`python3 main.py`，等待执行完毕即可
+
+## websocket服务端运行
+
+1. 手动运行 `go run ./cmd/jd_wstool`
+
+2. 下载 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases)，选择自己的电脑系统对应的压缩包，解压运行
+
+![测试图](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.png)
+
+## 手机端短信如何传递给电脑端
+
+1. 安卓端，我是用了tasker监听，总是随便一个可以监听到的，然后请求接口就行，接口如下
+
+```bash
+http://同局域网IP:5201/publish?smsCode=短信验证码
+
+例如：
+http://192.168.2.100:5201/publish?smsCode=12345
+
+同局域网IP会在运行 `./jd_wstool 或 jd_wstool.exe` 时提示出来，例如：
+listening on http://192.168.2.100:5201
+```
 
 ## ScreenShots
 
