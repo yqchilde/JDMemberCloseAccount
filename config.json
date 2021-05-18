@@ -7,7 +7,7 @@
   "cjy_password": "",
   "cjy_soft_id": "",
   "cjy_kind": 9101,
-  "ws_conn_url": "ws://localhost:5213/ws?user_id=123",
+  "ws_conn_url": "ws://localhost:5201/subscribe",
   "mobile_cookie": "",
   "users": {}
 }
