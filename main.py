@@ -1,3 +1,4 @@
+import sys
 import time
 import json
 import asyncio
@@ -107,6 +108,10 @@ class JDMemberCloseAccount(object):
         resp = requests.request("POST", url, headers=headers, data=payload)
         ret = json.loads(resp.text)
         if ret["code"] == "0":
+            if ret["message"] == "用户未登录":
+                print("config.json 中的 mobile_cookie 值有误，请确保pt_key和pt_pin都存在")
+                sys.exit(1)
+
             card_list = (ret["result"]["cardList"])
         else:
             print("echo")
