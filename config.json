@@ -8,6 +8,8 @@
   "cjy_soft_id": "",
   "cjy_kind": 9101,
   "ws_conn_url": "ws://localhost:5201/subscribe",
+  "skip_shops": "",
+  "phone_tail_number": "",
   "mobile_cookie": "",
   "users": {}
 }
