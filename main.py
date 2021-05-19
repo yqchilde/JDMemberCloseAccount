@@ -112,6 +112,10 @@ class JDMemberCloseAccount(object):
                 print("config.json 中的 mobile_cookie 值有误，请确保pt_key和pt_pin都存在")
                 sys.exit(1)
 
+            if "cardList" not in ret["result"]:
+                print("当前卡包中会员店铺为0个")
+                sys.exit(1)
+
             card_list = (ret["result"]["cardList"])
         else:
             print("echo")
@@ -156,6 +160,9 @@ class JDMemberCloseAccount(object):
                 try:
                     res = asyncio.get_event_loop().run_until_complete(ws_conn(remote))
                     ret = res["sms_code"]
+                except Exception as e:
+                    print("请先启动 jd_wstool 监听退会短信验证码\n", e.args)
+                    sys.exit(1)
                 except KeyboardInterrupt:
                     logging.info('WebSocket conn close.')
 
