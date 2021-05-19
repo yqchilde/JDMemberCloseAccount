@@ -146,7 +146,6 @@ class JDMemberCloseAccount(object):
         print("本次运行获取到", len(card_list), "家店铺会员信息")
         cnt = 0
         for card in card_list:
-
             # 判断该店铺是否要跳过
             if card["brandName"] in shops:
                 print("发现需要跳过的店铺", card["brandName"])
@@ -168,7 +167,7 @@ class JDMemberCloseAccount(object):
                 # 发送短信验证码
                 self.wait.until(EC.presence_of_element_located(
                     (By.XPATH, "//button[text()='发送验证码']")
-                )).click()
+                ), "发送短信验证码超时 " + card["brandName"]).click()
 
                 # 要连接的websocket地址
                 ret, ws_conn_url = "", self.config["ws_conn_url"]
