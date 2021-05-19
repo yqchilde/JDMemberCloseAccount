@@ -2,6 +2,10 @@
 
 学习python操作selenium的一个🌰，用来 全自动/半自动 退出加入的所有店铺会员
 
+* 全自动：短信验证码全自动，图形验证码用 [超级鹰打码](https://www.chaojiying.com/) ，费用是1块=1000积分，一次扣15积分
+
+* 半自动：短信验证码全自动，图形验证码手动
+
 ## 要求
 
 1. 有一定的电脑知识 or 有耐心爱折腾
@@ -15,6 +19,10 @@
 5. 关于如何在手机传递到浏览器，这点只说一下我的方式(达到目的即可)
    
    * 安卓端：利用tasker软件监听，一旦监听到就立即通过websocket推送过来
+   
+   * 安卓端：利用macrodroid软件监听，一旦监听到就立即通过websocket推送过来
+   
+   * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
 
 ## 安装方法
 
