@@ -54,6 +54,8 @@
         "cjy_soft_id": "",
         "cjy_kind": 9101,
         "ws_conn_url": "ws://localhost:5201/subscribe",
+        "skip_shops": "",
+        "phone_tail_number": "",
         "mobile_cookie": "",
         "users": {}
     }
@@ -75,7 +77,11 @@
     
     * `cjy_kind`: 超级鹰验证码类型，仅在 cjy_validation 为 True 时需要设置，且该项目指定为 `9101`
     
-    * `ws_conn_url`: websocket链接地址
+    * `ws_conn_url`: websocket链接地址，不用动
+   
+    * `skip_shops`: 需要跳过的店铺，需要填写卡包中的完整店铺名称，为了效率没做模糊匹配
+   
+    * `phone_tail_number`: 手机尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过
     
     * `mobile_cookie`: 手机端cookie，是pt_key开头的那个
     
@@ -92,7 +98,7 @@
 
     在项目目录下执行`python3 main.py`，等待执行完毕即可
 
-## websocket服务端运行
+## websocket服务端运行(以下两种方法任一都行，图省事就用2)
 
 1. 手动运行 `go run ./cmd/jd_wstool`
 

@@ -109,7 +109,7 @@ class JDMemberCloseAccount(object):
         ret = json.loads(resp.text)
         if ret["code"] == "0":
             if ret["message"] == "用户未登录":
-                print("config.json 中的 mobile_cookie 值有误，请确保pt_key和pt_pin都存在")
+                print("config.json 中的 mobile_cookie 值有误，请确保pt_key和pt_pin都存在，如都存在请检查是否失效")
                 sys.exit(1)
 
             if "cardList" not in ret["result"]:
@@ -142,12 +142,32 @@ class JDMemberCloseAccount(object):
             print("当前没有加入的店铺信息")
             return
 
-        print("共获取到", len(card_list), "家店铺会员信息")
+        # 加载需要跳过的店铺
+        shops = []
+        if self.config['skip_shops'] != "":
+            shops = self.config['skip_shops'].split(",")
+
+        print("本次运行获取到", len(card_list), "家店铺会员信息")
         cnt = 0
         for card in card_list:
+
+            # 判断该店铺是否要跳过
+            if card["brandName"] in shops:
+                print("发现需要跳过的店铺", card["brandName"])
+                continue
+
             try:
                 # 打开注销页面
                 self.browser.get("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                print("开始注销店铺", card["brandName"])
+
+                # 检查手机尾号是否正确
+                if self.config['phone_tail_number'] != "":
+                    if self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='cm-ec']")
+                    )).text[-4:] != self.config['phone_tail_number']:
+                        print("当前店铺手机尾号不是规定的尾号，已跳过")
+                        continue
 
                 # 发送短信验证码
                 self.wait.until(EC.presence_of_element_located(
