@@ -2,33 +2,29 @@ import sys
 import time
 import json
 import asyncio
-import logging
 import requests
 
 from PIL import Image
 from utils import get_config
 from chaojiying import ChaoJiYing
+from websockets import connect
 from selenium_browser import get_browser
-from aiowebsocket.converses import AioWebSocket
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-async def ws_conn(url):
+async def ws_conn(ws_conn_url):
     """
-    websocket客户端，只做接收数据用，用来监听获取短信验证码
-    :param url:
-    :return:
+    websocket连接
     """
-    async with AioWebSocket(url) as aws:
-        converse = aws.manipulator
-        while True:
-            mes = await converse.receive()
-            if mes:
-                msg = json.loads(str(mes, encoding="utf-8"))
-                return msg
+    async with connect(ws_conn_url) as websocket:
+        try:
+            recv = await asyncio.wait_for(websocket.recv(), get_config()["ws_timeout"])
+            return recv
+        except asyncio.TimeoutError:
+            return ""
 
 
 class JDMemberCloseAccount(object):
@@ -41,7 +37,7 @@ class JDMemberCloseAccount(object):
     def __init__(self):
         self.config = get_config()
         self.browser = get_browser(self.config)
-        self.wait = WebDriverWait(self.browser, 20)
+        self.wait = WebDriverWait(self.browser, self.config["selenium_timeout"])
         self.cjy_kind = self.config["cjy_kind"]
         self.cjy = ChaoJiYing(self.config["cjy_username"], self.config["cjy_password"], self.config["cjy_soft_id"])
 
@@ -164,7 +160,7 @@ class JDMemberCloseAccount(object):
                 # 检查手机尾号是否正确
                 if self.config['phone_tail_number'] != "":
                     if self.wait.until(EC.presence_of_element_located(
-                        (By.XPATH, "//div[@class='cm-ec']")
+                            (By.XPATH, "//div[@class='cm-ec']")
                     )).text[-4:] != self.config['phone_tail_number']:
                         print("当前店铺手机尾号不是规定的尾号，已跳过")
                         continue
@@ -175,27 +171,28 @@ class JDMemberCloseAccount(object):
                 )).click()
 
                 # 要连接的websocket地址
-                remote = self.config["ws_conn_url"]
-                ret = ""
+                ret, ws_conn_url = "", self.config["ws_conn_url"]
                 try:
-                    res = asyncio.get_event_loop().run_until_complete(ws_conn(remote))
-                    ret = res["sms_code"]
+                    recv = asyncio.run(ws_conn(ws_conn_url))
+                    if recv == "":
+                        print("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
+                        continue
+                    else:
+                        ret = json.loads(recv)["sms_code"]
                 except Exception as e:
                     print("请先启动 jd_wstool 监听退会短信验证码\n", e.args)
                     sys.exit(1)
-                except KeyboardInterrupt:
-                    logging.info('WebSocket conn close.')
 
                 # 输入短信验证码
                 self.wait.until(EC.presence_of_element_located(
                     (By.XPATH, "//input[@type='number']")
-                )).send_keys(ret)
+                ), "输入短信验证码超时 " + card["brandName"]).send_keys(ret)
                 time.sleep(1)
 
                 # 点击注销按钮
                 self.wait.until(EC.presence_of_element_located(
                     (By.XPATH, "//div[text()='注销会员']")
-                )).click()
+                ), "点击注销按钮超时 " + card["brandName"]).click()
 
                 # 使用超级鹰验证
                 if self.config["cjy_validation"]:
@@ -234,7 +231,7 @@ class JDMemberCloseAccount(object):
 
                 self.wait.until(EC.presence_of_element_located(
                     (By.XPATH, "//div[text()='解绑会员成功']")
-                ))
+                ), "停留图形验证码界面超时 " + card["brandName"])
 
                 time.sleep(1)
                 cnt += 1

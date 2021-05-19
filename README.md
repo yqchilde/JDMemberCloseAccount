@@ -54,6 +54,8 @@
         "cjy_soft_id": "",
         "cjy_kind": 9101,
         "ws_conn_url": "ws://localhost:5201/subscribe",
+        "ws_timeout": 60,
+        "selenium_timeout": 30,
         "skip_shops": "",
         "phone_tail_number": "",
         "mobile_cookie": "",
@@ -69,15 +71,19 @@
     
     * `cjy_validation`: 是否开启超级鹰验证图形验证码
     
-    * `cjy_username`: 超级鹰账号，仅在 cjy_validation 为 True 时需要设置
+    * `cjy_username`: 超级鹰账号，仅在 cjy_validation 为 true 时需要设置
     
-    * `cjy_password`: 超级鹰密码，仅在 cjy_validation 为 True 时需要设置
+    * `cjy_password`: 超级鹰密码，仅在 cjy_validation 为 true 时需要设置
     
-    * `cjy_soft_id`: 超级鹰软件ID，仅在 cjy_validation 为 True 时需要设置
+    * `cjy_soft_id`: 超级鹰软件ID，仅在 cjy_validation 为 true 时需要设置
     
-    * `cjy_kind`: 超级鹰验证码类型，仅在 cjy_validation 为 True 时需要设置，且该项目指定为 `9101`
+    * `cjy_kind`: 超级鹰验证码类型，仅在 cjy_validation 为 true 时需要设置，且该项目指定为 `9101`
     
     * `ws_conn_url`: websocket链接地址，不用动
+      
+    * `ws_timeout`: websocket接收验证码时间超时时间，超时会跳过当前店铺，进行下一个店铺，默认为60秒
+   
+    * `selenium_timeout`: selenium操作超时时间，超过会跳过当前店铺，进行下一个店铺，默认为30秒
    
     * `skip_shops`: 需要跳过的店铺，需要填写卡包中的完整店铺名称，为了效率没做模糊匹配，多个店铺用逗号隔开
    
