@@ -96,6 +96,10 @@
 
 1. 安卓端，我是用了tasker监听，总是随便一个可以监听到的，然后请求接口就行，接口如下
 
+2. 安卓端，用 `Macrodroid监听`，原理一样
+
+* 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
+
 ```bash
 http://同局域网IP:5201/publish?smsCode=短信验证码
 
