@@ -2,6 +2,7 @@ import sys
 import time
 import json
 import asyncio
+import traceback
 import requests
 
 from PIL import Image
@@ -43,7 +44,8 @@ class JDMemberCloseAccount(object):
         self.cjy_kind = self.config["cjy_kind"]
         self.cjy = ChaoJiYing(self.config["cjy_username"], self.config["cjy_password"], self.config["cjy_soft_id"])
         self.tj = TuJian(self.config["tj_username"], self.config["tj_password"])
-        self.baidu_ocr = BaiduOCR(self.config["baidu_app_id"], self.config["baidu_api_key"], self.config["baidu_secret_key"])
+        self.baidu_ocr = BaiduOCR(self.config["baidu_app_id"], self.config["baidu_api_key"],
+                                  self.config["baidu_secret_key"])
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -172,7 +174,8 @@ class JDMemberCloseAccount(object):
 
                 try:
                     # 打开注销页面
-                    self.browser.get("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                    self.browser.get(
+                        "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
                     print("开始注销店铺", card["brandName"])
 
                     # 检查当前店铺退会链接是否失效
@@ -194,9 +197,9 @@ class JDMemberCloseAccount(object):
                             continue
 
                     # 发送短信验证码
-                    self.wait.until(EC.presence_of_element_located(
-                        (By.XPATH, "//button[text()='发送验证码']")
-                    ), "发送短信验证码超时 " + card["brandName"]).click()
+                    # self.wait.until(EC.presence_of_element_located(
+                    #     (By.XPATH, "//button[text()='发送验证码']")
+                    # ), "发送短信验证码超时 " + card["brandName"]).click()
 
                     # 要连接的websocket地址
                     sms_code, ws_conn_url = "", self.config["ws_conn_url"]
@@ -282,6 +285,7 @@ class JDMemberCloseAccount(object):
                     print("本次运行已成功注销店铺会员数量为：", cnt)
                 except Exception as e:
                     print("发生了一点小问题：", e.args)
+                    traceback.print_exc()
 
             print("本轮店铺已执行完，即将开始获取下一轮店铺")
 

@@ -1,5 +1,10 @@
+import time
+import traceback
+
 from PIL import ImageGrab
 from aip import AipOcr
+
+sms_code = ""
 
 
 class BaiduOCR(object):
@@ -32,11 +37,36 @@ class BaiduOCR(object):
         :param _range:
         :return:
         """
+        global sms_code
         self.get_code_pic(_range)
         img = open('ios_code_pic.png', 'rb').read()
         ret = self.client.basicGeneral(img)
-        print(ret)
         if "words_result" in ret:
-            return ret["words_result"][0]["words"]
+            if len(ret["words_result"]) == 0:
+                print("未识别到验证码，5秒后重试")
+                time.sleep(5)
+                return self.baidu_ocr(_range)
+
+            try:
+                code = int(ret["words_result"][0]["words"])
+                if sms_code == "":
+                    sms_code = code
+                elif sms_code == code:
+                    print("暂未获取到最新验证码，5秒后重试")
+                    time.sleep(5)
+                    return self.baidu_ocr(_range)
+
+                return code
+            except IndexError:
+                print("未识别到验证码，5秒后重试")
+                time.sleep(5)
+                return self.baidu_ocr(_range)
+            except ValueError as _:
+                print("未识别到验证码，5秒后重试")
+                time.sleep(5)
+                return self.baidu_ocr(_range)
+
         else:
-            return ""
+            print("未识别到验证码，5秒后重试")
+            time.sleep(5)
+            return self.baidu_ocr(_range)

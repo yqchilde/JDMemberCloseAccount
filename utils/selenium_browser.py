@@ -1,3 +1,4 @@
+import os
 import sys
 
 from utils.config import get_file
@@ -36,6 +37,47 @@ def get_browser(_config):
             elif sys.platform == 'win32':
                 _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
                                             options=chrome_options)
+        elif browser_type == 'Edge':
+            from msedge.selenium_tools import Edge, EdgeOptions
+            edge_options = EdgeOptions()
+            edge_options.use_chromium = True
+            edge_options.add_argument('--no-sandbox')
+            edge_options.add_argument('--disable-dev-shm-usage')
+            edge_options.add_experimental_option("excludeSwitches", ['enable-automation', 'enable-logging'])
+            if binary != "":
+                edge_options.binary_location = binary
+            if headless:
+                edge_options.add_argument('--headless')
+                edge_options.add_argument('--disable-gpu')
+            if sys.platform == 'linux':
+                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), options=edge_options,
+                                capabilities={})
+            elif sys.platform == 'darwin':
+                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), capabilities={},
+                                options=edge_options)
+            elif sys.platform == 'win32':
+                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), capabilities={},
+                                options=edge_options)
+        elif browser_type == 'Firefox':
+            # 先清除上次的日志
+            if not os.path.exists(get_file("./logs")):
+                os.mkdir(get_file("./logs/"))
+            open(get_file("./logs/geckodriver.log"), "w").close()
+
+            firefox_options = webdriver.FirefoxOptions()
+            firefox_options.log.level = "fatal"
+            if binary != "":
+                firefox_options.binary_location = binary
+            if headless:
+                firefox_options.add_argument('--headless')
+                firefox_options.add_argument('--disable-gpu')
+            if sys.platform == 'linux':
+                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options,
+                                             service_log_path=get_file("./logs/geckodriver.log"))
+            elif sys.platform == 'darwin':
+                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
+            elif sys.platform == 'win32':
+                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
         else:
             raise WebDriverException
         return _browser
