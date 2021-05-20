@@ -2,7 +2,6 @@ import sys
 import time
 import json
 import asyncio
-import traceback
 import requests
 
 from PIL import Image
@@ -285,7 +284,6 @@ class JDMemberCloseAccount(object):
                     print("本次运行已成功注销店铺会员数量为：", cnt)
                 except Exception as e:
                     print("发生了一点小问题：", e.args)
-                    traceback.print_exc()
 
             print("本轮店铺已执行完，即将开始获取下一轮店铺")
 
