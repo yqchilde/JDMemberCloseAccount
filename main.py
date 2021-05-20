@@ -139,13 +139,22 @@ class JDMemberCloseAccount(object):
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
         self.browser.set_window_size(500, 700)
 
-        cnt = 0
+        cnt, cache_brand_id = 0, ""
         while True:
             # 获取店铺列表
             card_list = self.get_shop_cards()
             if len(card_list) == 0:
                 print("当前没有加入的店铺信息")
                 sys.exit(0)
+
+            # 记录一下第一家店铺，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
+            if cache_brand_id == "":
+                cache_brand_id = card_list[0]["brandId"]
+            else:
+                if cache_brand_id == card_list[0]["brandId"]:
+                    print("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
+                    time.sleep(30)
+                    continue
 
             # 加载需要跳过的店铺
             shops = []
@@ -252,6 +261,8 @@ class JDMemberCloseAccount(object):
                     print("本次运行已成功注销店铺会员数量为：", cnt)
                 except Exception as e:
                     print("发生了一点小问题：", e.args)
+
+            print("本轮店铺已执行完，即将开始获取下一轮店铺")
 
 
 if __name__ == '__main__':

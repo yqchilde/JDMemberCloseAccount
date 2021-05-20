@@ -124,7 +124,7 @@
 
 1. 手动运行 `go run ./cmd/jd_wstool`
 
-2. 下载 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases)，选择自己的电脑系统对应的压缩包，解压运行
+2. 下载 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases), 选择自己的电脑系统对应的压缩包，解压运行
 
 ![测试图](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.png)
 
