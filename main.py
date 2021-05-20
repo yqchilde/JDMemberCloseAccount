@@ -5,10 +5,11 @@ import asyncio
 import requests
 
 from PIL import Image
-from utils import get_config
-from chaojiying import ChaoJiYing
 from websockets import connect
-from selenium_browser import get_browser
+from captcha.chaojiying import ChaoJiYing
+from captcha.tujian import TuJian
+from utils.config import get_config
+from utils.selenium_browser import get_browser
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -40,6 +41,7 @@ class JDMemberCloseAccount(object):
         self.wait = WebDriverWait(self.browser, self.config["selenium_timeout"])
         self.cjy_kind = self.config["cjy_kind"]
         self.cjy = ChaoJiYing(self.config["cjy_username"], self.config["cjy_password"], self.config["cjy_soft_id"])
+        self.tj = TuJian(self.config["tj_username"], self.config["tj_password"])
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -119,6 +121,11 @@ class JDMemberCloseAccount(object):
         return card_list
 
     def main(self):
+        # 打码平台只能启用一个
+        if self.config["cjy_validation"] and self.config["tj_validation"]:
+            print("打码平台只能选择一个使用，不可两个都开启")
+            sys.exit(1)
+
         # 打开京东
         self.browser.get("https://www.jd.com/")
 
@@ -132,111 +139,119 @@ class JDMemberCloseAccount(object):
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
         self.browser.set_window_size(500, 700)
 
-        # 获取店铺列表
-        card_list = self.get_shop_cards()
-        if len(card_list) == 0:
-            print("当前没有加入的店铺信息")
-            return
-
-        # 加载需要跳过的店铺
-        shops = []
-        if self.config['skip_shops'] != "":
-            shops = self.config['skip_shops'].split(",")
-
-        print("本次运行获取到", len(card_list), "家店铺会员信息")
         cnt = 0
-        for card in card_list:
-            # 判断该店铺是否要跳过
-            if card["brandName"] in shops:
-                print("发现需要跳过的店铺", card["brandName"])
-                continue
+        while True:
+            # 获取店铺列表
+            card_list = self.get_shop_cards()
+            if len(card_list) == 0:
+                print("当前没有加入的店铺信息")
+                sys.exit(0)
 
-            try:
-                # 打开注销页面
-                self.browser.get("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
-                print("开始注销店铺", card["brandName"])
+            # 加载需要跳过的店铺
+            shops = []
+            if self.config['skip_shops'] != "":
+                shops = self.config['skip_shops'].split(",")
 
-                # 检查手机尾号是否正确
-                if self.config['phone_tail_number'] != "":
-                    if self.wait.until(EC.presence_of_element_located(
-                            (By.XPATH, "//div[@class='cm-ec']")
-                    )).text[-4:] != self.config['phone_tail_number']:
-                        print("当前店铺手机尾号不是规定的尾号，已跳过")
-                        continue
+            print("本次运行获取到", len(card_list), "家店铺会员信息")
+            for card in card_list:
+                # 判断该店铺是否要跳过
+                if card["brandName"] in shops:
+                    print("发现需要跳过的店铺", card["brandName"])
+                    continue
 
-                # 发送短信验证码
-                self.wait.until(EC.presence_of_element_located(
-                    (By.XPATH, "//button[text()='发送验证码']")
-                ), "发送短信验证码超时 " + card["brandName"]).click()
-
-                # 要连接的websocket地址
-                ret, ws_conn_url = "", self.config["ws_conn_url"]
                 try:
-                    recv = asyncio.run(ws_conn(ws_conn_url))
-                    if recv == "":
-                        print("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
-                        continue
-                    else:
-                        ret = json.loads(recv)["sms_code"]
-                except Exception as e:
-                    print("请先启动 jd_wstool 监听退会短信验证码\n", e.args)
-                    sys.exit(1)
+                    # 打开注销页面
+                    self.browser.get("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                    print("开始注销店铺", card["brandName"])
 
-                # 输入短信验证码
-                self.wait.until(EC.presence_of_element_located(
-                    (By.XPATH, "//input[@type='number']")
-                ), "输入短信验证码超时 " + card["brandName"]).send_keys(ret)
-                time.sleep(1)
+                    # 检查手机尾号是否正确
+                    if self.config['phone_tail_number'] != "":
+                        if self.wait.until(EC.presence_of_element_located(
+                                (By.XPATH, "//div[@class='cm-ec']")
+                        )).text[-4:] != self.config['phone_tail_number']:
+                            print("当前店铺手机尾号不是规定的尾号，已跳过")
+                            continue
 
-                # 点击注销按钮
-                self.wait.until(EC.presence_of_element_located(
-                    (By.XPATH, "//div[text()='注销会员']")
-                ), "点击注销按钮超时 " + card["brandName"]).click()
+                    # 发送短信验证码
+                    self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//button[text()='发送验证码']")
+                    ), "发送短信验证码超时 " + card["brandName"]).click()
 
-                # 使用超级鹰验证
-                if self.config["cjy_validation"]:
-                    # 识别图形验证码
-                    code_img = self.get_code_pic()
-                    im = open('code_pic.png', 'rb').read()
+                    # 要连接的websocket地址
+                    ret, ws_conn_url = "", self.config["ws_conn_url"]
+                    try:
+                        recv = asyncio.run(ws_conn(ws_conn_url))
+                        if recv == "":
+                            print("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
+                            continue
+                        else:
+                            ret = json.loads(recv)["sms_code"]
+                    except Exception as e:
+                        print("请先启动 jd_wstool 监听退会短信验证码\n", e.args)
+                        sys.exit(1)
 
-                    # 调用超级鹰API接口识别点触验证码
-                    result = self.cjy.post_pic(im, self.cjy_kind)['pic_str']
+                    # 输入短信验证码
+                    self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//input[@type='number']")
+                    ), "输入短信验证码超时 " + card["brandName"]).send_keys(ret)
+                    time.sleep(1)
 
-                    all_list = []  # 存储被点击的坐标
-                    if '|' in result:
-                        list1 = result.split('|')
+                    # 点击注销按钮
+                    self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[text()='注销会员']")
+                    ), "点击注销按钮超时 " + card["brandName"]).click()
+
+                    # 使用超级鹰验证 或 图鉴验证
+                    if self.config["cjy_validation"] or self.config["tj_validation"]:
+                        # 分割图形验证码
+                        code_img = self.get_code_pic()
+                        im = open('code_pic.png', 'rb').read()
+
+                        # 调用超级鹰API接口识别点触验证码
+                        pic_str = ""
+                        if self.config["cjy_validation"]:
+                            print("开始调用超级鹰识别验证码")
+                            resp = self.cjy.post_pic(im, self.cjy_kind)
+                            pic_str = resp["pic_str"]
+
+                            if pic_str == "":
+                                print("超级鹰验证失败，上报错误")
+                                self.cjy.report_error(resp["pic_id"])
+                        if self.config["tj_validation"]:
+                            print("开始调用图鉴识别验证码")
+                            resp = self.tj.post_pic(im, self.config["tj_type_id"])
+                            pic_str = resp["result"]
+
+                            if pic_str == "":
+                                print("图鉴验证失败，上报错误")
+                                self.tj.report_error(resp["id"])
+
+                        # 调用图鉴API接口识别点触验证码
+                        all_list = []  # 存储被点击的坐标
                         xy_list = []
-                        for i in list1:
-                            x = int(list1[i].split(',')[0])
-                            xy_list.append(x)
-                            y = int(list1[i].split(',')[1])
-                            xy_list.append(y)
-                            all_list.append(xy_list)
-                    else:
-                        xy_list = []
-                        x = int(result.split(',')[0])
+                        x = int(pic_str.split(',')[0])
                         xy_list.append(x)
-                        y = int(result.split(',')[1])
+                        y = int(pic_str.split(',')[1])
                         xy_list.append(y)
                         all_list.append(xy_list)
-                    print(all_list)
+                        print(all_list)
 
-                    # 循环遍历点击图片
-                    for i in all_list:
-                        x = i[0]
-                        y = i[1]
-                        ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
-                        time.sleep(1)
+                        # 循环遍历点击图片
+                        for i in all_list:
+                            x = i[0]
+                            y = i[1]
+                            ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
+                            time.sleep(1)
 
-                self.wait.until(EC.presence_of_element_located(
-                    (By.XPATH, "//div[text()='解绑会员成功']")
-                ), "停留图形验证码界面超时 " + card["brandName"])
+                    self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[text()='解绑会员成功']")
+                    ), "停留图形验证码界面超时 " + card["brandName"])
 
-                time.sleep(1)
-                cnt += 1
-                print("本次运行已成功注销店铺会员数量为：", cnt)
-            except Exception as e:
-                print("发生了一点小问题：", e.args)
+                    time.sleep(1)
+                    cnt += 1
+                    print("本次运行已成功注销店铺会员数量为：", cnt)
+                except Exception as e:
+                    print("发生了一点小问题：", e.args)
 
 
 if __name__ == '__main__':

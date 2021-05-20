@@ -5,6 +5,7 @@ from hashlib import md5
 class ChaoJiYing(object):
     """
     超级鹰验证类
+    超级鹰打码地址：https://www.chaojiying.com
     """
     def __init__(self, username, password, soft_id):
         self.username = username

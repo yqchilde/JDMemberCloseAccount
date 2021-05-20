@@ -2,7 +2,11 @@
 
 学习python操作selenium的一个🌰，用来 全自动/半自动 退出加入的所有店铺会员
 
-* 全自动：短信验证码全自动，图形验证码用 [超级鹰打码](https://www.chaojiying.com/) ，费用是1块=1000积分，一次扣15积分
+* 全自动：短信验证码全自动，图形验证码任选下面的一种，我测试图鉴比较好，又便宜又速度快
+
+  * 图形验证码用 [超级鹰打码](https://www.chaojiying.com/) ，费用是1块=1000积分，一次扣15积分
+   
+  * 图形验证码用 [图鉴打码](https://www.ttshitu.com/) ，费用是1块=1积分，一次扣0.01积分
 
 * 半自动：短信验证码全自动，图形验证码手动
 
@@ -53,6 +57,10 @@
         "cjy_password": "",
         "cjy_soft_id": "",
         "cjy_kind": 9101,
+        "tj_validation": false,
+        "tj_username": "",
+        "tj_password": "",
+        "tj_type_id": 19,
         "ws_conn_url": "ws://localhost:5201/subscribe",
         "ws_timeout": 60,
         "selenium_timeout": 30,
@@ -76,8 +84,16 @@
     * `cjy_password`: 超级鹰密码，仅在 cjy_validation 为 true 时需要设置
     
     * `cjy_soft_id`: 超级鹰软件ID，仅在 cjy_validation 为 true 时需要设置
-    
+
     * `cjy_kind`: 超级鹰验证码类型，仅在 cjy_validation 为 true 时需要设置，且该项目指定为 `9101`
+
+    * `tj_validation`: 是否开启图鉴验证图形验证码
+   
+    * `tj_username`: 图鉴账号，仅在 tj_validation 为 true 时需要设置
+   
+    * `tj_password`: 图鉴密码，仅在 tj_validation 为 true 时需要设置
+   
+    * `tj_type_id`: 超级鹰验证码类型，仅在 tj_validation 为 true 时需要设置，且该项目指定为 `19`
     
     * `ws_conn_url`: websocket链接地址，不用动
       

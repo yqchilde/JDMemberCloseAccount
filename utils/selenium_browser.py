@@ -1,6 +1,6 @@
 import sys
 
-from utils import get_file
+from utils.config import get_file
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 

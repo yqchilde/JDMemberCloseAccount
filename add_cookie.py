@@ -1,7 +1,7 @@
 import json
 
-from utils import get_config, get_file
-from selenium_browser import get_browser
+from utils.config import get_config, get_file
+from utils.selenium_browser import get_browser
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
