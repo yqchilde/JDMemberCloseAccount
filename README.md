@@ -27,6 +27,8 @@
    * 安卓端：利用macrodroid软件监听，一旦监听到就立即通过websocket推送过来
    
    * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
+   
+   * ios端：首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg) 提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后找个截图工具记一下验证码的左上角和右下角坐标，再利用[百度ocr](https://cloud.baidu.com/product/ocr_general?track=navigation0904) 识别，识别到后获取结果并输入，百度ocr一个账号一天免费500次调用
 
 ## 安装方法
 
@@ -49,6 +51,11 @@
 
     ```json
     {
+        "device": "ios",
+        "baidu_app_id": "",
+        "baidu_api_key": "",
+        "baidu_secret_key": "",
+        "baidu_range": [1231,393,1383,412],
         "browserType": "Chrome",
         "headless": false,
         "binary": "",
@@ -70,7 +77,17 @@
         "users": {}
     }
     ```
-   
+
+    * `device`: 如果是ios设备就填写ios，安卓留空
+      
+    * `baidu_app_id`: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`app_id`
+      
+    * `baidu_api_key`: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`api_key`
+      
+    * `baidu_secret_key`: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`secret_key`
+      
+    * `baidu_range`: 需要截取的投屏区域的验证码左上角和右下角坐标，顺序依次是 [左x,左y,右x,右y]
+      
     * `browserType`: 浏览器类型
     
     * `headless`: 无头模式，建议默认设置
@@ -134,7 +151,9 @@
 
 2. 安卓端，用 `Macrodroid监听`，原理一样
 
-* 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
+   * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
+
+3. ios端，找一个投屏软件，群友教程提供的是 [airplayer](https://pro.itools.cn/airplayer), 然后记录验证码区域坐标，通过百度ocr识别并填入
 
 ```bash
 http://同局域网IP:5201/publish?smsCode=短信验证码
@@ -145,6 +164,16 @@ http://192.168.2.100:5201/publish?smsCode=12345
 同局域网IP会在运行 `./jd_wstool 或 jd_wstool.exe` 时提示出来，例如：
 listening on http://192.168.2.100:5201
 ```
+
+## 常见问题
+
+1. Tasker | Macrodroid 监听不到短信怎么办？
+
+   * vivo手机和iqoo手机的验证码保护取消： 短信-设置-隐私保护-验证码安全保护关闭
+   
+   * 小米手机：权限-允许读取短信 & 允许读取通知类短信
+   
+   * 华为手机：短信-右上角三个点-设置-验证码安全保护关闭
 
 ## ScreenShots
 

@@ -8,6 +8,7 @@ from PIL import Image
 from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
+from captcha.baidu_ocr import BaiduOCR
 from utils.config import get_config
 from utils.selenium_browser import get_browser
 from selenium.webdriver import ActionChains
@@ -42,6 +43,7 @@ class JDMemberCloseAccount(object):
         self.cjy_kind = self.config["cjy_kind"]
         self.cjy = ChaoJiYing(self.config["cjy_username"], self.config["cjy_password"], self.config["cjy_soft_id"])
         self.tj = TuJian(self.config["tj_username"], self.config["tj_password"])
+        self.baidu_ocr = BaiduOCR(self.config["baidu_app_id"], self.config["baidu_api_key"], self.config["baidu_secret_key"])
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -173,6 +175,16 @@ class JDMemberCloseAccount(object):
                     self.browser.get("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
                     print("开始注销店铺", card["brandName"])
 
+                    # 检查当前店铺退会链接是否失效
+                    # noinspection PyBroadException
+                    try:
+                        self.browser.find_element_by_xpath("//p[text()='网络请求失败']")
+                        print("当前店铺退会链接已失效，即将跳过，当前店铺链接为：")
+                        print("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                        continue
+                    except Exception as e:
+                        pass
+
                     # 检查手机尾号是否正确
                     if self.config['phone_tail_number'] != "":
                         if self.wait.until(EC.presence_of_element_located(
@@ -187,22 +199,31 @@ class JDMemberCloseAccount(object):
                     ), "发送短信验证码超时 " + card["brandName"]).click()
 
                     # 要连接的websocket地址
-                    ret, ws_conn_url = "", self.config["ws_conn_url"]
-                    try:
-                        recv = asyncio.run(ws_conn(ws_conn_url))
-                        if recv == "":
-                            print("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
-                            continue
+                    sms_code, ws_conn_url = "", self.config["ws_conn_url"]
+                    # 如果是IOS设备，去ocr识别投屏验证码
+                    if self.config["device"] == "ios":
+                        if self.config["baidu_range"] == "":
+                            print("请在config.json中配置需要截取的手机短信验证码区域坐标")
+                            sys.exit(1)
                         else:
-                            ret = json.loads(recv)["sms_code"]
-                    except Exception as e:
-                        print("请先启动 jd_wstool 监听退会短信验证码\n", e.args)
-                        sys.exit(1)
+                            _range = (self.config["baidu_range"])
+                            sms_code = self.baidu_ocr.baidu_ocr(_range)
+                    else:
+                        try:
+                            recv = asyncio.run(ws_conn(ws_conn_url))
+                            if recv == "":
+                                print("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
+                                continue
+                            else:
+                                sms_code = json.loads(recv)["sms_code"]
+                        except Exception as e:
+                            print("请先启动 jd_wstool 监听退会短信验证码\n", e.args)
+                            sys.exit(1)
 
                     # 输入短信验证码
                     self.wait.until(EC.presence_of_element_located(
                         (By.XPATH, "//input[@type='number']")
-                    ), "输入短信验证码超时 " + card["brandName"]).send_keys(ret)
+                    ), "输入短信验证码超时 " + card["brandName"]).send_keys(sms_code)
                     time.sleep(1)
 
                     # 点击注销按钮

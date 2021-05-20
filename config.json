@@ -1,4 +1,9 @@
 {
+  "device": "",
+  "baidu_app_id": "",
+  "baidu_api_key": "",
+  "baidu_secret_key": "",
+  "baidu_range": [],
   "browserType": "Chrome",
   "headless": false,
   "binary": "",
