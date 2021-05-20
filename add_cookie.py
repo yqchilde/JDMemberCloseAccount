@@ -23,7 +23,8 @@ if __name__ == '__main__':
             "cookie": browser.get_cookies()
         }
         config['users'] = user
-        json.dump(config, open(get_file("./config.json"), "w"), indent=4, ensure_ascii=False)
+        with open(get_file("./config.json"), mode='w', encoding="utf-8") as f:
+            json.dump(config, f, indent=4, ensure_ascii=False)
         print("成功添加", username)
     except WebDriverException:
         print("添加失败")
