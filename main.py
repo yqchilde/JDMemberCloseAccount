@@ -142,7 +142,7 @@ class JDMemberCloseAccount(object):
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
         self.browser.set_window_size(500, 700)
 
-        cnt, cache_brand_id = 0, ""
+        cnt, cache_brand_id, pc_cookie_valid = 0, "", True
         while True:
             # 获取店铺列表
             card_list = self.get_shop_cards()
@@ -180,11 +180,15 @@ class JDMemberCloseAccount(object):
                     # 检查当前店铺退会链接是否失效
                     # noinspection PyBroadException
                     try:
-                        self.browser.find_element_by_xpath("//p[text()='网络请求失败']")
+                        WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
+                            (By.XPATH, "//p[text()='网络请求失败']")
+                        ))
                         print("当前店铺退会链接已失效，即将跳过，当前店铺链接为：")
                         print("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                        pc_cookie_valid = False
                         continue
-                    except Exception as e:
+                    except Exception as _:
+                        pc_cookie_valid = True
                         pass
 
                     # 检查手机尾号是否正确
@@ -234,54 +238,76 @@ class JDMemberCloseAccount(object):
                         (By.XPATH, "//div[text()='注销会员']")
                     ), "点击注销按钮超时 " + card["brandName"]).click()
 
-                    # 使用超级鹰验证 或 图鉴验证
-                    if self.config["cjy_validation"] or self.config["tj_validation"]:
-                        # 分割图形验证码
-                        code_img = self.get_code_pic()
-                        im = open('code_pic.png', 'rb').read()
+                    # 识别并点击封装一下
+                    def auto_identify_captcha_click():
+                        # 使用超级鹰验证 或 图鉴验证
+                        t = True
+                        if self.config["cjy_validation"] or self.config["tj_validation"] or t:
+                            # 分割图形验证码
+                            code_img = self.get_code_pic()
+                            im = open('code_pic.png', 'rb').read()
 
-                        # 调用超级鹰API接口识别点触验证码
-                        pic_str = ""
-                        if self.config["cjy_validation"]:
-                            print("开始调用超级鹰识别验证码")
-                            resp = self.cjy.post_pic(im, self.cjy_kind)
-                            if "pic_str" in resp and resp["pic_str"] == "":
-                                print("超级鹰验证失败，原因为：", resp["err_str"])
-                            else:
-                                pic_str = resp["pic_str"]
+                            # 调用超级鹰API接口识别点触验证码
+                            pic_str, pic_id = "", ""
+                            if self.config["cjy_validation"]:
+                                print("开始调用超级鹰识别验证码")
+                                resp = self.cjy.post_pic(im, self.cjy_kind)
+                                if "pic_str" in resp and resp["pic_str"] == "":
+                                    print("超级鹰验证失败，原因为：", resp["err_str"])
+                                else:
+                                    pic_str = resp["pic_str"]
+                                    pic_id = resp["pic_id"]
 
-                            if "pic_id" in resp and resp["pic_str"] == "":
-                                print("超级鹰验证失败，上报错误")
-                                self.cjy.report_error(resp["pic_id"])
-                        if self.config["tj_validation"]:
-                            print("开始调用图鉴识别验证码")
-                            resp = self.tj.post_pic(im, self.config["tj_type_id"])
-                            pic_str = resp["result"]
+                            # 调用图鉴API接口识别点触验证码
+                            if self.config["tj_validation"]:
+                                print("开始调用图鉴识别验证码")
+                                resp = self.tj.post_pic(im, self.config["tj_type_id"])
+                                pic_str = resp["result"]
+                                pic_id = resp["id"]
 
-                            if pic_str == "":
-                                print("图鉴验证失败，上报错误")
-                                self.tj.report_error(resp["id"])
+                            # 调用图鉴API接口识别点触验证码
+                            all_list = []  # 存储被点击的坐标
+                            xy_list = []
+                            x = int(pic_str.split(',')[0])
+                            xy_list.append(x)
+                            y = int(pic_str.split(',')[1])
+                            xy_list.append(y)
+                            all_list.append(xy_list)
+                            print(all_list)
 
-                        # 调用图鉴API接口识别点触验证码
-                        all_list = []  # 存储被点击的坐标
-                        xy_list = []
-                        x = int(pic_str.split(',')[0])
-                        xy_list.append(x)
-                        y = int(pic_str.split(',')[1])
-                        xy_list.append(y)
-                        all_list.append(xy_list)
-                        print(all_list)
+                            # 循环遍历点击图片
+                            for i in all_list:
+                                x = i[0]
+                                y = i[1]
+                                ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
+                                time.sleep(1)
 
-                        # 循环遍历点击图片
-                        for i in all_list:
-                            x = i[0]
-                            y = i[1]
-                            ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
-                            time.sleep(1)
+                            # 图形验证码坐标点击错误尝试重试
+                            # noinspection PyBroadException
+                            try:
+                                WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//p[text()='验证失败，请重新验证']")
+                                ))
+                                print("验证码坐标识别出错，将上报平台处理")
 
+                                # 上报错误的图片到平台
+                                if self.config["cjy_validation"]:
+                                    self.cjy.report_error(pic_id)
+                                if self.config["tj_validation"]:
+                                    self.tj.report_error(pic_id)
+
+                                return False
+                            except Exception as _:
+                                return True
+
+                    # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
+                    if not auto_identify_captcha_click():
+                        auto_identify_captcha_click()
+
+                    # 解绑成功页面
                     self.wait.until(EC.presence_of_element_located(
                         (By.XPATH, "//div[text()='解绑会员成功']")
-                    ), "停留图形验证码界面超时 " + card["brandName"])
+                    ), "图形验证码识别超时 " + card["brandName"])
 
                     time.sleep(1)
                     cnt += 1
@@ -289,7 +315,11 @@ class JDMemberCloseAccount(object):
                 except Exception as e:
                     print("发生了一点小问题：", e.args)
 
-            print("本轮店铺已执行完，即将开始获取下一轮店铺")
+            if not pc_cookie_valid:
+                print("本轮全部店铺都失效，有可能是电脑端cookie失效导致，请重新添加")
+                sys.exit(1)
+            else:
+                print("本轮店铺已执行完，即将开始获取下一轮店铺")
 
 
 if __name__ == '__main__':
