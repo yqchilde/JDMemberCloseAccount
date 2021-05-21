@@ -4,6 +4,7 @@
   "baidu_api_key": "",
   "baidu_secret_key": "",
   "baidu_range": [],
+  "baidu_delay_time": 5,
   "browserType": "Chrome",
   "headless": false,
   "binary": "",

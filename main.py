@@ -209,7 +209,8 @@ class JDMemberCloseAccount(object):
                             sys.exit(1)
                         else:
                             _range = (self.config["baidu_range"])
-                            sms_code = self.baidu_ocr.baidu_ocr(_range)
+                            ocr_delay_time = self.config["baidu_delay_time"]
+                            sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
                     else:
                         try:
                             recv = asyncio.run(ws_conn(ws_conn_url))

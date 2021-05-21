@@ -1,5 +1,4 @@
 import time
-import traceback
 
 from PIL import ImageGrab
 from aip import AipOcr
@@ -13,8 +12,6 @@ class BaiduOCR(object):
     """
 
     def __init__(self, app_id, app_key, secret_key):
-        self.ocr_api = "https://aip.baidubce.com/rest/2.0/ocr/v1/accurate_basic"
-        self.token_api = "https://aip.baidubce.com/oauth/2.0/token"
         self.client = AipOcr(app_id, app_key, secret_key)
 
     @staticmethod
@@ -31,11 +28,12 @@ class BaiduOCR(object):
         code_pic.save(name)
         return code_pic
 
-    def baidu_ocr(self, _range):
+    def baidu_ocr(self, _range, delay_time):
         """
         百度ocr识别数字
-        :param _range:
-        :return:
+        :param delay_time: ocr识别延迟时间
+        :param _range: 验证码截图区域坐标(左x,左y,右x,右y)
+        :return: 识别到的数字
         """
         global sms_code
         self.get_code_pic(_range)
@@ -45,30 +43,30 @@ class BaiduOCR(object):
         print(ret)
         if "words_result" in ret:
             if len(ret["words_result"]) == 0:
-                print("未识别到验证码，5秒后重试")
-                time.sleep(5)
-                return self.baidu_ocr(_range)
+                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                time.sleep(delay_time)
+                self.baidu_ocr(_range, delay_time)
 
             try:
                 code = int(ret["words_result"][0]["words"])
                 if sms_code == code:
-                    print("暂未获取到最新验证码，5秒后重试")
-                    time.sleep(5)
-                    return self.baidu_ocr(_range)
+                    print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                    time.sleep(delay_time)
+                    self.baidu_ocr(_range, delay_time)
                 else:
                     sms_code = code
 
                 return code
             except IndexError:
-                print("未识别到验证码，5秒后重试")
-                time.sleep(5)
-                return self.baidu_ocr(_range)
+                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                time.sleep(delay_time)
+                self.baidu_ocr(_range, delay_time)
             except ValueError as _:
-                print("未识别到验证码，5秒后重试")
-                time.sleep(5)
-                return self.baidu_ocr(_range)
+                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                time.sleep(delay_time)
+                self.baidu_ocr(_range, delay_time)
 
         else:
-            print("未识别到验证码，5秒后重试")
-            time.sleep(5)
-            return self.baidu_ocr(_range)
+            print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+            time.sleep(delay_time)
+            self.baidu_ocr(_range, delay_time)
