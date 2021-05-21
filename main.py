@@ -156,7 +156,7 @@ class JDMemberCloseAccount(object):
                 retried = 0
             else:
                 if retried >= 5:
-                    print("连续五次获取到相同的店铺列表")
+                    print("连续五次获取到相同的店铺列表，退出程序")
                     exit()
                 if cache_brand_id == card_list:
                     print("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
@@ -166,6 +166,7 @@ class JDMemberCloseAccount(object):
 
             # 加载需要跳过的店铺
             shops = []
+            retried = 0
             if self.config['skip_shops'] != "":
                 shops = self.config['skip_shops'].split(",")
 
