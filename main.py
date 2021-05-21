@@ -142,7 +142,7 @@ class JDMemberCloseAccount(object):
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
         self.browser.set_window_size(500, 700)
 
-        cnt, cache_brand_id, pc_cookie_valid = 0, "", True
+        cnt, cache_brand_id, pc_cookie_valid, retried = 0, "", True, 0
         while True:
             # 获取店铺列表
             card_list = self.get_shop_cards()
@@ -153,11 +153,10 @@ class JDMemberCloseAccount(object):
             # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
             if cache_brand_id == "":
                 cache_brand_id = card_list
-                retried = 0
             else:
                 if retried >= 5:
-                    print("连续五次获取到相同的店铺列表")
-                    exit()
+                    print("连续五次获取到相同的店铺列表，退出程序")
+                    sys.exit(0)
                 if cache_brand_id == card_list:
                     print("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
                     time.sleep(30)
@@ -306,7 +305,7 @@ class JDMemberCloseAccount(object):
                                 return True
 
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
-                    if self.config['cjy_validation'] == "true" or self.config['tj_validation'] == "true" :
+                    if self.config['cjy_validation'] or self.config['tj_validation']:
                         if not auto_identify_captcha_click():
                             auto_identify_captcha_click()
 
