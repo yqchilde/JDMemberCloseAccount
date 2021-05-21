@@ -1,8 +1,10 @@
-import re
 import time
+import traceback
 
 from PIL import ImageGrab
 from aip import AipOcr
+
+from windowsjb import fetch_image
 
 sms_code = ""
 
@@ -13,6 +15,8 @@ class BaiduOCR(object):
     """
 
     def __init__(self, app_id, app_key, secret_key):
+        self.ocr_api = "https://aip.baidubce.com/rest/2.0/ocr/v1/accurate_basic"
+        self.token_api = "https://aip.baidubce.com/oauth/2.0/token"
         self.client = AipOcr(app_id, app_key, secret_key)
 
     @staticmethod
@@ -29,42 +33,43 @@ class BaiduOCR(object):
         code_pic.save(name)
         return code_pic
 
-    def baidu_ocr(self, _range, delay_time=5):
+    def baidu_ocr(self, _range):
         """
         百度ocr识别数字
-        :param delay_time: ocr识别延迟时间
-        :param _range: 验证码截图区域坐标(左x,左y,右x,右y)
-        :return: 识别到的数字
+        :param _range:
+        :return:
         """
         global sms_code
-        self.get_code_pic(_range)
+        # self.get_code_pic(_range)
+        fetch_image()
         img = open('ios_code_pic.png', 'rb').read()
         ret = self.client.basicGeneral(img)
-        # 加这个是为了很多人不知道OCR为啥识别不到，如果介意请注释
-        print(ret)
         if "words_result" in ret:
             if len(ret["words_result"]) == 0:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                time.sleep(delay_time)
-                return self.baidu_ocr(_range, delay_time)
+                print("未识别到验证码，5秒后重试")
+                time.sleep(5)
+                return self.baidu_ocr(_range)
 
-            code = ""
-            find_all = re.findall(r'[\d]{6}', ret["words_result"][0]["words"])
-            if len(find_all) == 0:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                time.sleep(delay_time)
-                return self.baidu_ocr(_range, delay_time)
-            elif len(find_all) >= 1:
-                code = find_all[0]
-                if sms_code == code:
-                    print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                    time.sleep(delay_time)
-                    return self.baidu_ocr(_range, delay_time)
-                else:
+            try:
+                code = int(ret["words_result"][0]["words"])
+                if sms_code == "":
                     sms_code = code
+                elif sms_code == code:
+                    print("暂未获取到最新验证码，5秒后重试")
+                    time.sleep(5)
+                    return self.baidu_ocr(_range)
 
-            return code
+                return code
+            except IndexError:
+                print("未识别到验证码，5秒后重试")
+                time.sleep(5)
+                return self.baidu_ocr(_range)
+            except ValueError as _:
+                print("未识别到验证码，5秒后重试")
+                time.sleep(5)
+                return self.baidu_ocr(_range)
+
         else:
-            print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-            time.sleep(delay_time)
-            return self.baidu_ocr(_range, delay_time)
+            print("未识别到验证码，5秒后重试")
+            time.sleep(5)
+            return self.baidu_ocr(_range)

@@ -9,3 +9,4 @@ drivers/chromedriver
 
 # config.json.bak
 config.json.bak
+/config.json

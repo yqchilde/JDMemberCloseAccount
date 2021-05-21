@@ -59,7 +59,6 @@
         "baidu_api_key": "",
         "baidu_secret_key": "",
         "baidu_range": [1231,393,1383,412],
-        "baidu_delay_time": 5,
         "browserType": "Chrome",
         "headless": false,
         "binary": "",
@@ -91,8 +90,6 @@
     * `baidu_secret_key`: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`secret_key`
       
     * `baidu_range`: 需要截取的投屏区域的验证码左上角和右下角坐标，顺序依次是 [左x,左y,右x,右y]
-   
-    * `baidu_delay_time`: 百度OCR识别的延迟时间，如果没识别到就几秒后再次尝试，默认为5
       
     * `browserType`: 浏览器类型
     

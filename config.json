@@ -1,27 +1,212 @@
 {
-  "device": "",
-  "baidu_app_id": "",
-  "baidu_api_key": "",
-  "baidu_secret_key": "",
-  "baidu_range": [],
-  "baidu_delay_time": 5,
-  "browserType": "Chrome",
-  "headless": false,
-  "binary": "",
-  "cjy_validation": false,
-  "cjy_username": "",
-  "cjy_password": "",
-  "cjy_soft_id": "",
-  "cjy_kind": 9101,
-  "tj_validation": false,
-  "tj_username": "",
-  "tj_password": "",
-  "tj_type_id": 19,
-  "ws_conn_url": "ws://localhost:5201/subscribe",
-  "ws_timeout": 60,
-  "selenium_timeout": 30,
-  "skip_shops": "",
-  "phone_tail_number": "",
-  "mobile_cookie": "",
-  "users": {}
+    "device": "ios",
+    "baidu_app_id": "17193284",
+    "baidu_api_key": "qgaGds7jjaeluZ7fRErxpcr1",
+    "baidu_secret_key": "t5uZ1GQ9XWLEzGBEv2bCgelG6MgFwgAh",
+    "baidu_range": [
+        -1481,
+        273,
+        1854,
+        278
+    ],
+    "browserType": "Edge",
+    "headless": false,
+    "binary": "",
+    "cjy_validation": false,
+    "cjy_username": "cg276686433",
+    "cjy_password": "cg276686433",
+    "cjy_soft_id": "917057",
+    "cjy_kind": 9101,
+    "tj_validation": false,
+    "tj_username": "",
+    "tj_password": "",
+    "tj_type_id": 19,
+    "ws_conn_url": "ws://localhost:5201/subscribe",
+    "ws_timeout": 60,
+    "selenium_timeout": 30,
+    "skip_shops": "",
+    "phone_tail_number": "",
+    "mobile_cookie": "pt_key=AAJgmXzzADA3WUvXr8p96wzRitc-aGESykRjuH9eGoLODEPt03goT7Vq11eaJpwusIz2-lUsvDk;pt_pin=19925433-55171885;",
+    "users": {
+        "userName": "bluewater_cg",
+        "cookie": [
+            {
+                "domain": ".jd.com",
+                "expiry": 1621579932,
+                "httpOnly": false,
+                "name": "shshshsID",
+                "path": "/",
+                "secure": false,
+                "value": "9bb4254ec5ae14c2cd0daf615e776f8f_1_1621578132935"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 2485578132,
+                "httpOnly": false,
+                "name": "shshshfp",
+                "path": "/",
+                "secure": false,
+                "value": "ff4907a4a78c4cbe53ec1cdbe2c27446"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1622182932,
+                "httpOnly": false,
+                "name": "PCSYCityID",
+                "path": "/",
+                "secure": false,
+                "value": "CN_310000_310100_310113"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1622442131,
+                "httpOnly": false,
+                "name": "areaId",
+                "path": "/",
+                "secure": false,
+                "value": "2"
+            },
+            {
+                "domain": "www.jd.com",
+                "expiry": 1653114131,
+                "httpOnly": false,
+                "name": "o2State",
+                "path": "/",
+                "secure": false,
+                "value": "{%22webp%22:true}"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1621579931,
+                "httpOnly": false,
+                "name": "__jdb",
+                "path": "/",
+                "secure": false,
+                "value": "76161171.3.16215781221791000709083|1.1621578122"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1637130131,
+                "httpOnly": false,
+                "name": "__jda",
+                "path": "/",
+                "secure": false,
+                "value": "76161171.16215781221791000709083.1621578122.1621578122.1621578122.1"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1779258132,
+                "httpOnly": false,
+                "name": "TrackID",
+                "path": "/",
+                "secure": false,
+                "value": "1_ww-2jrOrK0sUM1NW7az-kDxgdOvT2xDh4Bs935pHtbGVG94-LqNit224O-yfqW5-W_ZAqzDTqeZ8b69wjngOw5xoaQ8S7BIYG091Vz-vOAkcAH1u1wUDrVum-Qm-i4BO1Uopd6VMolCdjq34-JUZw"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1624170132,
+                "httpOnly": true,
+                "name": "unick",
+                "path": "/",
+                "secure": false,
+                "value": "bluewater_cg"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1624170132,
+                "httpOnly": true,
+                "name": "_pst",
+                "path": "/",
+                "secure": false,
+                "value": "19925433-55171885"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1624170132,
+                "httpOnly": false,
+                "name": "_tp",
+                "path": "/",
+                "secure": false,
+                "value": "xcxsnzKY6u4K3CFhQnsDimS3crf6CNZodVNS1rCYuBs%3D"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 2485578132,
+                "httpOnly": false,
+                "name": "shshshfpa",
+                "path": "/",
+                "secure": false,
+                "value": "4c50cdb5-f0f8-738b-04a7-a765fad474ef-1621578132"
+            },
+            {
+                "domain": ".jd.com",
+                "httpOnly": false,
+                "name": "ceshi3.com",
+                "path": "/",
+                "secure": false,
+                "value": "201"
+            },
+            {
+                "domain": ".jd.com",
+                "httpOnly": false,
+                "name": "__jdc",
+                "path": "/",
+                "secure": false,
+                "value": "76161171"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1622442131,
+                "httpOnly": false,
+                "name": "ipLoc-djd",
+                "path": "/",
+                "secure": false,
+                "value": "2-2824-0-0"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1653114132,
+                "httpOnly": false,
+                "name": "pinId",
+                "path": "/",
+                "secure": false,
+                "value": "EgdWp7AgjQOXTZ90NEcwsngsXsUrwI4a"
+            },
+            {
+                "domain": ".jd.com",
+                "httpOnly": true,
+                "name": "thor",
+                "path": "/",
+                "secure": false,
+                "value": "831BD14CE30CB2A584F75A8BB80ECDC752DF7FDF4D9DC078C7D6EB02ED40B04AF5A9B414DEB42D065F65B9A70AB210D44BCD7DA4A3547D0CA44EA0BBE2C3EC863A7BF596FF63B58F255B2FDA8576227368693E6DCC9200A5A3E20EA07CD35090FA1F5E5ACD60E347ED85E6E79E14885880B71963898519A2F3FA161C64D8B442BE19D7D8A5963665EE4CB69157A5A2C7EC83CCCE5B4553F3913A70B3F7AEEB0B"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1637130133,
+                "httpOnly": false,
+                "name": "__jdu",
+                "path": "/",
+                "secure": false,
+                "value": "16215781221791000709083"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1624170132,
+                "httpOnly": false,
+                "name": "pin",
+                "path": "/",
+                "secure": false,
+                "value": "19925433-55171885"
+            },
+            {
+                "domain": ".jd.com",
+                "expiry": 1622874122,
+                "httpOnly": false,
+                "name": "__jdv",
+                "path": "/",
+                "secure": false,
+                "value": "122270672|direct|-|none|-|1621578122180"
+            }
+        ]
+    }
 }

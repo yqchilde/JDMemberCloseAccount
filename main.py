@@ -124,6 +124,8 @@ class JDMemberCloseAccount(object):
         return card_list
 
     def main(self):
+        sms_code_used = []
+        sms_code_used.append(100000)
         # 打码平台只能启用一个
         if self.config["cjy_validation"] and self.config["tj_validation"]:
             print("打码平台只能选择一个使用，不可两个都开启")
@@ -186,7 +188,7 @@ class JDMemberCloseAccount(object):
                         continue
                     except Exception as e:
                         pass
-
+                    time.sleep(2)
                     # 检查手机尾号是否正确
                     if self.config['phone_tail_number'] != "":
                         if self.wait.until(EC.presence_of_element_located(
@@ -209,8 +211,15 @@ class JDMemberCloseAccount(object):
                             sys.exit(1)
                         else:
                             _range = (self.config["baidu_range"])
-                            ocr_delay_time = self.config["baidu_delay_time"]
-                            sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                            time.sleep(2)
+                            sms_code = 100000
+                            #如果该验证码已经被使用，等待1秒重新请求
+                            while sms_code in sms_code_used:
+                                sms_code = self.baidu_ocr.baidu_ocr(_range)
+                                if(sms_code not in sms_code_used) :
+                                    sms_code_used.append(sms_code)
+                                    break
+
                     else:
                         try:
                             recv = asyncio.run(ws_conn(ws_conn_url))
@@ -245,12 +254,9 @@ class JDMemberCloseAccount(object):
                         if self.config["cjy_validation"]:
                             print("开始调用超级鹰识别验证码")
                             resp = self.cjy.post_pic(im, self.cjy_kind)
-                            if "pic_str" in resp and resp["pic_str"] == "":
-                                print("超级鹰验证失败，原因为：", resp["err_str"])
-                            else:
-                                pic_str = resp["pic_str"]
+                            pic_str = resp["pic_str"]
 
-                            if "pic_id" in resp and resp["pic_str"] == "":
+                            if pic_str == "":
                                 print("超级鹰验证失败，上报错误")
                                 self.cjy.report_error(resp["pic_id"])
                         if self.config["tj_validation"]:
