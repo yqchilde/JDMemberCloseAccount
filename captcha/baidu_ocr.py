@@ -28,7 +28,7 @@ class BaiduOCR(object):
         code_pic.save(name)
         return code_pic
 
-    def baidu_ocr(self, _range, delay_time):
+    def baidu_ocr(self, _range, delay_time=5):
         """
         百度ocr识别数字
         :param delay_time: ocr识别延迟时间
