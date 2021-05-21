@@ -301,8 +301,9 @@ class JDMemberCloseAccount(object):
                                 return True
 
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
-                    if not auto_identify_captcha_click():
-                        auto_identify_captcha_click()
+                    if self.config['cjy_validation'] == "true" or self.config['tj_validation'] == "true" :
+                        if not auto_identify_captcha_click():
+                            auto_identify_captcha_click()
 
                     # 解绑成功页面
                     self.wait.until(EC.presence_of_element_located(
