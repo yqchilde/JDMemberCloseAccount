@@ -49,12 +49,12 @@ class BaiduOCR(object):
 
             try:
                 code = int(ret["words_result"][0]["words"])
-                if sms_code == "":
-                    sms_code = code
-                elif sms_code == code:
+                if sms_code == code:
                     print("暂未获取到最新验证码，5秒后重试")
                     time.sleep(5)
                     return self.baidu_ocr(_range)
+                else:
+                    sms_code = code
 
                 return code
             except IndexError:
