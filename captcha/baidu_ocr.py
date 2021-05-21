@@ -1,3 +1,4 @@
+import re
 import time
 
 from PIL import ImageGrab
@@ -45,28 +46,25 @@ class BaiduOCR(object):
             if len(ret["words_result"]) == 0:
                 print("暂未获取到最新验证码，%d秒后重试" % delay_time)
                 time.sleep(delay_time)
-                self.baidu_ocr(_range, delay_time)
+                return self.baidu_ocr(_range, delay_time)
 
-            try:
-                code = int(ret["words_result"][0]["words"])
+            code = ""
+            find_all = re.findall(r'[\d]{6}', ret["words_result"][0]["words"])
+            if len(find_all) == 0:
+                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                time.sleep(delay_time)
+                return self.baidu_ocr(_range, delay_time)
+            elif len(find_all) >= 1:
+                code = find_all[0]
                 if sms_code == code:
                     print("暂未获取到最新验证码，%d秒后重试" % delay_time)
                     time.sleep(delay_time)
-                    self.baidu_ocr(_range, delay_time)
+                    return self.baidu_ocr(_range, delay_time)
                 else:
                     sms_code = code
 
-                return code
-            except IndexError:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                time.sleep(delay_time)
-                self.baidu_ocr(_range, delay_time)
-            except ValueError as _:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                time.sleep(delay_time)
-                self.baidu_ocr(_range, delay_time)
-
+            return code
         else:
             print("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
-            self.baidu_ocr(_range, delay_time)
+            return self.baidu_ocr(_range, delay_time)
