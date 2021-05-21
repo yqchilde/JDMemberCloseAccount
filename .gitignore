@@ -1,4 +1,5 @@
 # Pycharm
+__pycharm__
 .idea/*
 
 # venv
@@ -7,5 +8,5 @@ venv
 # drivers
 drivers/chromedriver
 
-# config.json.bak
+# config.json
 config.json.bak
