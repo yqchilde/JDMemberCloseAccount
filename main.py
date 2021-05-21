@@ -196,9 +196,9 @@ class JDMemberCloseAccount(object):
                             continue
 
                     # 发送短信验证码
-                    # self.wait.until(EC.presence_of_element_located(
-                    #     (By.XPATH, "//button[text()='发送验证码']")
-                    # ), "发送短信验证码超时 " + card["brandName"]).click()
+                    self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//button[text()='发送验证码']")
+                    ), "发送短信验证码超时 " + card["brandName"]).click()
 
                     # 要连接的websocket地址
                     sms_code, ws_conn_url = "", self.config["ws_conn_url"]
