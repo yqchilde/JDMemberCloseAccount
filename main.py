@@ -153,10 +153,15 @@ class JDMemberCloseAccount(object):
             # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
             if cache_brand_id == "":
                 cache_brand_id = card_list
+                retried = 0
             else:
+                if retried >= 5:
+                    print("连续五次获取到相同的店铺列表")
+                    exit()
                 if cache_brand_id == card_list:
                     print("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
                     time.sleep(30)
+                    retried += 1
                     continue
 
             # 加载需要跳过的店铺
