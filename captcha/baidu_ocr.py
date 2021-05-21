@@ -41,6 +41,8 @@ class BaiduOCR(object):
         self.get_code_pic(_range)
         img = open('ios_code_pic.png', 'rb').read()
         ret = self.client.basicGeneral(img)
+        # 加这个是为了很多人不知道OCR为啥识别不到，如果介意请注释
+        print(ret)
         if "words_result" in ret:
             if len(ret["words_result"]) == 0:
                 print("未识别到验证码，5秒后重试")
