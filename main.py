@@ -244,9 +244,12 @@ class JDMemberCloseAccount(object):
                         if self.config["cjy_validation"]:
                             print("开始调用超级鹰识别验证码")
                             resp = self.cjy.post_pic(im, self.cjy_kind)
-                            pic_str = resp["pic_str"]
+                            if "pic_str" in resp and resp["pic_str"] == "":
+                                print("超级鹰验证失败，原因为：", resp["err_str"])
+                            else:
+                                pic_str = resp["pic_str"]
 
-                            if pic_str == "":
+                            if "pic_id" in resp and resp["pic_str"] == "":
                                 print("超级鹰验证失败，上报错误")
                                 self.cjy.report_error(resp["pic_id"])
                         if self.config["tj_validation"]:
