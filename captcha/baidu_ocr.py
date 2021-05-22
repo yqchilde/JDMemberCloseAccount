@@ -48,22 +48,26 @@ class BaiduOCR(object):
                 time.sleep(delay_time)
                 return self.baidu_ocr(_range, delay_time)
 
-            code = ""
-            find_all = re.findall(r'[\d]{6}', ret["words_result"][0]["words"])
-            if len(find_all) == 0:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                time.sleep(delay_time)
-                return self.baidu_ocr(_range, delay_time)
-            elif len(find_all) >= 1:
-                code = find_all[0]
-                if sms_code == code:
-                    print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                    time.sleep(delay_time)
-                    return self.baidu_ocr(_range, delay_time)
-                else:
-                    sms_code = code
+            code, length = "", len(ret["words_result"])
 
-            return code
+            for idx, words in enumerate(ret["words_result"]):
+                find_all = re.findall(r'[\d]{6}', words["words"])
+                if len(find_all) == 0:
+                    if idx == length - 1:
+                        print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                        time.sleep(delay_time)
+                        return self.baidu_ocr(_range, delay_time)
+                    else:
+                        continue
+                elif len(find_all) >= 1:
+                    code = find_all[0]
+                    if sms_code == code:
+                        print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                        time.sleep(delay_time)
+                        return self.baidu_ocr(_range, delay_time)
+                    else:
+                        sms_code = code
+                return code
         else:
             print("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
