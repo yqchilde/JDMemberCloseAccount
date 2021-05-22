@@ -221,7 +221,7 @@ class JDMemberCloseAccount(object):
                             sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
                     else:
                         try:
-                            recv = asyncio.run(ws_conn(ws_conn_url))
+                            recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
                             if recv == "":
                                 print("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                                 continue
