@@ -124,6 +124,9 @@ class JDMemberCloseAccount(object):
         return card_list
 
     def main(self):
+        # 已经验证过的验证码，确保重复验证但不会把已经验证的填写到验证码输入框
+        sms_code_used = []
+        sms_code_used.append(100000)
         # 打码平台只能启用一个
         if self.config["cjy_validation"] and self.config["tj_validation"]:
             print("打码平台只能选择一个使用，不可两个都开启")
@@ -218,7 +221,15 @@ class JDMemberCloseAccount(object):
                         else:
                             _range = (self.config["baidu_range"])
                             ocr_delay_time = self.config["baidu_delay_time"]
-                            sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                            # sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                            time.sleep(3)
+                            sms_code = 100000
+                            # 如果该验证码已经被使用，等待1秒重新请求
+                            while sms_code in sms_code_used:
+                                sms_code = self.baidu_ocr.baidu_ocr(_range)
+                                if (sms_code not in sms_code_used):
+                                    sms_code_used.append(sms_code)
+                                    break
                     else:
                         try:
                             recv = asyncio.run(ws_conn(ws_conn_url))
