@@ -28,7 +28,7 @@
    
    * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
    
-   * ios端：首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg) 提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后找个截图工具记一下验证码的左上角和右下角坐标，再利用[百度ocr](https://cloud.baidu.com/product/ocr_general?track=navigation0904) 识别，识别到后获取结果并输入，百度ocr一个账号一天免费500次调用
+   * ios端：首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg) 提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的左上角和右下角坐标(最好能暴露出完整短信)，再利用[百度ocr](https://cloud.baidu.com/product/ocr_general?track=navigation0904) 识别，识别到后获取结果并输入，百度ocr一个账号一天免费500次调用
    
    * <span style="color: red; "> 注意：百度OCR只是处理识别短信验证码并填入，不要误解为图形验证码也可以解决 </span>
    

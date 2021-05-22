@@ -51,7 +51,7 @@ class BaiduOCR(object):
             code, length = "", len(ret["words_result"])
 
             for idx, words in enumerate(ret["words_result"]):
-                find_all = re.findall(r'[\d]{6}', words["words"])
+                find_all = re.findall(r'([\d]{6})[\u3002]', words["words"])
                 if len(find_all) == 0:
                     if idx == length - 1:
                         print("暂未获取到最新验证码，%d秒后重试" % delay_time)
