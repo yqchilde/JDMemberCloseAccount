@@ -266,6 +266,9 @@ class JDMemberCloseAccount(object):
                             if self.config["tj_validation"]:
                                 print("开始调用图鉴识别验证码")
                                 resp = self.tj.post_pic(im, self.config["tj_type_id"])
+                                if resp == "NoBalanceException: 余额不足":
+                                    print("图鉴打码平台余额不足，请去充值！")
+                                    sys.exit(0)
                                 pic_str = resp["result"]
                                 pic_id = resp["id"]
 
