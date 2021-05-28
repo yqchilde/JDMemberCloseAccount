@@ -25,9 +25,10 @@ func Run() error {
 	}
 
 	info("注意事项：")
-	info("1. 手机端请求IP地址为如下监听地址")
-	info("2. 先用手机浏览器测试访问，如连接通代表无问题，访问不通请检查防火墙开启5201端口或使用ipconfig/ifconfig查看本地其他IP")
-	fmt.Printf("监听地址： %s://%s:%d\n", "http", getInterIP(), 5201)
+	info("1. 手机端请求IP地址为如下监听地址，请先用电脑点击一下哪个可以访问通！")
+	info("2. 用手机浏览器测试访问说明1中尝试过的IP地址，如访问通代表无问题")
+	info("3. 以下IP获取到的IP仅做参考，如果全部访问不通，请检查防火墙开启5201端口或使用ipconfig/ifconfig查看本地其他IP")
+	getInterIP()
 
 	cs := NewChatServer()
 	s := &http.Server{
@@ -55,18 +56,18 @@ func Run() error {
 	return s.Shutdown(ctx)
 }
 
-func getInterIP() string {
+func getInterIP() {
 	inter, err := net.InterfaceAddrs()
 	checkIfError(err)
-	for i := range inter {
-		if ipNet, ok := inter[i].(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+	i := 1
+	for _, addr := range inter {
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
 			if ipNet.IP.To4() != nil {
-				return ipNet.IP.To4().String()
+				fmt.Printf("监听地址%d： %s://%s:%d\n", i, "http", ipNet.IP.To4().String(), 5201)
+				i += 1
 			}
 		}
 	}
-
-	return ""
 }
 
 // info should be used to describe the example commands that are about to run.

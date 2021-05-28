@@ -22,6 +22,14 @@ release:
 			tar czvf $$project-darwin-amd64.tar.gz ./$$project; \
 		done
 
+		# Build for linux
+		go clean
+		@for project in $$(ls cmd); \
+		do \
+			CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build "./cmd/$$project"; \
+			upx "./$$project"; \
+			tar czvf $$project-linux-amd64.tar.gz ./$$project; \
+		done
 
 		# Build for windows
 		go clean
