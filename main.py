@@ -326,7 +326,18 @@ class JDMemberCloseAccount(object):
                                     cpc_img, int(res[1][0] * zoom),
                                     int(res[1][1] * zoom)
                                 ).click().perform()
-                                return True
+
+                                # 图形验证码坐标点击错误尝试重试
+                                # noinspection PyBroadException
+                                try:
+                                    WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//p[text()='验证失败，请重新验证']")
+                                    ))
+                                    print("验证码位置点击错误")
+                                    return False
+                                except Exception as _:
+                                    return True
+                                # return True
                             else:
                                 print("识别未果")
                                 self.wait.until(
@@ -338,7 +349,8 @@ class JDMemberCloseAccount(object):
                         if not auto_identify_captcha_click():
                             auto_identify_captcha_click()
                     else:
-                        local_auto_identify_captcha_click()
+                        if not local_auto_identify_captcha_click():
+                            local_auto_identify_captcha_click()
 
                     # 解绑成功页面
                     self.wait.until(EC.presence_of_element_located(
