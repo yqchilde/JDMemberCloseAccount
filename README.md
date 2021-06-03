@@ -5,8 +5,12 @@
 * 全自动：短信验证码全自动，图形验证码任选下面的一种，我测试图鉴比较好，又便宜又速度快
 
   * 图形验证码用 [超级鹰打码](https://www.chaojiying.com/) ，费用是1块=1000积分，一次扣15积分
+
   * 图形验证码用 [图鉴打码](https://www.ttshitu.com/) ，费用是1块=1积分，一次扣0.01积分
-  * 图形验证码用 本地识别引擎，识别效率和精准度可能不会很高
+
+  * 图形验证码用 本地识别引擎，识别效率和精准度可能不会很高 [测试图最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) (感谢 [@AntonVanke](https://github.com/AntonVanke) )的 PR，这下大家可以不用花钱了👍
+
+  * **当`cjy_validation` 和 `tj_validation` 都为false时，启动本地引擎识别**
 
 * 半自动：短信验证码全自动，图形验证码手动
 
@@ -190,6 +194,8 @@ listening on http://192.168.2.100:5201
 ![测试图2](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img2.gif)
 
 ![测试图3](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.gif)
+
+![测试图4](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img4.png)
 
 # Thanks
 

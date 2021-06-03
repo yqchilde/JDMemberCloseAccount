@@ -322,10 +322,10 @@ class JDMemberCloseAccount(object):
                             print("正在通过本地引擎识别")
                             res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
                             if res[0]:
-                                ActionChains(self.browser).move_to_element_with_offset(cpc_img, int(res[1][0] * zoom),
-                                                                                       int(
-                                                                                           res[1][
-                                                                                               1] * zoom)).click().perform()
+                                ActionChains(self.browser).move_to_element_with_offset(
+                                    cpc_img, int(res[1][0] * zoom),
+                                    int(res[1][1] * zoom)
+                                ).click().perform()
                                 return True
                             else:
                                 print("识别未果")
