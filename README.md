@@ -187,6 +187,13 @@ listening on http://192.168.2.100:5201
    
    * 华为手机：短信-右上角三个点-设置-验证码安全保护关闭
 
+## 测试
+
+1. websocket转发验证码
+   
+   1. 电脑运行`python3 test_main` 和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
+   2. 手机访问 `http://你的IP:5201/publish?smsCode=1234522`，之后查看电脑上`jd_wstool` 和 `test_main.py` 的控制台输出信息
+
 ## ScreenShots
 
 ![测试图1](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img1.gif)
