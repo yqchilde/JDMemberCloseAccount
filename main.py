@@ -8,6 +8,7 @@ from PIL import Image
 from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
+from captcha.jd_captcha import JDcaptcha_base64
 from captcha.baidu_ocr import BaiduOCR
 from utils.config import get_config
 from utils.selenium_browser import get_browser
@@ -307,10 +308,37 @@ class JDMemberCloseAccount(object):
                             except Exception as _:
                                 return True
 
+                    def local_auto_identify_captcha_click():
+                        for _ in range(4):
+                            time.sleep(1)
+                            cpc_img = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]')))
+                            zoom = cpc_img.size['height'] / 170
+                            cpc_img_path_base64 = self.wait.until(
+                                EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]'))).get_attribute(
+                                'src').replace("data:image/jpeg;base64,", "")
+                            pcp_show_picture_path_base64 = self.wait.until(EC.presence_of_element_located(
+                                (By.XPATH, '//*[@class="pcp_showPicture"]'))).get_attribute('src')
+                            # 正在识别验证码
+                            print("正在通过本地引擎识别")
+                            res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
+                            if res[0]:
+                                ActionChains(self.browser).move_to_element_with_offset(cpc_img, int(res[1][0] * zoom),
+                                                                                       int(
+                                                                                           res[1][
+                                                                                               1] * zoom)).click().perform()
+                                return True
+                            else:
+                                print("识别未果")
+                                self.wait.until(
+                                    EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
+                        return False
+
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
                     if self.config['cjy_validation'] or self.config['tj_validation']:
                         if not auto_identify_captcha_click():
                             auto_identify_captcha_click()
+                    else:
+                        local_auto_identify_captcha_click()
 
                     # 解绑成功页面
                     self.wait.until(EC.presence_of_element_located(

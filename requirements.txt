@@ -3,3 +3,4 @@ requests~=2.25.1
 selenium~=3.141.0
 websockets~=9.0.2
 baidu-aip==2.2.18.0
+numpy~=1.20.3
