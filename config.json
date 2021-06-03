@@ -22,6 +22,7 @@
   "selenium_timeout": 30,
   "skip_shops": "",
   "phone_tail_number": "",
+  "member_close_max_number": 0,
   "mobile_cookie": "",
   "users": {}
 }

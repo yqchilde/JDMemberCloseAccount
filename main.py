@@ -143,7 +143,9 @@ class JDMemberCloseAccount(object):
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
         self.browser.set_window_size(500, 700)
 
-        cnt, cache_brand_id, pc_cookie_valid, retried = 0, "", True, 0
+        cache_brand_id, pc_cookie_valid, retried = "", True, 0
+        cnt, member_close_max_number = 0, self.config["member_close_max_number"]
+
         while True:
             # 获取店铺列表
             card_list = self.get_shop_cards()
@@ -171,6 +173,11 @@ class JDMemberCloseAccount(object):
 
             print("本次运行获取到", len(card_list), "家店铺会员信息")
             for card in card_list:
+                # 判断本次运行数是否达到设置
+                if member_close_max_number != 0 and cnt >= member_close_max_number:
+                    print("已注销店铺数达到配置中允许注销的最大次数，程序退出")
+                    sys.exit(0)
+
                 # 判断该店铺是否要跳过
                 if card["brandName"] in shops:
                     print("发现需要跳过的店铺", card["brandName"])
@@ -333,11 +340,9 @@ class JDMemberCloseAccount(object):
                                     WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
                                         (By.XPATH, "//p[text()='验证失败，请重新验证']")
                                     ))
-                                    print("验证码位置点击错误")
                                     return False
                                 except Exception as _:
                                     return True
-                                # return True
                             else:
                                 print("识别未果")
                                 self.wait.until(
@@ -347,9 +352,11 @@ class JDMemberCloseAccount(object):
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
                     if self.config['cjy_validation'] or self.config['tj_validation']:
                         if not auto_identify_captcha_click():
+                            print("验证码位置点击错误，尝试再试一次")
                             auto_identify_captcha_click()
                     else:
                         if not local_auto_identify_captcha_click():
+                            print("验证码位置点击错误，尝试再试一次")
                             local_auto_identify_captcha_click()
 
                     # 解绑成功页面

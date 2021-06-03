@@ -60,7 +60,7 @@
 
     ```json
     {
-        "device": "ios",
+        "device": "",
         "baidu_app_id": "",
         "baidu_api_key": "",
         "baidu_secret_key": "",
@@ -83,6 +83,7 @@
         "selenium_timeout": 30,
         "skip_shops": "",
         "phone_tail_number": "",
+        "member_close_max_number": 0,
         "mobile_cookie": "",
         "users": {}
     }
@@ -133,6 +134,8 @@
     * `skip_shops`: 需要跳过的店铺，需要填写卡包中的完整店铺名称，为了效率没做模糊匹配，多个店铺用逗号隔开
    
     * `phone_tail_number`: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过
+   
+    * `member_close_max_number`: 设置本次运行注销的最大店铺数
     
     * `mobile_cookie`: 手机端cookie，是pt_key开头的那个
     
