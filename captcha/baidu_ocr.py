@@ -86,3 +86,9 @@ class BaiduOCR(object):
             print("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
             return self.baidu_ocr(_range, delay_time)
+
+
+if __name__ == '__main__':
+    _range = (2634, 514, 3686, 1468)
+    sms_code = BaiduOCR("", "", "").baidu_ocr(_range, 10)
+    print("百度OCR识别到的验证码是：", sms_code)
