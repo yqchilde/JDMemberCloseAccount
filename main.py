@@ -135,8 +135,10 @@ class JDMemberCloseAccount(object):
         # msShortcutLogin
         # 写入 cookie
         self.browser.delete_all_cookies()
-        for cookie in self.config['mobile_cookie'].split(";"):
-            self.browser.add_cookie({"name": cookie.split("=")[0], "value": cookie.split("=")[1], "domain": ".jd.com"})
+        for cookie in self.config['mobile_cookie'].split(";", 1):
+            self.browser.add_cookie(
+                {"name": cookie.split("=")[0], "value": cookie.split("=")[1].strip(";"), "domain": ".jd.com"}
+            )
         self.browser.refresh()
 
         self.browser.set_window_size(500, 700)
