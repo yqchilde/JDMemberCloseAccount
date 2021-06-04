@@ -14,7 +14,8 @@ def get_browser(_config):
     browser_type = _config['browserType']
     headless = _config['headless']
     binary = _config['binary']
-
+    user_agent = "Mozilla/5.0 (Linux; Android 9; COR-AL00) AppleWebKit/537.36 (KHTML, like Gecko) " \
+                 "Chrome/77.0.3865.116 Mobile Safari/537.36 EdgA/46.03.4.5155 "
     try:
         if browser_type == 'Chrome':
             chrome_options = webdriver.ChromeOptions()
@@ -22,6 +23,7 @@ def get_browser(_config):
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_experimental_option("excludeSwitches", ['enable-automation', 'enable-logging'])
+            chrome_options.add_argument(f'user-agent={user_agent}')
             if binary != "":
                 # 当找不到浏览器时需要在 config 里配置路径
                 chrome_options.binary_location = binary

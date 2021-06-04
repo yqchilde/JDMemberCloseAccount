@@ -129,12 +129,13 @@
   * `phone_tail_number`: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过
   * `member_close_max_number`: 设置本次运行注销的最大店铺数，默认为0，代表不限制
   * `mobile_cookie`: 手机端cookie，是pt_key开头的那个
-  * `users`: web端cookie，通过add_cookie.py添加
+  * `users`: 现在没有用了
 
 ### 3. 添加`cookie`
 
-* web端cookie：请在项目目录下执行`python3 add_cookie.py`， 在打开的浏览器界面登录你的京东，此时你可以看到`config.json`已经有了你的用户信息（**请不要随意泄露你的cookie**）
-* 手机端cookie：在 `config.json` 中写入 `mobile_cookie` 项，注意是pt_key开头的那个（**请不要随意泄露你的cookie**）
+-   使用`add_cookie.py`可以获取手机端`Cookie`
+
+* 在 `config.json` 中写入 `mobile_cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
 
 ### 4. 启动 `jd_wstool` 工具（使用OCR的不用开）
 
