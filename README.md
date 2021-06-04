@@ -43,6 +43,11 @@
       * 如果定位不准，看一下项目目录生成的`ios_code_pic.png`图片位置在当前屏幕的哪个位置，[测试识别效果gif点我查看](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) 
       * 此外，坐标和电脑分辨率有关，如果分辨是是1080P，那么qq截图识别的坐标就是刚好一比一的，比我的是4k显示器，是以百分之200显示的，那所有坐标就要乘以2了
 
+3. 第二关：图形验证码
+
+   1. 收费的打码平台，超级鹰或图鉴
+   2. 本地识别，来自[@AntonVanke](https://github.com/AntonVanke)大佬提供的 [JDCaptcha](https://github.com/AntonVanke/JDCaptcha)代码
+
 ## 操作
 
 ### 1. 下载项目
@@ -174,11 +179,11 @@
 </div>
 
 <div align=center>
-<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.gif" width="600" />
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.gif" width="800" />
 </div>
 
 <div align=center>
-<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img4.png" width="600" />
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img4.png" width="800" />
 </div>
 
 # Thanks
