@@ -131,16 +131,14 @@ class JDMemberCloseAccount(object):
             sys.exit(1)
 
         # 打开京东
-        self.browser.get("https://www.jd.com/")
-
+        self.browser.get("https://m.jd.com/")
+        # msShortcutLogin
         # 写入 cookie
-        for cookie in self.config['users']['cookie']:
-            cookie['domain'] = ".jd.com"
-            self.browser.add_cookie(cookie)
+        self.browser.delete_all_cookies()
+        for cookie in self.config['mobile_cookie'].split(";"):
+            self.browser.add_cookie({"name": cookie.split("=")[0], "value": cookie.split("=")[1], "domain": ".jd.com"})
         self.browser.refresh()
 
-        # 验证是否登录成功
-        self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'nickname')))
         self.browser.set_window_size(500, 700)
 
         cache_brand_id, pc_cookie_valid, retried = "", True, 0
