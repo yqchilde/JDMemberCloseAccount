@@ -1,8 +1,6 @@
 """
 京东验证码识别
 ---
-pip3 install numpy, Pillow
----
 JDcaptcha(cpc_img_path, pcp_show_picture_path) 传入图片路径
 JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64) 传入图片base64值
 """
@@ -14,11 +12,11 @@ import base64
 
 # 调整以下几个参数可以有效改变速度与准确度的关系
 # 颜色压缩度
-GRAIN = 20
+GRAIN = 16
 # 区块大小
-BLOCK = 8
+BLOCK = 16
 # 压缩倍数
-ZOOM = 2
+ZOOM = 3
 
 
 def JDcaptcha(cpc_img_path, pcp_show_picture_path):
@@ -27,15 +25,13 @@ def JDcaptcha(cpc_img_path, pcp_show_picture_path):
     :param pcp_show_picture_path: 需要在大图片中找到的物品图片地址
     :return: 是否成功, (x轴, y轴)
     """
-    # Image.open(cpc_img_path).show()
-    # Image.open(pcp_show_picture_path).show()
-
     pcp_show_picture_color = {}
-    # (46, 8, 64, 26) 是 验证码主体目标的范围
+
     pcp_show_picture = Image.open(pcp_show_picture_path).crop(
         (54 - BLOCK / 2, 18 - BLOCK / 2, 54 + BLOCK / 2, 18 + BLOCK / 2))
     # pcp_show_picture.show()
     pcp_show_picture_array = np.array(pcp_show_picture)
+
     # 减色操作
     for x in range(len(pcp_show_picture_array)):
         for y in range(len(pcp_show_picture_array[x])):
@@ -45,12 +41,12 @@ def JDcaptcha(cpc_img_path, pcp_show_picture_path):
             # 记录颜色
             pcp_show_picture_color[str(pcp_show_picture_array[x][y])] = pcp_show_picture_color.get(
                 str(pcp_show_picture_array[x][y]), 0) + 1
-    pcp_show_picture_target = max(pcp_show_picture_color, key=pcp_show_picture_color.get)
-    pcp_show_picture_count = pcp_show_picture_color[max(pcp_show_picture_color, key=pcp_show_picture_color.get)]
+
+    # print(pcp_show_picture_color)
+    pcp_show_picture_color_list = list(pcp_show_picture_color)
 
     # 处理大图片
-    cpc_img_path_max_probability = 0
-    # (0, 275)为图片的 x 轴像素， (0, 170)为图片的 y 轴的像素
+    cpc_img_path_max_probability = {}
     for row in range(0, 275, int(BLOCK / 2)):
         for col in range(0, 170, int(BLOCK / 2)):
             cpc_img = Image.open(cpc_img_path).crop((row, col, row + BLOCK, col + BLOCK))
@@ -67,15 +63,16 @@ def JDcaptcha(cpc_img_path, pcp_show_picture_path):
                     cpc_img_array[x][y] = [(cpc_img_array[x][y][0] // GRAIN) * GRAIN,
                                            (cpc_img_array[x][y][1] // GRAIN) * GRAIN,
                                            (cpc_img_array[x][y][2] // GRAIN) * GRAIN]
-
+                    # print(len(cpc_img_array)*len(cpc_img_array[x]))
                     # 记录颜色
                     cpc_img_color[str(cpc_img_array[x][y])] = cpc_img_color.get(str(cpc_img_array[x][y]), 0) + 1
+            for _ in cpc_img_color:
+                if _ in pcp_show_picture_color_list:
+                    cpc_img_path_max_probability[str([row, col])] = cpc_img_path_max_probability.get(str([row, col]),
+                                                                                                     0) + 1
 
-            if max(cpc_img_color, key=cpc_img_color.get) == pcp_show_picture_target:
-                if cpc_img_color[
-                    max(cpc_img_color, key=cpc_img_color.get)] / pcp_show_picture_count > cpc_img_path_max_probability:
-                    target_x, target_y = row, col
-                # print((max(cpc_img_color, key=cpc_img_color.get), row, col))
+    target_x, target_y = eval(max(cpc_img_path_max_probability, key=cpc_img_path_max_probability.get))[0], \
+                         eval(max(cpc_img_path_max_probability, key=cpc_img_path_max_probability.get))[1]
 
     try:
         if __name__ == '__main__':
@@ -99,11 +96,27 @@ def JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64):
 
 
 if __name__ == '__main__':
-    # 测试图片集就不附上了
-    # 如果需要自行测试的话保存类似：原图：1-1.jpg 目标1-2.jpg
-    for i in range(1, 21):
-        # 普通测试
-        print(JDcaptcha("img/" + str(i) + "-1.jpg", "img/" + str(i) + "-2.jpg"))
-        # 测试 base64
-        print(JDcaptcha_base64(base64.b64encode(open("img/" + str(i) + "-1.jpg", "rb").read()),
-                               base64.b64encode(open("img/" + str(i) + "-2.jpg", "rb").read())))
+    pass
+    # import time
+    #
+    # # 8:16:2  20 28 32 19 20
+    # # 16:16:3 47 54 55
+    # start_time = time.time()
+    #
+    # count = 0
+    # try:
+    #     for i in range(41, 61):
+    #         # 普通测试
+    #         print(JDcaptcha("img/" + str(i) + "-1.jpg", "img/" + str(i) + "-2.jpg"))
+    #
+    #         # 测试 base64
+    #         # print(JDcaptcha_base64(base64.b64encode(open("img/" + str(i) + "-1.jpg", "rb").read()),
+    #         #                        base64.b64encode(open("img/" + str(i) + "-2.jpg", "rb").read())))
+    #         count += 1
+    #
+    #
+    # except:
+    #     pass
+    # finally:
+    #     end_time = time.time()
+    #     print("总时长{},共{}个图片, 平均时长{}每图".format(end_time - start_time, count, (end_time - start_time) / count))
