@@ -107,7 +107,7 @@ class JDMemberCloseAccount(object):
         }
 
         card_list = []
-        resp = requests.request("POST", url, headers=headers, data=payload)
+        resp = requests.request("POST", url, headers=headers, data=payload, verify=False)
         ret = json.loads(resp.text)
         if ret["code"] == "0":
             if ret["message"] == "用户未登录":
@@ -131,6 +131,7 @@ class JDMemberCloseAccount(object):
             sys.exit(1)
 
         # 打开京东
+        self.browser.set_window_size(500, 700)
         self.browser.get("https://m.jd.com/")
         # msShortcutLogin
         # 写入 cookie
@@ -140,8 +141,6 @@ class JDMemberCloseAccount(object):
                 {"name": cookie.split("=")[0], "value": cookie.split("=")[1].strip(";"), "domain": ".jd.com"}
             )
         self.browser.refresh()
-
-        self.browser.set_window_size(500, 700)
 
         cache_brand_id, pc_cookie_valid, retried = "", True, 0
         cnt, member_close_max_number = 0, self.config["member_close_max_number"]
