@@ -75,7 +75,7 @@ def JDcaptcha(cpc_img_path, pcp_show_picture_path):
                          eval(max(cpc_img_path_max_probability, key=cpc_img_path_max_probability.get))[1]
 
     try:
-        if True:
+        if __name__ == '__main__':
             im = Image.open(cpc_img_path)
             draw = ImageDraw.Draw(im)
             draw.rectangle((target_x, target_y, target_x + BLOCK, target_y + BLOCK), outline='red', width=1)
