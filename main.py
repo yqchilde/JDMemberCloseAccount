@@ -226,8 +226,9 @@ class JDMemberCloseAccount(object):
                         else:
                             _range = (self.config["baidu_range"])
                             ocr_delay_time = self.config["ocr_delay_time"]
-                            print("刚发短信，%d秒后识别验证码" % ocr_delay_time)
-                            time.sleep(ocr_delay_time)
+                            first_time_delay_time = self.config["first_time_delay_time"]
+                            print("刚发短信，%d秒后识别验证码" % first_time_delay_time)
+                            time.sleep(first_time_delay_time)
 
                             if self.config["easy_ocr"]:
                                 sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
