@@ -14,12 +14,20 @@ release:
 		go clean
 		rm -rf *.gz
 
-		# Build for mac
+		# Build for mac with amd64
 		@for project in $$(ls cmd); \
 		do \
 			GO111MODULE=on go build "./cmd/$$project"; \
 			upx "./$$project"; \
 			tar czvf $$project-darwin-amd64.tar.gz ./$$project; \
+		done
+
+		# Build for mac with arm
+		@for project in $$(ls cmd); \
+		do \
+			CGO_ENABLED=0 GOOS=darwin GOARCH=arm GO111MODULE=on go build "./cmd/$$project"; \
+			upx "./$$project"; \
+			tar czvf $$project-darwin-arm.tar.gz ./$$project; \
 		done
 
 		# Build for linux with amd64
