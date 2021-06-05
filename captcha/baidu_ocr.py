@@ -1,8 +1,10 @@
 import re
 import time
+import easyocr
 
 from PIL import ImageGrab
 from aip import AipOcr
+from utils.config import get_config
 
 sms_code = ""
 
@@ -13,6 +15,7 @@ class BaiduOCR(object):
     """
 
     def __init__(self, app_id, app_key, secret_key):
+        self.config = get_config()
         self.client = AipOcr(app_id, app_key, secret_key)
 
     @staticmethod
@@ -42,16 +45,13 @@ class BaiduOCR(object):
         ret = self.client.basicGeneral(img)
         # 加这个是为了很多人不知道OCR为啥识别不到，如果介意请注释
         print(ret)
-        if "words_result" in ret:
-            if len(ret["words_result"]) == 0:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                time.sleep(delay_time)
-                return self.baidu_ocr(_range, delay_time)
-
-            code, length = "", len(ret["words_result"])
-
-            for idx, words in enumerate(ret["words_result"]):
-                find_all = re.findall(r'[\d]{6}', words["words"])
+        if "words_result" in ret or self.config["easy_ocr"]:
+            if self.config["easy_ocr"]:
+                reader = easyocr.Reader(['ch_sim','en'])
+                result = reader.readtext('ios_code_pic.png')
+                find_all = re.findall(r"'[\d]{6}'", str(result))
+                print(f"easy-ocr:{len(find_all)}\n"
+                      f"{str(result)}")
                 if len(find_all) == 1:
                     code = find_all[0]
                     if sms_code == code:
@@ -63,16 +63,20 @@ class BaiduOCR(object):
 
                     return code
                 else:
-                    find_all = re.findall(r'([\d]{6})[\u3002]', words["words"])
-                    if len(find_all) == 0:
-                        if idx == length - 1:
-                            print("暂未获取到最新验证码，%d秒后重试" % delay_time)
-                            time.sleep(delay_time)
-                            return self.baidu_ocr(_range, delay_time)
-                        else:
-                            continue
-                    elif len(find_all) >= 1:
-                        print(find_all)
+                    print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                    time.sleep(delay_time)
+                    return self.baidu_ocr(_range, delay_time)
+            else:
+                if len(ret["words_result"]) == 0:
+                    print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                    time.sleep(delay_time)
+                    return self.baidu_ocr(_range, delay_time)
+
+                code, length = "", len(ret["words_result"])
+
+                for idx, words in enumerate(ret["words_result"]):
+                    find_all = re.findall(r'[\d]{6}', words["words"])
+                    if len(find_all) == 1:
                         code = find_all[0]
                         if sms_code == code:
                             print("暂未获取到最新验证码，%d秒后重试" % delay_time)
@@ -81,7 +85,27 @@ class BaiduOCR(object):
                         else:
                             sms_code = code
 
-                    return code
+                        return code
+                    else:
+                        find_all = re.findall(r'([\d]{6})[\u3002]', words["words"])
+                        if len(find_all) == 0:
+                            if idx == length - 1:
+                                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                                time.sleep(delay_time)
+                                return self.baidu_ocr(_range, delay_time)
+                            else:
+                                continue
+                        elif len(find_all) >= 1:
+                            print(find_all)
+                            code = find_all[0]
+                            if sms_code == code:
+                                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                                time.sleep(delay_time)
+                                return self.baidu_ocr(_range, delay_time)
+                            else:
+                                sms_code = code
+
+                        return code
         else:
             print("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
