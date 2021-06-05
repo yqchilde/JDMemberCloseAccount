@@ -21,6 +21,7 @@
 1. 有一定的电脑知识 or 有耐心爱折腾
 2. chrome驱动(只在chrome测试了，故只留了chrome)
 3. 操作系统(只在mac上测试了，非M1)
+4. 使用`python3.x`版本执行
 
 ## 思路
 
@@ -161,13 +162,21 @@
    * 小米手机：权限-允许读取短信 & 允许读取通知类短信
 
    * 华为手机：短信-右上角三个点-设置-验证码安全保护关闭
+    
+2. 百度OCR报错 `{'error_code': 18, 'error_msg': 'Open api qps request limit reached'}`
+
+   * 答案在这里 https://github.com/yqchilde/JDMemberCloseAccount/issues/48 
 
 ## 测试
 
 1. websocket转发验证码
 
-   1. 电脑运行`python3 test_main` 和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
+   1. 电脑运行`python3 test_main.py` 和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
    2. 手机访问 `http://你的IP:5201/publish?smsCode=1234522`，之后查看电脑上`jd_wstool` 和 `test_main.py` 的控制台输出信息
+    
+2. 百度OCR
+
+   1. 手动补齐 `captcha/baidu_ocr.py`的`main`方法下面的数据，运行`python3 ./captcha/baidu_ocr.py`测试
 
 ## ScreenShots
 
