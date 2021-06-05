@@ -39,6 +39,7 @@ def get_browser(_config):
             elif sys.platform == 'win32':
                 _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
                                             options=chrome_options)
+            _browser.set_window_size(500, 700)
         elif browser_type == 'Edge':
             from msedge.selenium_tools import Edge, EdgeOptions
             edge_options = EdgeOptions()
@@ -60,6 +61,7 @@ def get_browser(_config):
             elif sys.platform == 'win32':
                 _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), capabilities={},
                                 options=edge_options)
+            _browser.set_window_size(500, 700)
         elif browser_type == 'Firefox':
             # 先清除上次的日志
             if not os.path.exists(get_file("./logs")):
@@ -80,6 +82,7 @@ def get_browser(_config):
                 _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
             elif sys.platform == 'win32':
                 _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
+            _browser.set_window_size(500, 700)
         else:
             raise WebDriverException
         return _browser

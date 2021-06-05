@@ -10,6 +10,7 @@ from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
 from captcha.baidu_ocr import BaiduOCR
+from captcha.easy_ocr import EasyOCR
 from utils.config import get_config
 from utils.selenium_browser import get_browser
 from selenium.webdriver import ActionChains
@@ -46,6 +47,7 @@ class JDMemberCloseAccount(object):
         self.tj = TuJian(self.config["tj_username"], self.config["tj_password"])
         self.baidu_ocr = BaiduOCR(self.config["baidu_app_id"], self.config["baidu_api_key"],
                                   self.config["baidu_secret_key"])
+        self.easy_ocr = EasyOCR()
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -131,7 +133,6 @@ class JDMemberCloseAccount(object):
             sys.exit(1)
 
         # 打开京东
-        self.browser.set_window_size(500, 700)
         self.browser.get("https://m.jd.com/")
         # msShortcutLogin
         # 写入 cookie
@@ -142,7 +143,7 @@ class JDMemberCloseAccount(object):
             )
         self.browser.refresh()
 
-        cache_brand_id, pc_cookie_valid, retried = "", True, 0
+        cache_brand_id, cookie_valid, retried = "", True, 0
         cnt, member_close_max_number = 0, self.config["member_close_max_number"]
 
         while True:
@@ -196,10 +197,10 @@ class JDMemberCloseAccount(object):
                         ))
                         print("当前店铺退会链接已失效，即将跳过，当前店铺链接为：")
                         print("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
-                        pc_cookie_valid = False
+                        cookie_valid = False
                         continue
                     except Exception as _:
-                        pc_cookie_valid = True
+                        cookie_valid = True
                         pass
 
                     # 检查手机尾号是否正确
@@ -224,8 +225,14 @@ class JDMemberCloseAccount(object):
                             sys.exit(1)
                         else:
                             _range = (self.config["baidu_range"])
-                            ocr_delay_time = self.config["baidu_delay_time"]
-                            sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                            ocr_delay_time = self.config["ocr_delay_time"]
+                            print("刚发短信，%d秒后识别验证码" % ocr_delay_time)
+                            time.sleep(ocr_delay_time)
+
+                            if self.config["easy_ocr"]:
+                                sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
+                            else:
+                                sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
                     else:
                         try:
                             recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
@@ -369,8 +376,8 @@ class JDMemberCloseAccount(object):
                 except Exception as e:
                     print("发生了一点小问题：", e.args)
 
-            if not pc_cookie_valid:
-                print("本轮全部店铺都失效，有可能是电脑端cookie失效导致，请重新添加")
+            if not cookie_valid:
+                print("本轮全部店铺都失效，有可能是cookie失效导致，请重新添加手机端cookie")
                 sys.exit(1)
             else:
                 print("本轮店铺已执行完，即将开始获取下一轮店铺")
