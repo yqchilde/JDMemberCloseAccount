@@ -10,6 +10,7 @@ from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
 from captcha.baidu_ocr import BaiduOCR
+from captcha.easy_ocr import EasyOCR
 from utils.config import get_config
 from utils.selenium_browser import get_browser
 from selenium.webdriver import ActionChains
@@ -46,6 +47,7 @@ class JDMemberCloseAccount(object):
         self.tj = TuJian(self.config["tj_username"], self.config["tj_password"])
         self.baidu_ocr = BaiduOCR(self.config["baidu_app_id"], self.config["baidu_api_key"],
                                   self.config["baidu_secret_key"])
+        self.easy_ocr = EasyOCR()
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -223,11 +225,14 @@ class JDMemberCloseAccount(object):
                             sys.exit(1)
                         else:
                             _range = (self.config["baidu_range"])
-                            ocr_delay_time = self.config["baidu_delay_time"]
-                            first_time_delay_time = self.config["first_time_delay_time"]
-                            print("刚发短信，%d秒后识别验证码" % first_time_delay_time)
-                            time.sleep(first_time_delay_time)
-                            sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                            ocr_delay_time = self.config["ocr_delay_time"]
+                            print("刚发短信，%d秒后识别验证码" % ocr_delay_time)
+                            time.sleep(ocr_delay_time)
+
+                            if self.config["easy_ocr"]:
+                                sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
+                            else:
+                                sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
                     else:
                         try:
                             recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
