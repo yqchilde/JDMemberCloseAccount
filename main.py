@@ -9,8 +9,6 @@ from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
-from captcha.baidu_ocr import BaiduOCR
-from captcha.easy_ocr import EasyOCR
 from utils.config import get_config
 from utils.selenium_browser import get_browser
 from selenium.webdriver import ActionChains
@@ -45,9 +43,17 @@ class JDMemberCloseAccount(object):
         self.cjy_kind = self.config["cjy_kind"]
         self.cjy = ChaoJiYing(self.config["cjy_username"], self.config["cjy_password"], self.config["cjy_soft_id"])
         self.tj = TuJian(self.config["tj_username"], self.config["tj_password"])
-        self.baidu_ocr = BaiduOCR(self.config["baidu_app_id"], self.config["baidu_api_key"],
-                                  self.config["baidu_secret_key"])
-        self.easy_ocr = EasyOCR()
+
+        if self.config["device"] == "ios":
+            from captcha.baidu_ocr import BaiduOCR
+            self.baidu_ocr = BaiduOCR(
+                self.config["baidu_app_id"],
+                self.config["baidu_api_key"],
+                self.config["baidu_secret_key"]
+            )
+        if self.config["easy_ocr"]:
+            from captcha.easy_ocr import EasyOCR
+            self.easy_ocr = EasyOCR()
 
     def get_code_pic(self, name='code_pic.png'):
         """
