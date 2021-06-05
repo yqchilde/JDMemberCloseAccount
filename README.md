@@ -38,10 +38,18 @@
       * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
 
    2. ios端：
-      * 首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg) 提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好能暴露出完整短信区域)，再利用[百度ocr](https://cloud.baidu.com/product/ocr_general?track=navigation0904) 识别，识别到后获取结果并输入，百度ocr一个账号一天免费500次调用
+
+      百度ocr
+
+      * 首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg) 提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好能暴露出完整短信区域)，再利用[百度ocr](https://cloud.baidu.com/product/ocr_general?track=navigation0904) 识别，识别到后获取结果并输入，百度ocr一个账号一天免费500次调用(调整之后的额度非常少，新用户注意，调整详情参考[这里](https://ai.baidu.com/support/news?action=detail&id=2390)。所以有了easyocr)
       * **注意：**百度OCR只是处理识别短信验证码并填入，不要误解为图形验证码也可以解决
       * 如果定位不准，看一下项目目录生成的`ios_code_pic.png`图片位置在当前屏幕的哪个位置，[测试识别效果gif点我查看](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) 
       * 此外，坐标和电脑分辨率有关，如果分辨是是1080P，那么qq截图识别的坐标就是刚好一比一的，比我的是4k显示器，是以百分之200显示的，那所有坐标就要乘以2了
+
+      easyocr
+
+      * 和上面百度ocr配置一样即可，新增`easy_ocr`的配置项，开启为`true`关闭为`false`
+      * 使用时注意框选识别的范围只显示6位数字验证码（毕竟免费开源，识别条件有点苛刻）
 
 3. 第二关：图形验证码
 
@@ -99,7 +107,8 @@
     "phone_tail_number": "",
     "member_close_max_number": 0,
     "mobile_cookie": "",
-    "users": {}
+    "users": {},
+    "easy_ocr": true
 }
 ```
 
@@ -130,6 +139,7 @@
   * `member_close_max_number`: 设置本次运行注销的最大店铺数，默认为0，代表不限制
   * `mobile_cookie`: 手机端cookie，是pt_key开头的那个
   * `users`: 现在没有用了
+  *  easy_ocr : 是否开启easyocr（由于百度ocr新用户额度很少，故添加）
 
 ### 3. 添加`cookie`
 
