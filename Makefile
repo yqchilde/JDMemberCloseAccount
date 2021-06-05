@@ -22,12 +22,12 @@ release:
 			tar czvf $$project-darwin-amd64.tar.gz ./$$project; \
 		done
 
-		# Build for mac with arm
+		# Build for mac with arm64
 		@for project in $$(ls cmd); \
 		do \
-			CGO_ENABLED=0 GOOS=darwin GOARCH=arm GO111MODULE=on go build "./cmd/$$project"; \
+			CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 GO111MODULE=on go build "./cmd/$$project"; \
 			upx "./$$project"; \
-			tar czvf $$project-darwin-arm.tar.gz ./$$project; \
+			tar czvf $$project-darwin-arm64.tar.gz ./$$project; \
 		done
 
 		# Build for linux with amd64
