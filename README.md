@@ -43,7 +43,7 @@
        百度ocr
 
         * 首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg)
-          提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好能暴露出完整短信区域)
+          提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好截取那一整条短信的坐标，当然截取范围越小，识别越快)
           ，再利用[百度ocr](https://cloud.baidu.com/product/ocr_general?track=navigation0904)
           识别，识别到后获取结果并输入，百度ocr一个账号一天免费500次调用(
           调整之后的额度非常少，新用户注意，调整详情参考[这里](https://ai.baidu.com/support/news?action=detail&id=2390)。所以有了easyocr)
@@ -55,7 +55,7 @@
        easyocr
 
         * 和上面百度ocr配置一样即可，新增`easy_ocr`的配置项，开启为`true`关闭为`false`
-        * 使用时注意框选识别的范围只显示6位数字验证码（毕竟免费开源，识别条件有点苛刻）
+        * 使用时注意框选识别的范围只显示6位数字验证码(现支持一整条完整短信的区域，当然范围越大识别速度也会相应增加，区域扩大是为了优化某些用户短信验证码6位数字每次位置不一致问题)（毕竟免费开源，识别条件有点苛刻）
 
 3. 第二关：图形验证码
 
@@ -202,6 +202,10 @@
 2. 百度OCR
 
     1. 手动补齐 `captcha/baidu_ocr.py`的`main`方法下面的数据，运行`python3 ./captcha/baidu_ocr.py`测试
+    
+3. Easy OCR
+
+    1. 手动补齐 `captcha/easy_ocr.py`的`main`方法下面的数据，运行`python3 ./captcha/easy_ocr.py`测试
 
 ## ScreenShots
 

@@ -3,8 +3,6 @@ import time
 
 import easyocr
 
-from captcha.baidu_ocr import BaiduOCR
-
 sms_code = ""
 
 
@@ -28,7 +26,13 @@ class EasyOCR(object):
 
         reader = easyocr.Reader(['ch_sim', 'en'])
         result = reader.readtext('ios_code_pic.png')
+
         find_all = re.findall(r'\'[\d]{6}\'', str(result))
+        if len(find_all) != 1:
+            find_all = re.findall(r'([\d]{6})[\u3002]', str(result))
+        if len(find_all) != 1:
+            find_all = re.findall(r'(您的验证码为[\d]{6})', str(result))
+
         print(f"easy-ocr:{len(find_all)}\n"
               f"{str(result)}")
 
@@ -50,6 +54,10 @@ class EasyOCR(object):
 
 
 if __name__ == '__main__':
-    _range = (3460, 590, 3658, 638)
+    from baidu_ocr import BaiduOCR
+
+    _range = (1441, 659, 1896, 754)
     sms_code = EasyOCR().easy_ocr(_range, 4)
     print("Easy OCR识别到的验证码是：", sms_code)
+else:
+    from captcha.baidu_ocr import BaiduOCR
