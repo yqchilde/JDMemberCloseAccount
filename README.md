@@ -185,7 +185,7 @@ image_captcha:
 
 - 使用`add_cookie.py`可以获取手机端`Cookie`
 
-* 在 `config.json` 中写入 `mobile_cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
+* 在 `config.yaml` 中写入 `cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
 
 ### 4. 启动 `jd_wstool` 工具（使用OCR的不用开）
 
