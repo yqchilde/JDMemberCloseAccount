@@ -1,3 +1,4 @@
+import sys
 import re
 import time
 
@@ -13,6 +14,9 @@ class BaiduOCR(object):
     """
 
     def __init__(self, app_id, app_key, secret_key):
+        if app_id == "" or app_key == "" or secret_key == "":
+            print("请在config.yaml中配置baidu ocr相关配置")
+            sys.exit(1)
         self.client = AipOcr(app_id, app_key, secret_key)
 
     @staticmethod

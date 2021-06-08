@@ -1,3 +1,4 @@
+import sys
 import base64
 import json
 import requests
@@ -25,7 +26,8 @@ class TuJian(object):
         if ret['success']:
             return ret["data"]
         else:
-            return ret["message"]
+            print(ret["message"])
+            sys.exit(1)
 
     @staticmethod
     def report_error(pid):

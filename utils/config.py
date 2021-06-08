@@ -1,6 +1,6 @@
 import os
 import sys
-import json
+import yaml
 
 
 def get_file(file_name=""):
@@ -17,4 +17,4 @@ def get_config():
     获取配置
     :return:
     """
-    return json.load(open(get_file("config.json"), 'r', encoding='utf-8'))
+    return yaml.safe_load(open(get_file("config.yaml"), 'r', encoding='utf-8'))

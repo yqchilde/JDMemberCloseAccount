@@ -1,6 +1,6 @@
-import json
+import re
 
-from utils.config import get_config, get_file
+from utils.config import get_config
 from utils.selenium_browser import get_browser
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -11,9 +11,7 @@ if __name__ == '__main__':
     """
     用于获取手机端cookie
     """
-    config = get_config()
-    config['headless'] = False
-    browser = get_browser(config)
+    browser = get_browser(get_config()["selenium"])
     browser.get("https://plogin.m.jd.com/login/login")
     try:
         wait = WebDriverWait(browser, 135)
@@ -25,10 +23,23 @@ if __name__ == '__main__':
         for _ in browser.get_cookies():
             if _["name"] == "pt_key" or _["name"] == "pt_pin":
                 cookie += _["name"] + "=" + _["value"] + ";"
-        config['mobile_cookie'] = cookie[0:-1]
         print("获取的cookie是：" + cookie)
-        with open(get_file("./config.json"), mode='w', encoding="utf-8") as f:
-            json.dump(config, f, indent=4, ensure_ascii=False)
+
+        new_lines = []
+        rf = open("config.yaml", 'r')
+        line = rf.readline()
+        while line:
+            if "cookie:" in line:
+                lineReg = re.compile(r'cookie: \"(.*?)\"')
+                line = lineReg.sub('cookie: \"%s\"' % cookie, line)
+            new_lines.append(line)
+            line = rf.readline()
+        rf.close()
+        wf = open("config.yaml", 'w')
+        for line in new_lines:
+            wf.write(line)
+        wf.close()
+
         print("成功添加", username)
     except WebDriverException:
         print("添加失败")

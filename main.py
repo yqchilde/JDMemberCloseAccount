@@ -3,6 +3,7 @@ import time
 import json
 import asyncio
 import requests
+import urllib3
 
 from PIL import Image
 from websockets import connect
@@ -23,7 +24,7 @@ async def ws_conn(ws_conn_url):
     """
     async with connect(ws_conn_url) as websocket:
         try:
-            recv = await asyncio.wait_for(websocket.recv(), get_config()["ws_timeout"])
+            recv = await asyncio.wait_for(websocket.recv(), get_config()["sms_captcha"]["ws_timeout"])
             return recv
         except asyncio.TimeoutError:
             return ""
@@ -37,23 +38,51 @@ class JDMemberCloseAccount(object):
     """
 
     def __init__(self):
+        # 初始化基础配置
         self.config = get_config()
-        self.browser = get_browser(self.config)
-        self.wait = WebDriverWait(self.browser, self.config["selenium_timeout"])
-        self.cjy_kind = self.config["cjy_kind"]
-        self.cjy = ChaoJiYing(self.config["cjy_username"], self.config["cjy_password"], self.config["cjy_soft_id"])
-        self.tj = TuJian(self.config["tj_username"], self.config["tj_password"])
+        self.selenium_cfg = get_config()["selenium"]
+        self.shop_cfg = get_config()["shop"]
+        self.sms_captcha_cfg = get_config()["sms_captcha"]
+        self.image_captcha_cfg = get_config()["image_captcha"]
+        self.ocr_cfg = self.sms_captcha_cfg["ocr"]
 
-        if self.config["device"] == "ios":
-            from captcha.baidu_ocr import BaiduOCR
-            self.baidu_ocr = BaiduOCR(
-                self.config["baidu_app_id"],
-                self.config["baidu_api_key"],
-                self.config["baidu_secret_key"]
+        # 初始化selenium配置
+        self.browser = get_browser(self.selenium_cfg)
+        self.wait = WebDriverWait(self.browser, self.selenium_cfg["selenium_timeout"])
+
+        # 初始化短信验证码配置
+        if self.sms_captcha_cfg["is_ocr"]:
+            if self.ocr_cfg["type"] == "":
+                print("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
+                sys.exit(1)
+            if self.ocr_cfg["type"] == "baidu":
+                from captcha.baidu_ocr import BaiduOCR
+                self.baidu_ocr = BaiduOCR(
+                    self.ocr_cfg["baidu_app_id"],
+                    self.ocr_cfg["baidu_api_key"],
+                    self.ocr_cfg["baidu_secret_key"]
+                )
+            elif self.ocr_cfg["type"] == "aliyun":
+                from captcha.aliyun_ocr import AliYunOCR
+                self.aliyun_ocr = AliYunOCR(
+                    self.ocr_cfg["aliyun_appcode"]
+                )
+            elif self.ocr_cfg["type"] == "easyocr":
+                from captcha.easy_ocr import EasyOCR
+                self.easy_ocr = EasyOCR()
+
+        # 初始化图形验证码配置
+        if self.image_captcha_cfg["type"] == "cjy":
+            self.cjy = ChaoJiYing(
+                self.image_captcha_cfg["cjy_username"],
+                self.image_captcha_cfg["cjy_password"],
+                self.image_captcha_cfg["cjy_soft_id"]
             )
-        if self.config["easy_ocr"]:
-            from captcha.easy_ocr import EasyOCR
-            self.easy_ocr = EasyOCR()
+        elif self.image_captcha_cfg["type"] == "tj":
+            self.tj = TuJian(
+                self.image_captcha_cfg["tj_username"],
+                self.image_captcha_cfg["tj_password"]
+            )
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -105,7 +134,7 @@ class JDMemberCloseAccount(object):
         payload = "body=%7B%22v%22%3A%224.1%22%2C%22version%22%3A1580659200%7D&"
         headers = {
             'Host': 'api.m.jd.com',
-            'cookie': self.config["mobile_cookie"],
+            'cookie': self.config["cookie"],
             'charset': 'UTF-8',
             'accept-encoding': 'br,gzip,deflate',
             'user-agent': 'okhttp/3.12.1;jdmall;android;version/9.5.2;build/87971;screen/1080x2266;os/11;network/wifi;',
@@ -115,6 +144,7 @@ class JDMemberCloseAccount(object):
         }
 
         card_list = []
+        urllib3.disable_warnings()
         resp = requests.request("POST", url, headers=headers, data=payload, verify=False)
         ret = json.loads(resp.text)
         if ret["code"] == "0":
@@ -133,24 +163,19 @@ class JDMemberCloseAccount(object):
         return card_list
 
     def main(self):
-        # 打码平台只能启用一个
-        if self.config["cjy_validation"] and self.config["tj_validation"]:
-            print("打码平台只能选择一个使用，不可两个都开启")
-            sys.exit(1)
-
         # 打开京东
         self.browser.get("https://m.jd.com/")
-        # msShortcutLogin
+
         # 写入 cookie
         self.browser.delete_all_cookies()
-        for cookie in self.config['mobile_cookie'].split(";", 1):
+        for cookie in self.config['cookie'].split(";", 1):
             self.browser.add_cookie(
                 {"name": cookie.split("=")[0], "value": cookie.split("=")[1].strip(";"), "domain": ".jd.com"}
             )
         self.browser.refresh()
 
         cache_brand_id, cookie_valid, retried = "", True, 0
-        cnt, member_close_max_number = 0, self.config["member_close_max_number"]
+        cnt, member_close_max_number = 0, self.shop_cfg["member_close_max_number"]
 
         while True:
             # 获取店铺列表
@@ -174,8 +199,8 @@ class JDMemberCloseAccount(object):
 
             # 加载需要跳过的店铺
             shops = []
-            if self.config['skip_shops'] != "":
-                shops = self.config['skip_shops'].split(",")
+            if self.shop_cfg['skip_shops'] != "":
+                shops = self.shop_cfg['skip_shops'].split(",")
 
             print("本次运行获取到", len(card_list), "家店铺会员信息")
             for card in card_list:
@@ -192,7 +217,8 @@ class JDMemberCloseAccount(object):
                 try:
                     # 打开注销页面
                     self.browser.get(
-                        "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                        "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"]
+                    )
                     print("开始注销店铺", card["brandName"])
 
                     # 检查当前店铺退会链接是否失效
@@ -210,10 +236,10 @@ class JDMemberCloseAccount(object):
                         pass
 
                     # 检查手机尾号是否正确
-                    if self.config['phone_tail_number'] != "":
+                    if self.shop_cfg['phone_tail_number'] != "":
                         if self.wait.until(EC.presence_of_element_located(
                                 (By.XPATH, "//div[@class='cm-ec']")
-                        )).text[-4:] != self.config['phone_tail_number']:
+                        )).text[-4:] != self.shop_cfg['phone_tail_number']:
                             print("当前店铺手机尾号不是规定的尾号，已跳过")
                             continue
 
@@ -223,22 +249,25 @@ class JDMemberCloseAccount(object):
                     ), "发送短信验证码超时 " + card["brandName"]).click()
 
                     # 要连接的websocket地址
-                    sms_code, ws_conn_url = "", self.config["ws_conn_url"]
-                    # 如果是IOS设备，去ocr识别投屏验证码
-                    if self.config["device"] == "ios":
-                        if self.config["baidu_range"] == "":
-                            print("请在config.json中配置需要截取的手机短信验证码区域坐标")
+                    sms_code, ws_conn_url = "", self.sms_captcha_cfg["ws_conn_url"]
+
+                    # ocr识别投屏验证码
+                    if self.sms_captcha_cfg["is_ocr"]:
+                        if len(self.ocr_cfg["ocr_range"]) == 0:
+                            print("请在config.yaml中配置需要截取的手机短信验证码区域坐标")
                             sys.exit(1)
                         else:
-                            _range = (self.config["baidu_range"])
-                            ocr_delay_time = self.config["ocr_delay_time"]
+                            _range = (self.ocr_cfg["ocr_range"])
+                            ocr_delay_time = self.ocr_cfg["ocr_delay_time"]
                             print("刚发短信，%d秒后识别验证码" % ocr_delay_time)
                             time.sleep(ocr_delay_time)
 
-                            if self.config["easy_ocr"]:
-                                sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
-                            else:
+                            if self.ocr_cfg["type"] == "baidu":
                                 sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                            elif self.ocr_cfg["type"] == "aliyun":
+                                sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
+                            elif self.ocr_cfg["type"] == "easyocr":
+                                sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
                     else:
                         try:
                             recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
@@ -248,7 +277,7 @@ class JDMemberCloseAccount(object):
                             else:
                                 sms_code = json.loads(recv)["sms_code"]
                         except Exception as e:
-                            print("请先启动 jd_wstool 监听退会短信验证码\n", e.args)
+                            print("请先启动 jd_wstool 工具监听退会短信验证码\n", e.args)
                             sys.exit(1)
 
                     # 输入短信验证码
@@ -262,71 +291,63 @@ class JDMemberCloseAccount(object):
                         (By.XPATH, "//div[text()='注销会员']")
                     ), "点击注销按钮超时 " + card["brandName"]).click()
 
-                    # 识别并点击封装一下
+                    # 利用打码平台识别图形验证码并模拟点击
                     def auto_identify_captcha_click():
-                        # 使用超级鹰验证 或 图鉴验证
-                        t = True
-                        if self.config["cjy_validation"] or self.config["tj_validation"] or t:
-                            # 分割图形验证码
-                            code_img = self.get_code_pic()
-                            im = open('code_pic.png', 'rb').read()
+                        # 分割图形验证码
+                        code_img = self.get_code_pic()
+                        img = open('code_pic.png', 'rb').read()
 
+                        pic_str, pic_id = "", ""
+                        if self.image_captcha_cfg["type"] == "cjy":
                             # 调用超级鹰API接口识别点触验证码
-                            pic_str, pic_id = "", ""
-                            if self.config["cjy_validation"]:
-                                print("开始调用超级鹰识别验证码")
-                                resp = self.cjy.post_pic(im, self.cjy_kind)
-                                if "pic_str" in resp and resp["pic_str"] == "":
-                                    print("超级鹰验证失败，原因为：", resp["err_str"])
-                                else:
-                                    pic_str = resp["pic_str"]
-                                    pic_id = resp["pic_id"]
-
+                            print("开始调用超级鹰识别验证码")
+                            resp = self.cjy.post_pic(img, self.image_captcha_cfg["cjy_kind"])
+                            if "pic_str" in resp and resp["pic_str"] == "":
+                                print("超级鹰验证失败，原因为：", resp["err_str"])
+                            else:
+                                pic_str = resp["pic_str"]
+                                pic_id = resp["pic_id"]
+                        elif self.image_captcha_cfg["type"] == "tj":
                             # 调用图鉴API接口识别点触验证码
-                            if self.config["tj_validation"]:
-                                print("开始调用图鉴识别验证码")
-                                resp = self.tj.post_pic(im, self.config["tj_type_id"])
-                                if resp == "NoBalanceException: 余额不足":
-                                    print("图鉴打码平台余额不足，请去充值！")
-                                    sys.exit(0)
-                                pic_str = resp["result"]
-                                pic_id = resp["id"]
+                            print("开始调用图鉴识别验证码")
+                            resp = self.tj.post_pic(img, self.image_captcha_cfg["tj_type_id"])
+                            pic_str = resp["result"]
+                            pic_id = resp["id"]
 
-                            # 调用图鉴API接口识别点触验证码
-                            all_list = []  # 存储被点击的坐标
-                            xy_list = []
-                            x = int(pic_str.split(',')[0])
-                            xy_list.append(x)
-                            y = int(pic_str.split(',')[1])
-                            xy_list.append(y)
-                            all_list.append(xy_list)
-                            print(all_list)
+                        # 处理要点击的坐标
+                        all_list = []
+                        xy_list = []
+                        x = int(pic_str.split(',')[0])
+                        xy_list.append(x)
+                        y = int(pic_str.split(',')[1])
+                        xy_list.append(y)
+                        all_list.append(xy_list)
 
-                            # 循环遍历点击图片
-                            for i in all_list:
-                                x = i[0]
-                                y = i[1]
-                                ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
-                                time.sleep(1)
+                        # 循环遍历点击图片
+                        for i in all_list:
+                            x = i[0]
+                            y = i[1]
+                            ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
+                            time.sleep(1)
 
-                            # 图形验证码坐标点击错误尝试重试
-                            # noinspection PyBroadException
-                            try:
-                                WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
-                                    (By.XPATH, "//p[text()='验证失败，请重新验证']")
-                                ))
-                                print("验证码坐标识别出错，将上报平台处理")
+                        # 图形验证码坐标点击错误尝试重试
+                        # noinspection PyBroadException
+                        try:
+                            WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
+                                (By.XPATH, "//p[text()='验证失败，请重新验证']")
+                            ))
+                            print("验证码坐标识别出错，将上报平台处理")
 
-                                # 上报错误的图片到平台
-                                if self.config["cjy_validation"]:
-                                    self.cjy.report_error(pic_id)
-                                if self.config["tj_validation"]:
-                                    self.tj.report_error(pic_id)
+                            # 上报错误的图片到平台
+                            if self.image_captcha_cfg["type"] == "cjy":
+                                self.cjy.report_error(pic_id)
+                            elif self.image_captcha_cfg["type"] == "tj":
+                                self.tj.report_error(pic_id)
+                            return False
+                        except Exception as _:
+                            return True
 
-                                return False
-                            except Exception as _:
-                                return True
-
+                    # 本地识别图形验证码并模拟点击
                     def local_auto_identify_captcha_click():
                         for _ in range(4):
                             time.sleep(1)
@@ -362,14 +383,14 @@ class JDMemberCloseAccount(object):
                         return False
 
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
-                    if self.config['cjy_validation'] or self.config['tj_validation']:
-                        if not auto_identify_captcha_click():
-                            print("验证码位置点击错误，尝试再试一次")
-                            auto_identify_captcha_click()
-                    else:
+                    if self.image_captcha_cfg["type"] == "local":
                         if not local_auto_identify_captcha_click():
                             print("验证码位置点击错误，尝试再试一次")
                             local_auto_identify_captcha_click()
+                    else:
+                        if not auto_identify_captcha_click():
+                            print("验证码位置点击错误，尝试再试一次")
+                            auto_identify_captcha_click()
 
                     # 解绑成功页面
                     self.wait.until(EC.presence_of_element_located(
