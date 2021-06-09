@@ -26,7 +26,7 @@ if __name__ == '__main__':
         print("获取的cookie是：" + cookie)
 
         new_lines = []
-        rf = open("config.yaml", 'r')
+        rf = open("config.yaml", 'r', encoding='utf-8')
         line = rf.readline()
         while line:
             if "cookie:" in line:
@@ -35,7 +35,7 @@ if __name__ == '__main__':
             new_lines.append(line)
             line = rf.readline()
         rf.close()
-        wf = open("config.yaml", 'w')
+        wf = open("config.yaml", 'w', encoding='utf-8')
         for line in new_lines:
             wf.write(line)
         wf.close()

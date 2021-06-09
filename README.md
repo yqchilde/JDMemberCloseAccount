@@ -246,7 +246,7 @@ image_captcha:
 </div>
 
 <div align=center>
-<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.gif" width="800" />
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.png" width="600" />
 </div>
 
 <div align=center>
