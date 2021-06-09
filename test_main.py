@@ -14,7 +14,7 @@ def test_websocket():
     print("开始测试websocket监听验证码转发")
     while True:
         try:
-            recv = asyncio.get_event_loop().run_until_complete(ws_conn(get_config()["ws_conn_url"]))
+            recv = asyncio.get_event_loop().run_until_complete(ws_conn(get_config()["sms_captcha"]["ws_conn_url"]))
             if recv != "":
                 sms_code = json.loads(recv)["sms_code"]
                 print("发送测试验证码", sms_code)
