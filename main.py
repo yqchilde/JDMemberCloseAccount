@@ -403,6 +403,10 @@ class JDMemberCloseAccount(object):
                 except Exception as e:
                     print("发生了一点小问题：", e.args)
 
+                    if self.config["debug"]:
+                        import traceback
+                        traceback.print_exc()
+
             if not cookie_valid:
                 print("本轮全部店铺都失效，有可能是cookie失效导致，请重新添加手机端cookie")
                 sys.exit(1)

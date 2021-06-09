@@ -1,5 +1,6 @@
 # 手机端cookie，是pt_key=xxx;pt_pin=xxx;
 cookie: ""
+debug: false
 
 # selenium 相关
 # selenium.browserType: 浏览器类型
