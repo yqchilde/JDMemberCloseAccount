@@ -1,3 +1,4 @@
+import os
 import sys
 import base64
 import json
@@ -6,6 +7,7 @@ import time
 import requests
 
 sms_code = ""
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 class AliYunOCR(object):
@@ -14,9 +16,12 @@ class AliYunOCR(object):
     """
 
     def __init__(self, appcode):
+        from utils.logger import Log
+        self.logger = Log().logger
+
         self.api_url = "https://ocrapi-advanced.taobao.com/ocrservice/advanced"
         if appcode == "":
-            print("请在config.yaml中配置aliyun_appcode")
+            self.logger.warning("请在config.yaml中配置aliyun_appcode")
             sys.exit(1)
         self.appcode = appcode
 
@@ -31,10 +36,10 @@ class AliYunOCR(object):
 
         resp = requests.request("POST", url=self.api_url, headers=headers, data=json.dumps(payload))
         if resp.status_code != 200:
-            print(resp)
+            self.logger.warning(resp)
         else:
             ocr_ret = json.loads(resp.text)["content"].strip(" ")
-            print("阿里云OCR识别结果：", ocr_ret)
+            self.logger.info("阿里云OCR识别结果：", ocr_ret)
             return ocr_ret
 
     def aliyun_ocr(self, _range, delay_time=5):
@@ -61,7 +66,7 @@ class AliYunOCR(object):
             if len(find_all) == 1:
                 code = find_all[0].strip("'")
                 if sms_code == code:
-                    print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                    self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
                     time.sleep(delay_time)
                     return self.aliyun_ocr(_range, delay_time)
                 else:
@@ -69,11 +74,11 @@ class AliYunOCR(object):
 
                 return code
             else:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
                 time.sleep(delay_time)
                 return self.aliyun_ocr(_range, delay_time)
         else:
-            print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+            self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
             return self.aliyun_ocr(_range, delay_time)
 

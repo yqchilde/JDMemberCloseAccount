@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 import time
@@ -6,6 +7,7 @@ from PIL import ImageGrab
 from aip import AipOcr
 
 sms_code = ""
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 class BaiduOCR(object):
@@ -14,8 +16,11 @@ class BaiduOCR(object):
     """
 
     def __init__(self, app_id, app_key, secret_key):
+        from utils.logger import Log
+        self.logger = Log().logger
+
         if app_id == "" or app_key == "" or secret_key == "":
-            print("请在config.yaml中配置baidu ocr相关配置")
+            self.logger.warning("请在config.yaml中配置baidu ocr相关配置")
             sys.exit(1)
         self.client = AipOcr(app_id, app_key, secret_key)
 
@@ -45,10 +50,10 @@ class BaiduOCR(object):
         img = open('ios_code_pic.png', 'rb').read()
         ret = self.client.basicGeneral(img)
         # 加这个是为了很多人不知道OCR为啥识别不到，如果介意请注释
-        print(ret)
+        self.logger.info(ret)
         if "words_result" in ret:
             if len(ret["words_result"]) == 0:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
                 time.sleep(delay_time)
                 return self.baidu_ocr(_range, delay_time)
 
@@ -62,7 +67,7 @@ class BaiduOCR(object):
             if len(find_all) == 1:
                 code = find_all[0].strip("'")
                 if sms_code == code:
-                    print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                    self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
                     time.sleep(delay_time)
                     return self.baidu_ocr(_range, delay_time)
                 else:
@@ -70,11 +75,11 @@ class BaiduOCR(object):
 
                 return code
             else:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
                 time.sleep(delay_time)
                 return self.baidu_ocr(_range, delay_time)
         else:
-            print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+            self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
             return self.baidu_ocr(_range, delay_time)
 

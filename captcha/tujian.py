@@ -1,8 +1,10 @@
+import os
 import sys
 import base64
 import json
 import requests
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 class TuJian(object):
     """
@@ -11,6 +13,9 @@ class TuJian(object):
     """
 
     def __init__(self, username, password):
+        from utils.logger import Log
+        self.logger = Log().logger
+
         self.username = username
         self.password = password
 
@@ -26,7 +31,7 @@ class TuJian(object):
         if ret['success']:
             return ret["data"]
         else:
-            print(ret["message"])
+            self.logger.error(ret["message"])
             sys.exit(1)
 
     @staticmethod

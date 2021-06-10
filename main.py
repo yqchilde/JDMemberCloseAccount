@@ -10,6 +10,7 @@ from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
+from utils.logger import Log
 from utils.config import get_config
 from utils.selenium_browser import get_browser
 from selenium.webdriver import ActionChains
@@ -28,6 +29,21 @@ async def ws_conn(ws_conn_url):
             return recv
         except asyncio.TimeoutError:
             return ""
+
+
+logger = Log().logger
+
+
+def INFO(*args):
+    logger.info(" ".join(map(str, args)))
+
+
+def WARN(*args):
+    logger.warning(" ".join(map(str, args)))
+
+
+def ERROR(*args):
+    logger.error(" ".join(map(str, args)))
 
 
 class JDMemberCloseAccount(object):
@@ -53,7 +69,7 @@ class JDMemberCloseAccount(object):
         # 初始化短信验证码配置
         if self.sms_captcha_cfg["is_ocr"]:
             if self.ocr_cfg["type"] == "":
-                print("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
+                WARN("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
                 sys.exit(1)
             if self.ocr_cfg["type"] == "baidu":
                 from captcha.baidu_ocr import BaiduOCR
@@ -149,16 +165,16 @@ class JDMemberCloseAccount(object):
         ret = json.loads(resp.text)
         if ret["code"] == "0":
             if ret["message"] == "用户未登录":
-                print("config.json 中的 mobile_cookie 值有误，请确保pt_key和pt_pin都存在，如都存在请检查是否失效")
+                WARN("config.json 中的 mobile_cookie 值有误，请确保pt_key和pt_pin都存在，如都存在请检查是否失效")
                 sys.exit(1)
 
             if "cardList" not in ret["result"]:
-                print("当前卡包中会员店铺为0个")
-                sys.exit(1)
+                INFO("当前卡包中会员店铺为0个")
+                sys.exit(0)
 
             card_list = (ret["result"]["cardList"])
         else:
-            print("echo")
+            ERROR(ret)
 
         return card_list
 
@@ -174,25 +190,27 @@ class JDMemberCloseAccount(object):
             )
         self.browser.refresh()
 
-        cache_brand_id, cookie_valid, retried = "", True, 0
+        cache_card_list, cookie_valid, retried = "", True, 0
         cnt, member_close_max_number = 0, self.shop_cfg["member_close_max_number"]
 
         while True:
             # 获取店铺列表
             card_list = self.get_shop_cards()
             if len(card_list) == 0:
-                print("当前没有加入的店铺信息")
+                INFO("当前没有加入的店铺信息")
                 sys.exit(0)
 
             # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
-            if cache_brand_id == "":
-                cache_brand_id = card_list
+            if cache_card_list == "":
+                cache_card_list = card_list
             else:
-                if retried >= 5:
-                    print("连续五次获取到相同的店铺列表，退出程序")
+                if retried >= 10:
+                    INFO("连续10次获取到相同的店铺列表，判断为5分钟左右的缓存仍未刷新，即将退出程序")
                     sys.exit(0)
-                if cache_brand_id == card_list:
-                    print("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
+
+                # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
+                if set(card_list) <= set(cache_card_list):
+                    INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
                     time.sleep(30)
                     retried += 1
                     continue
@@ -202,16 +220,16 @@ class JDMemberCloseAccount(object):
             if self.shop_cfg['skip_shops'] != "":
                 shops = self.shop_cfg['skip_shops'].split(",")
 
-            print("本次运行获取到", len(card_list), "家店铺会员信息")
+            INFO("本次运行获取到", len(card_list), "家店铺会员信息")
             for card in card_list:
                 # 判断本次运行数是否达到设置
                 if member_close_max_number != 0 and cnt >= member_close_max_number:
-                    print("已注销店铺数达到配置中允许注销的最大次数，程序退出")
+                    INFO("已注销店铺数达到配置中允许注销的最大次数，程序退出")
                     sys.exit(0)
 
                 # 判断该店铺是否要跳过
                 if card["brandName"] in shops:
-                    print("发现需要跳过的店铺", card["brandName"])
+                    INFO("发现需要跳过的店铺", card["brandName"])
                     continue
 
                 try:
@@ -219,7 +237,7 @@ class JDMemberCloseAccount(object):
                     self.browser.get(
                         "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"]
                     )
-                    print("开始注销店铺", card["brandName"])
+                    INFO("开始注销店铺", card["brandName"])
 
                     # 检查当前店铺退会链接是否失效
                     # noinspection PyBroadException
@@ -227,8 +245,8 @@ class JDMemberCloseAccount(object):
                         WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
                             (By.XPATH, "//p[text()='网络请求失败']")
                         ))
-                        print("当前店铺退会链接已失效，即将跳过，当前店铺链接为：")
-                        print("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                        INFO("当前店铺退会链接已失效，即将跳过，当前店铺链接为：")
+                        INFO("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
                         cookie_valid = False
                         continue
                     except Exception as _:
@@ -240,7 +258,7 @@ class JDMemberCloseAccount(object):
                         if self.wait.until(EC.presence_of_element_located(
                                 (By.XPATH, "//div[@class='cm-ec']")
                         )).text[-4:] != self.shop_cfg['phone_tail_number']:
-                            print("当前店铺手机尾号不是规定的尾号，已跳过")
+                            INFO("当前店铺手机尾号不是规定的尾号，已跳过")
                             continue
 
                     # 发送短信验证码
@@ -253,13 +271,13 @@ class JDMemberCloseAccount(object):
 
                     # ocr识别投屏验证码
                     if self.sms_captcha_cfg["is_ocr"]:
-                        if len(self.ocr_cfg["ocr_range"]) == 0:
-                            print("请在config.yaml中配置需要截取的手机短信验证码区域坐标")
+                        if len(self.ocr_cfg["ocr_range"]) != 4:
+                            WARN("请在config.yaml中配置 ocr_range")
                             sys.exit(1)
                         else:
                             _range = (self.ocr_cfg["ocr_range"])
                             ocr_delay_time = self.ocr_cfg["ocr_delay_time"]
-                            print("刚发短信，%d秒后识别验证码" % ocr_delay_time)
+                            INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
                             time.sleep(ocr_delay_time)
 
                             if self.ocr_cfg["type"] == "baidu":
@@ -272,12 +290,12 @@ class JDMemberCloseAccount(object):
                         try:
                             recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
                             if recv == "":
-                                print("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
+                                INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                                 continue
                             else:
                                 sms_code = json.loads(recv)["sms_code"]
                         except Exception as e:
-                            print("请先启动 jd_wstool 工具监听退会短信验证码\n", e.args)
+                            WARN("请先启动 jd_wstool 工具监听退会短信验证码\n", e.args)
                             sys.exit(1)
 
                     # 输入短信验证码
@@ -300,16 +318,16 @@ class JDMemberCloseAccount(object):
                         pic_str, pic_id = "", ""
                         if self.image_captcha_cfg["type"] == "cjy":
                             # 调用超级鹰API接口识别点触验证码
-                            print("开始调用超级鹰识别验证码")
+                            INFO("开始调用超级鹰识别验证码")
                             resp = self.cjy.post_pic(img, self.image_captcha_cfg["cjy_kind"])
                             if "pic_str" in resp and resp["pic_str"] == "":
-                                print("超级鹰验证失败，原因为：", resp["err_str"])
+                                INFO("超级鹰验证失败，原因为：", resp["err_str"])
                             else:
                                 pic_str = resp["pic_str"]
                                 pic_id = resp["pic_id"]
                         elif self.image_captcha_cfg["type"] == "tj":
                             # 调用图鉴API接口识别点触验证码
-                            print("开始调用图鉴识别验证码")
+                            INFO("开始调用图鉴识别验证码")
                             resp = self.tj.post_pic(img, self.image_captcha_cfg["tj_type_id"])
                             pic_str = resp["result"]
                             pic_id = resp["id"]
@@ -336,7 +354,7 @@ class JDMemberCloseAccount(object):
                             WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
                                 (By.XPATH, "//p[text()='验证失败，请重新验证']")
                             ))
-                            print("验证码坐标识别出错，将上报平台处理")
+                            INFO("验证码坐标识别出错，将上报平台处理")
 
                             # 上报错误的图片到平台
                             if self.image_captcha_cfg["type"] == "cjy":
@@ -359,7 +377,7 @@ class JDMemberCloseAccount(object):
                             pcp_show_picture_path_base64 = self.wait.until(EC.presence_of_element_located(
                                 (By.XPATH, '//*[@class="pcp_showPicture"]'))).get_attribute('src')
                             # 正在识别验证码
-                            print("正在通过本地引擎识别")
+                            INFO("正在通过本地引擎识别")
                             res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
                             if res[0]:
                                 ActionChains(self.browser).move_to_element_with_offset(
@@ -377,7 +395,7 @@ class JDMemberCloseAccount(object):
                                 except Exception as _:
                                     return True
                             else:
-                                print("识别未果")
+                                INFO("识别未果")
                                 self.wait.until(
                                     EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
                         return False
@@ -385,11 +403,11 @@ class JDMemberCloseAccount(object):
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
                     if self.image_captcha_cfg["type"] == "local":
                         if not local_auto_identify_captcha_click():
-                            print("验证码位置点击错误，尝试再试一次")
+                            INFO("验证码位置点击错误，尝试再试一次")
                             local_auto_identify_captcha_click()
                     else:
                         if not auto_identify_captcha_click():
-                            print("验证码位置点击错误，尝试再试一次")
+                            INFO("验证码位置点击错误，尝试再试一次")
                             auto_identify_captcha_click()
 
                     # 解绑成功页面
@@ -399,19 +417,19 @@ class JDMemberCloseAccount(object):
 
                     time.sleep(1)
                     cnt += 1
-                    print("本次运行已成功注销店铺会员数量为：", cnt)
+                    INFO("本次运行已成功注销店铺会员数量为：", cnt)
                 except Exception as e:
-                    print("发生了一点小问题：", e.args)
+                    ERROR("发生了一点小问题：", e.args)
 
                     if self.config["debug"]:
                         import traceback
                         traceback.print_exc()
 
             if not cookie_valid:
-                print("本轮全部店铺都失效，有可能是cookie失效导致，请重新添加手机端cookie")
-                sys.exit(1)
+                INFO("本轮全部店铺都失效，有可能是cookie失效导致，请重新添加手机端cookie")
+                sys.exit(0)
             else:
-                print("本轮店铺已执行完，即将开始获取下一轮店铺")
+                INFO("本轮店铺已执行完，即将开始获取下一轮店铺")
 
 
 if __name__ == '__main__':

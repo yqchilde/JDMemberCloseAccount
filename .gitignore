@@ -8,5 +8,13 @@ venv
 # drivers
 drivers/chromedriver
 
-# config.json
-config.json.bak
+# config.yaml.bak
+config.yaml.bak
+
+# logs
+logs
+
+# others
+jd_wstool
+code_pic.png
+ios_code_pic.png

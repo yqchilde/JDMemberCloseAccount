@@ -1,9 +1,11 @@
+import os
 import re
+import sys
 import time
-
 import easyocr
 
 sms_code = ""
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 class EasyOCR(object):
@@ -12,7 +14,8 @@ class EasyOCR(object):
     """
 
     def __init__(self):
-        pass
+        from utils.logger import Log
+        self.logger = Log().logger
 
     def easy_ocr(self, _range, delay_time=5):
         """
@@ -33,14 +36,14 @@ class EasyOCR(object):
         if len(find_all) != 1:
             find_all = re.findall(r'(您的验证码为[\d]{6})', str(result))
 
-        print(f"easy-ocr:{len(find_all)}\n"
-              f"{str(result)}")
+        # 识别结果
+        self.logger.info(str(result))
 
         if len(find_all) == 1:
             code = find_all[0].strip("'")
 
             if sms_code == code:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
                 time.sleep(delay_time)
                 return self.easy_ocr(_range, delay_time)
             else:
@@ -48,7 +51,7 @@ class EasyOCR(object):
 
             return code
         else:
-            print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+            self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
             return self.easy_ocr(_range, delay_time)
 
