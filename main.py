@@ -217,6 +217,9 @@ class JDMemberCloseAccount(object):
         # 打开京东
         self.browser.get("https://m.jd.com/")
 
+        if self.config["cookie"] == "":
+            WARN("请先在 config.yaml 里配置好cookie")
+
         # 写入 cookie
         self.browser.delete_all_cookies()
         for cookie in self.config['cookie'].split(";", 1):

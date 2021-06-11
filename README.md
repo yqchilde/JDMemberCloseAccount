@@ -25,6 +25,7 @@
 2. chrome驱动(只在chrome测试了，故只留了chrome)
 3. 操作系统(只在mac上测试了，非M1)
 4. 使用`python3.x`版本执行
+5. 有一定python基础知识，没有的话先去学一下，起码得会搭python环境
 
 ## 思路
 
@@ -34,9 +35,11 @@
 
 2. 第一关：手机验证码
 
-    1. 安卓端：
-        * 利用tasker软件监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool` 工具监听并送到selenium中填写
-        * 利用macrodroid软件监听，同上
+    1. 安卓端（以下两种任选一个用就行）：
+        * 利用[macrodroid软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool` 工具监听并送到selenium中填写
+
+        * 利用[tasker软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，同上
+
         * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
 
     2. ios端：
@@ -182,17 +185,37 @@ image_captcha:
   tj_type_id: 19
 ```
 
-### 3. 添加`cookie`
+### 3. 添加`cookie` （二选一）
 
-- 使用`add_cookie.py`可以获取手机端`Cookie`
+* 使用`add_cookie.py`可以获取手机端`Cookie` 并自动配置到 `config.yaml` 文件中
 
-* 在 `config.yaml` 中写入 `cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
+* 手动在 `config.yaml` 中写入 `cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
 
-### 4. 启动 `jd_wstool` 工具（使用OCR的不用开）
+### 4. 根据手机终端类型补充配置 （其实还是第2步，这里详细再讲下）
+
+大体说一下，这块是关于手机端短信验证码的配置
+
+1. 安卓推荐使用tasker或macrodroid，不要用ocr，不必须，是为了你省事，IOS必须OCR
+
+2. 如果是使用tasker / macrodroid，is_ocr肯定是false，代表不用ocr
+
+3. 如果用ocr，is_ocr写true，能理解吧
+
+4. ocr里面的type是三选一，baidu / aliyun / easyocr，代表你要用的ocr平台是哪个，easyocr是本地的，其他两个是线上的
+
+5. ocr_range是你要截图的区域，不知道怎么截，往下翻，有截图
+
+6. ocr_delay_time是ocr延迟时间，不想改就保持默认
+
+7. 下面的配置，就是type你用baidu，下面id，key啥的你就写baidu的，阿里同样原理，easyocr不用写
+
+### 5. 启动 `jd_wstool` 工具（使用OCR的不用开）
 
 这个步骤只需要安卓端手机用了tasker 或 macrodroid 或其他自动化工具的开启
 
-### 5. 启动主程序
+什么意思呢？就是配置文件中你的 `is_ocr`为false的，就要开启，否则不用开启
+
+### 6. 启动主程序
 
 在项目目录下执行`python3 main.py`，等待执行完毕即可
 
@@ -212,6 +235,8 @@ image_captcha:
     * 小米手机：权限-允许读取短信 & 允许读取通知类短信
 
     * 华为手机：短信-右上角三个点-设置-验证码安全保护关闭
+    
+    * 权限没问题的，看下tasker的日志或macrodroid的日志，有错误会显示
 
 2. 百度OCR报错 `{'error_code': 18, 'error_msg': 'Open api qps request limit reached'}`
 
