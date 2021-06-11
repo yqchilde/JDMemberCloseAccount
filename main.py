@@ -190,7 +190,7 @@ class JDMemberCloseAccount(object):
             )
         self.browser.refresh()
 
-        cache_card_list, cookie_valid, retried = "", True, 0
+        cache_card_list, cookie_valid, retried = [], True, 0
         cnt, member_close_max_number = 0, self.shop_cfg["member_close_max_number"]
 
         while True:
@@ -201,19 +201,25 @@ class JDMemberCloseAccount(object):
                 sys.exit(0)
 
             # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
-            if cache_card_list == "":
-                cache_card_list = card_list
+            if len(cache_card_list) == 0:
+                cache_card_list = [item['brandId'] for item in card_list]
+                print("cache: ", cache_card_list)
             else:
                 if retried >= 10:
-                    INFO("连续10次获取到相同的店铺列表，判断为5分钟左右的缓存仍未刷新，即将退出程序")
+                    INFO("连续%d次获取到相同的店铺列表，判断为%d分钟左右的缓存仍未刷新，即将退出程序" % (retried, retried / 2))
                     sys.exit(0)
 
                 # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
-                if set(card_list) <= set(cache_card_list):
+                new_card_list = [item['brandId'] for item in card_list]
+                print("cache: ", cache_card_list)
+                print("new: ", new_card_list)
+                if set(new_card_list) <= set(cache_card_list) and len(new_card_list) == len(cache_card_list):
                     INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
                     time.sleep(30)
                     retried += 1
                     continue
+                else:
+                    cache_card_list = new_card_list
 
             # 加载需要跳过的店铺
             shops = []
