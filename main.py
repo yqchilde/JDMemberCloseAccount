@@ -63,7 +63,7 @@ class JDMemberCloseAccount(object):
         self.ocr_cfg = self.sms_captcha_cfg["ocr"]
 
         # 初始化selenium配置
-        self.browser = get_browser(self.selenium_cfg)
+        self.browser = get_browser(self.config)
         self.wait = WebDriverWait(self.browser, self.selenium_cfg["selenium_timeout"])
 
         # 初始化短信验证码配置
@@ -73,32 +73,23 @@ class JDMemberCloseAccount(object):
                 sys.exit(1)
             if self.ocr_cfg["type"] == "baidu":
                 from captcha.baidu_ocr import BaiduOCR
-                self.baidu_ocr = BaiduOCR(
-                    self.ocr_cfg["baidu_app_id"],
-                    self.ocr_cfg["baidu_api_key"],
-                    self.ocr_cfg["baidu_secret_key"]
-                )
+                self.baidu_ocr = BaiduOCR(self.ocr_cfg)
             elif self.ocr_cfg["type"] == "aliyun":
                 from captcha.aliyun_ocr import AliYunOCR
-                self.aliyun_ocr = AliYunOCR(
-                    self.ocr_cfg["aliyun_appcode"]
-                )
+                self.aliyun_ocr = AliYunOCR(self.ocr_cfg)
             elif self.ocr_cfg["type"] == "easyocr":
                 from captcha.easy_ocr import EasyOCR
                 self.easy_ocr = EasyOCR()
 
         # 初始化图形验证码配置
         if self.image_captcha_cfg["type"] == "cjy":
-            self.cjy = ChaoJiYing(
-                self.image_captcha_cfg["cjy_username"],
-                self.image_captcha_cfg["cjy_password"],
-                self.image_captcha_cfg["cjy_soft_id"]
-            )
+            self.cjy = ChaoJiYing(self.image_captcha_cfg)
         elif self.image_captcha_cfg["type"] == "tj":
-            self.tj = TuJian(
-                self.image_captcha_cfg["tj_username"],
-                self.image_captcha_cfg["tj_password"]
-            )
+            self.tj = TuJian(self.image_captcha_cfg)
+        elif self.image_captcha_cfg["type"] == "local":
+            pass
+        else:
+            WARN("请在config.yaml中补充image_captcha.type")
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -153,7 +144,7 @@ class JDMemberCloseAccount(object):
             'cookie': self.config["cookie"],
             'charset': 'UTF-8',
             'accept-encoding': 'br,gzip,deflate',
-            'user-agent': 'okhttp/3.12.1;jdmall;android;version/9.5.2;build/87971;screen/1080x2266;os/11;network/wifi;',
+            'user-agent': self.config["user-agent"][1],
             'cache-control': 'no-cache',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'content-length': '60'
@@ -199,7 +190,7 @@ class JDMemberCloseAccount(object):
             'cookie': self.config["cookie"],
             'charset': 'UTF-8',
             'accept-encoding': 'br,gzip,deflate',
-            'user-agent': 'okhttp/3.12.1;jdmall;android;version/9.5.2;build/88569;screen/1080x2266;os/11;network/wifi;',
+            'user-agent': self.config["user-agent"][1],
             'cache-control': 'no-cache',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'content-length': '102'
@@ -327,10 +318,13 @@ class JDMemberCloseAccount(object):
                             time.sleep(ocr_delay_time)
 
                             if self.ocr_cfg["type"] == "baidu":
+                                INFO("开始调用百度OCR识别")
                                 sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
                             elif self.ocr_cfg["type"] == "aliyun":
+                                INFO("开始调用阿里云OCR识别")
                                 sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
                             elif self.ocr_cfg["type"] == "easyocr":
+                                INFO("开始调用EasyOCR识别")
                                 sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
                     else:
                         try:

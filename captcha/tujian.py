@@ -6,18 +6,19 @@ import requests
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
+
 class TuJian(object):
     """
     图鉴验证类
     图鉴打码地址：https://www.ttshitu.com
     """
 
-    def __init__(self, username, password):
+    def __init__(self, _config):
         from utils.logger import Log
         self.logger = Log().logger
 
-        self.username = username
-        self.password = password
+        self.username = _config["tj_username"]
+        self.password = _config["tj_password"]
 
     def post_pic(self, im, type_id):
         """

@@ -255,11 +255,11 @@ image_captcha:
 
 2. 百度OCR
 
-    1. 手动补齐 `captcha/baidu_ocr.py`的`main`方法下面的数据，运行`python3 ./captcha/baidu_ocr.py`测试
+    1. 运行`python3 ./captcha/baidu_ocr.py`测试
 
 3. Easy OCR
 
-    1. 手动补齐 `captcha/easy_ocr.py`的`main`方法下面的数据，运行`python3 ./captcha/easy_ocr.py`测试
+    1. 运行`python3 ./captcha/easy_ocr.py`测试
 
 ## ScreenShots
 

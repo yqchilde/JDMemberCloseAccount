@@ -12,9 +12,9 @@ def get_file(file_name=""):
     return os.path.join(os.path.split(sys.argv[0])[0], file_name)
 
 
-def get_config():
+def get_config(file_name="config.yaml"):
     """
     获取配置
     :return:
     """
-    return yaml.safe_load(open(get_file("config.yaml"), 'r', encoding='utf-8'))
+    return yaml.safe_load(open(get_file(file_name), 'r', encoding='utf-8'))

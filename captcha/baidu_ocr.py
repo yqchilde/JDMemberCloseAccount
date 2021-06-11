@@ -15,14 +15,17 @@ class BaiduOCR(object):
     百度ocr识别类，用于帮助ios设备识别投屏后的短信验证码
     """
 
-    def __init__(self, app_id, app_key, secret_key):
+    def __init__(self, _config):
         from utils.logger import Log
         self.logger = Log().logger
 
-        if app_id == "" or app_key == "" or secret_key == "":
+        app_id = _config["baidu_app_id"]
+        api_key = _config["baidu_api_key"]
+        secret_key = _config["baidu_secret_key"]
+        if app_id == "" or api_key == "" or secret_key == "":
             self.logger.warning("请在config.yaml中配置baidu ocr相关配置")
             sys.exit(1)
-        self.client = AipOcr(app_id, app_key, secret_key)
+        self.client = AipOcr(app_id, api_key, secret_key)
 
     @staticmethod
     def get_code_pic(_range, name='ios_code_pic.png'):
@@ -85,6 +88,9 @@ class BaiduOCR(object):
 
 
 if __name__ == '__main__':
-    _range = (2634, 514, 3686, 1468)
-    sms_code = BaiduOCR("", "", "").baidu_ocr(_range, 10)
+    from utils.config import get_config
+
+    ocr_cfg = get_config("../config.yaml")["sms_captcha"]["ocr"]
+    _range = ocr_cfg["ocr_range"]
+    sms_code = BaiduOCR(ocr_cfg).baidu_ocr(_range, ocr_cfg["ocr_delay_time"])
     print("百度OCR识别到的验证码是：", sms_code)

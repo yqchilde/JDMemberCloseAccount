@@ -4,6 +4,8 @@ import sys
 import time
 import easyocr
 
+from PIL import ImageGrab
+
 sms_code = ""
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -17,6 +19,20 @@ class EasyOCR(object):
         from utils.logger import Log
         self.logger = Log().logger
 
+    @staticmethod
+    def get_code_pic(_range, name='ios_code_pic.png'):
+        """
+        获取验证码图像
+        :param _range:
+        :param name:
+        :return:
+        """
+
+        # 确定验证码的左上角和右下角坐标
+        code_pic = ImageGrab.grab(_range)
+        code_pic.save(name)
+        return code_pic
+
     def easy_ocr(self, _range, delay_time=5):
         """
         easy ocr识别数字
@@ -25,7 +41,7 @@ class EasyOCR(object):
         :return: 识别到的数字
         """
         global sms_code
-        BaiduOCR.get_code_pic(_range)
+        self.get_code_pic(_range)
 
         reader = easyocr.Reader(['ch_sim', 'en'])
         result = reader.readtext('ios_code_pic.png')
@@ -57,10 +73,9 @@ class EasyOCR(object):
 
 
 if __name__ == '__main__':
-    from baidu_ocr import BaiduOCR
+    from utils.config import get_config
 
-    _range = (1441, 659, 1896, 754)
-    sms_code = EasyOCR().easy_ocr(_range, 4)
+    ocr_cfg = get_config("../config.yaml")["sms_captcha"]["ocr"]
+    _range = ocr_cfg["ocr_range"]
+    sms_code = EasyOCR().easy_ocr(_range, ocr_cfg["ocr_delay_time"])
     print("Easy OCR识别到的验证码是：", sms_code)
-else:
-    from captcha.baidu_ocr import BaiduOCR

@@ -6,6 +6,8 @@ import re
 import time
 import requests
 
+from PIL import ImageGrab
+
 sms_code = ""
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -15,15 +17,30 @@ class AliYunOCR(object):
     阿里云OCR识别类，用于帮助ios设备识别投屏后的短信验证码
     """
 
-    def __init__(self, appcode):
+    def __init__(self, _config):
         from utils.logger import Log
         self.logger = Log().logger
 
         self.api_url = "https://ocrapi-advanced.taobao.com/ocrservice/advanced"
+        appcode = _config["aliyun_appcode"]
         if appcode == "":
             self.logger.warning("请在config.yaml中配置aliyun_appcode")
             sys.exit(1)
         self.appcode = appcode
+
+    @staticmethod
+    def get_code_pic(_range, name='ios_code_pic.png'):
+        """
+        获取验证码图像
+        :param _range:
+        :param name:
+        :return:
+        """
+
+        # 确定验证码的左上角和右下角坐标
+        code_pic = ImageGrab.grab(_range)
+        code_pic.save(name)
+        return code_pic
 
     def post_url(self, img):
         headers = {
@@ -39,7 +56,7 @@ class AliYunOCR(object):
             self.logger.warning(resp)
         else:
             ocr_ret = json.loads(resp.text)["content"].strip(" ")
-            self.logger.info("阿里云OCR识别结果：", ocr_ret)
+            self.logger.info("阿里云OCR识别结果：" + ocr_ret)
             return ocr_ret
 
     def aliyun_ocr(self, _range, delay_time=5):
@@ -50,7 +67,7 @@ class AliYunOCR(object):
         :return: 识别到的数字
         """
         global sms_code
-        BaiduOCR.get_code_pic(_range)
+        self.get_code_pic(_range)
         img = open('ios_code_pic.png', 'rb').read()
         ocr_ret = self.post_url(img)
 
@@ -84,10 +101,9 @@ class AliYunOCR(object):
 
 
 if __name__ == '__main__':
-    from baidu_ocr import BaiduOCR
+    from utils.config import get_config
 
-    _range = (1735, 357, 1816, 380)
-    sms_code = AliYunOCR("").aliyun_ocr(_range, 4)
+    ocr_cfg = get_config("../config.yaml")["sms_captcha"]["ocr"]
+    _range = ocr_cfg["ocr_range"]
+    sms_code = AliYunOCR(ocr_cfg).aliyun_ocr(_range, ocr_cfg["ocr_delay_time"])
     print("阿里云OCR识别到的验证码是：", sms_code)
-else:
-    from captcha.baidu_ocr import BaiduOCR

@@ -11,11 +11,10 @@ def get_browser(_config):
     获取浏览器对象
     :return:
     """
-    browser_type = _config['browserType']
-    headless = _config['headless']
-    binary = _config['binary']
-    user_agent = "Mozilla/5.0 (Linux; Android 9; COR-AL00) AppleWebKit/537.36 (KHTML, like Gecko) " \
-                 "Chrome/77.0.3865.116 Mobile Safari/537.36 EdgA/46.03.4.5155 "
+    browser_type = _config['selenium']['browserType']
+    headless = _config['selenium']['headless']
+    binary = _config['selenium']['binary']
+    user_agent = _config['user-agent'][0]
     try:
         if browser_type == 'Chrome':
             chrome_options = webdriver.ChromeOptions()

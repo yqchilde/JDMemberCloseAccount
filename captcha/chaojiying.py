@@ -7,10 +7,11 @@ class ChaoJiYing(object):
     超级鹰验证类
     超级鹰打码地址：https://www.chaojiying.com
     """
-    def __init__(self, username, password, soft_id):
-        self.username = username
-        self.password = md5(password.encode('utf-8')).hexdigest()
-        self.soft_id = soft_id
+
+    def __init__(self, _config):
+        self.username = _config["cjy_username"]
+        self.password = md5(_config["cjy_password"].encode('utf-8')).hexdigest()
+        self.soft_id = _config["cjy_soft_id"]
         self.base_params = {
             'user': self.username,
             'pass2': self.password,
