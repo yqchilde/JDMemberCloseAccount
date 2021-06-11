@@ -178,6 +178,41 @@ class JDMemberCloseAccount(object):
 
         return card_list
 
+    def refresh_cache(self):
+        """
+        利用待领卡接口刷新卡包列表缓存
+        :return:
+        """
+        url = "https://api.m.jd.com/client.action?functionId=getWalletUnreceivedCardList_New&clientVersion=10.0.2" \
+              "&build=88569&client=android&d_brand=Xiaomi&d_model=M2007J3SC&osVersion=11&screen=2266*1080&partner" \
+              "=xiaomi001&oaid=e02a70327f315862&openudid=3dab9a16bd95e38a&eid=eidA24e181233bsdmxzC3hIpQF2nJhWGGLb" \
+              "%2F1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1%2F7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54%2FyNK&sdkVersion=30" \
+              "&lang=zh_CN&uuid=3dab9a16bd95e38a&aid=3dab9a16bd95e38a&area=13_1000_40488_54442&networkType=wifi" \
+              "&wifiBssid=unknown&uts=0f31TVRjBSsa33%2BKCXYEGxOEcvF5WoCTLW6zy4ICUIZSJDN7StKCM709NzfQ4TH7UyK43CcV9m" \
+              "8NBxDef2fv9lr5dGonowgeJ4YODX5Jeb5TRw1PUE0YmmEdsQw4TlvNc5umf1j%2FKrR%2F3FAfMh%2Bs8nQ%2BG8trnDhaJW2kJKg" \
+              "Hzq7N3es4kOmO4MEmUYf2putd%2BK0ZMPqJ8MfHJCta74kmAA%3D%3D&uemps=0-0&st=1623387008796&sign=d8297b1521c" \
+              "0d56cdf290e2de658452e&sv=100"
+        payload = "body=%7B%22pageNum%22%3A1%2C%22pageSize%22%3A10%2C%22v%22%3A%224.3%22%2C%22version%22%3A1580659200" \
+                  "%7D&"
+        headers = {
+            'Host': 'api.m.jd.com',
+            'cookie': self.config["cookie"],
+            'charset': 'UTF-8',
+            'accept-encoding': 'br,gzip,deflate',
+            'user-agent': 'okhttp/3.12.1;jdmall;android;version/9.5.2;build/88569;screen/1080x2266;os/11;network/wifi;',
+            'cache-control': 'no-cache',
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'content-length': '102'
+        }
+        urllib3.disable_warnings()
+        resp = requests.request("POST", url, headers=headers, data=payload, verify=False)
+        ret = json.loads(resp.text)
+        if ret["code"] == "0":
+            return True
+        else:
+            ERROR(ret)
+            return False
+
     def main(self):
         # 打开京东
         self.browser.get("https://m.jd.com/")
@@ -211,10 +246,15 @@ class JDMemberCloseAccount(object):
                 # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
                 new_card_list = [item['brandId'] for item in card_list]
                 if set(new_card_list) <= set(cache_card_list) and len(new_card_list) == len(cache_card_list):
-                    INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
-                    time.sleep(30)
-                    retried += 1
-                    continue
+                    INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，即将尝试刷新缓存")
+                    if self.refresh_cache():
+                        INFO("理论上缓存已经刷新成功，如页面未成功自动刷新请及时反馈")
+                        continue
+                    else:
+                        INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
+                        time.sleep(30)
+                        retried += 1
+                        continue
                 else:
                     cache_card_list = new_card_list
 
