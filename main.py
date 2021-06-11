@@ -203,7 +203,6 @@ class JDMemberCloseAccount(object):
             # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
             if len(cache_card_list) == 0:
                 cache_card_list = [item['brandId'] for item in card_list]
-                print("cache: ", cache_card_list)
             else:
                 if retried >= 10:
                     INFO("连续%d次获取到相同的店铺列表，判断为%d分钟左右的缓存仍未刷新，即将退出程序" % (retried, retried / 2))
@@ -211,8 +210,6 @@ class JDMemberCloseAccount(object):
 
                 # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
                 new_card_list = [item['brandId'] for item in card_list]
-                print("cache: ", cache_card_list)
-                print("new: ", new_card_list)
                 if set(new_card_list) <= set(cache_card_list) and len(new_card_list) == len(cache_card_list):
                     INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
                     time.sleep(30)
