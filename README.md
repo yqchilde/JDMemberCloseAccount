@@ -200,6 +200,11 @@ image_captcha:
   tj_username: ""
   tj_password: ""
   tj_type_id: 19
+
+# user-agent 用户代理，可自行配置
+user-agent:
+  - Mozilla/5.0 (Linux; Android 11; M2007J3SC) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36
+  - okhttp/3.12.1;jdmall;android;version/10.0.2;build/88569;screen/1080x2266;os/11;network/wifi;
 ```
 
 ### 3. 添加`cookie` （二选一）

@@ -226,7 +226,7 @@ class JDMemberCloseAccount(object):
             # 获取店铺列表
             card_list = self.get_shop_cards()
             if len(card_list) == 0:
-                INFO("当前没有加入的店铺信息")
+                INFO("本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
                 sys.exit(0)
 
             # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
