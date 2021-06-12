@@ -156,7 +156,7 @@ class JDMemberCloseAccount(object):
         ret = json.loads(resp.text)
         if ret["code"] == "0":
             if ret["message"] == "用户未登录":
-                WARN("config.json 中的 mobile_cookie 值有误，请确保pt_key和pt_pin都存在，如都存在请检查是否失效")
+                WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
                 sys.exit(1)
 
             if "cardList" not in ret["result"]:
@@ -219,7 +219,7 @@ class JDMemberCloseAccount(object):
             )
         self.browser.refresh()
 
-        cache_card_list, cookie_valid, retried = [], True, 0
+        cache_card_list, retried = [], 0
         cnt, member_close_max_number = 0, self.shop_cfg["member_close_max_number"]
 
         while True:
@@ -257,7 +257,7 @@ class JDMemberCloseAccount(object):
             if self.shop_cfg['skip_shops'] != "":
                 shops = self.shop_cfg['skip_shops'].split(",")
 
-            INFO("本次运行获取到", len(card_list), "家店铺会员信息")
+            INFO("本轮运行获取到", len(card_list), "家店铺会员信息")
             for card in card_list:
                 # 判断本次运行数是否达到设置
                 if member_close_max_number != 0 and cnt >= member_close_max_number:
@@ -282,12 +282,15 @@ class JDMemberCloseAccount(object):
                         WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
                             (By.XPATH, "//p[text()='网络请求失败']")
                         ))
-                        INFO("当前店铺退会链接已失效，即将跳过，当前店铺链接为：")
-                        INFO("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
-                        cookie_valid = False
-                        continue
+                        INFO("当前店铺退会链接已失效，暂判定为缓存导致，正在尝试清除卡包列表缓存...")
+                        if self.refresh_cache():
+                            INFO("理论上缓存已经刷新成功，如项目未继续执行请及时反馈")
+                            break
+                        else:
+                            INFO("卡包列表缓存清除失败，即将跳过该店铺，失效店铺链接为：")
+                            INFO("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                            continue
                     except Exception as _:
-                        cookie_valid = True
                         pass
 
                     # 检查手机尾号是否正确
@@ -465,11 +468,7 @@ class JDMemberCloseAccount(object):
                         import traceback
                         traceback.print_exc()
 
-            if not cookie_valid:
-                INFO("本轮全部店铺都失效，有可能是cookie失效导致，请重新添加手机端cookie")
-                sys.exit(0)
-            else:
-                INFO("本轮店铺已执行完，即将开始获取下一轮店铺")
+            INFO("本轮店铺已执行完，即将开始获取下一轮店铺")
 
 
 if __name__ == '__main__':
