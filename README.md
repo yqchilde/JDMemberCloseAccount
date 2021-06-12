@@ -2,18 +2,7 @@
 
 ## 介绍
 
-本项目是我学习python操作selenium的一个🌰，用来 全自动/半自动 退出加入的所有店铺会员
-
-* 全自动：短信验证码全自动，图形验证码任选下面的一种
-
-    * 图形验证码用 `本地识别引擎`，识别效率和精准度可能不会很高， [测试图在最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) (
-      感谢 [@AntonVanke](https://github.com/AntonVanke) )
-      大佬的 [代码](https://github.com/yqchilde/JDMemberCloseAccount/issues/45) ，这下大家可以不用花钱了👍
-        * **当配置文件中`cjy_validation` 和 `tj_validation` 都为false时，启动本地引擎识别**
-    * 图形验证码用 [超级鹰打码](https://www.chaojiying.com/) ，费用是1块=1000积分，一次扣15积分
-    * 图形验证码用 [图鉴打码](http://www.ttshitu.com/) ，费用是1块=1积分，一次扣0.01积分
-
-* 半自动：短信验证码全自动，图形验证码手动
+本项目是我学习python操作selenium的一个🌰，也是一种京东自动退会方案，用来全自动退出京东加入的所有店铺会员
 
 ## 声明
 
@@ -37,88 +26,102 @@
 
     1. 安卓端（以下两种任选一个用就行）：
 
-        * 利用[macrodroid软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool` 工具监听并送到selenium中填写
+        * 利用[macrodroid软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool`
+          工具监听并送到selenium中填写
 
-        * 利用[macrodroid软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool` 工具监听并送到selenium中填写
+        * 利用[macrodroid软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool`
+          工具监听并送到selenium中填写
 
         * 利用[tasker软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，同上
 
         * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
 
     2. ios端：
-    
-        1. 越狱机（来自[@curtinlv](https://github.com/curtinlv) 大佬的越狱监听短信方法，[#61](https://github.com/yqchilde/JDMemberCloseAccount/pull/61) ）
-    
+
+        1. 越狱机（来自[@curtinlv](https://github.com/curtinlv)
+           大佬的越狱监听短信方法，[#61](https://github.com/yqchilde/JDMemberCloseAccount/pull/61) ）
+
             * 像安卓端一样传验证码（基本逻辑：iOS设备通过访问短信数据库，监听最新的jd验证码并传到 `jd_wstool`）
 
-                1. 下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py) 传到手机上（测试Pythonista 3可以，其他软件自行研究）
+                1.
+                下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py)
+                传到手机上（测试Pythonista 3可以，其他软件自行研究）
 
                 2. 填写`jd_wstool` 监听地址ip
 
-                    如：监听地址1： http://192.168.0.101:5201，填在脚本开头 ipaddr= '192.168.0.101'
-                
+                   如：监听地址1： http://192.168.0.101:5201，填在脚本开头 ipaddr= '192.168.0.101'
+
                 3. 运行脚本
-    
-        2. 非越狱机
 
-            > 首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg)
-            提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好截取那一整条短信的坐标，当然截取范围越小，识别越快)，然后通过ocr工具识别数字验证码
+        2. 非越狱机 （任选以下一种类型）
 
-            > **注意：** OCR只是处理识别短信验证码并填入，不要误解为图形验证码也可以解决。如果定位不准，看一下项目目录生成的`ios_code_pic.png`
-            图片位置在当前屏幕的哪个位置，[测试识别效果gif点我查看](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) , 此外，坐标和电脑分辨率有关，如果分辨是是1080P，那么qq截图识别的坐标就是刚好一比一的，比我的是4k显示器，是以百分之200显示的，那所有坐标就要乘以2了
+           > 首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg)
+           提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好截取那一整条短信的坐标，当然截取范围越小，识别越快)，然后通过ocr工具识别数字验证码
 
-            百度ocr (之前用过的用户还是免费500次/天的额度，新用户调整为1000次/月的额度，调整详情参考[这里](https://ai.baidu.com/support/news?action=detail&id=2390))
+           > **注意：** OCR只是处理识别短信验证码并填入，不要误解为图形验证码也可以解决。如果定位不准，看一下项目目录生成的`ios_code_pic.png`
+           图片位置在当前屏幕的哪个位置，[测试识别效果gif点我查看](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) , 此外，坐标和电脑分辨率有关，如果分辨是是1080P，那么qq截图识别的坐标就是刚好一比一的，比我的是4k显示器，是以百分之200显示的，那所有坐标就要乘以2了
+
+           百度ocr (
+           之前用过的用户还是免费500次/天的额度，新用户调整为1000次/月的额度，调整详情参考[这里](https://ai.baidu.com/support/news?action=detail&id=2390))
 
                 * 需要在`config.yaml`中配置如下参数：
-    
+
                 * `sms_captcha.is_ocr`设置为`true`
-    
+
                 * `sms_captcha.is_ocr.type`设置为`baidu`
-    
+
                 * `sms_captcha.is_ocr.baidu_app_id`补充完整
-    
+
                 * `sms_captcha.is_ocr.baidu_api_key`补充完整
-    
+
                 * `sms_captcha.is_ocr.baidu_secret_key`补充完整
 
            阿里云ocr (
            用户新购0元500次，后续500次/0.01元，开通地址[阿里云市场](https://market.aliyun.com/products/57124001/cmapi028554.html?spm=5176.2020520132.101.2.608172181RzlnC#sku=yuncode2255400000))
-    
+
                 * 同上，需要在`config.yaml`中配置如下参数：
-    
+
                 * `sms_captcha.is_ocr`设置为`true`
-    
+
                 * `sms_captcha.is_ocr.type`设置为`aliyun`
-    
+
                 * `sms_captcha.is_ocr.aliyun_appcode`补充完整
 
            easyocr (免费，本地识别)
-    
+
                 * 同上，需要在`config.yaml`中配置如下参数：
-    
+
                 * `sms_captcha.is_ocr`设置为`true`
-    
+
                 * `sms_captcha.is_ocr.type`设置为`easyocr`
 
                 * 使用时注意框选识别的范围只显示6位数字验证码(现支持一整条完整短信的区域，当然范围越大识别速度也会相应增加，区域扩大是为了优化某些用户短信验证码6位数字每次位置不一致问题)（毕竟免费开源，识别条件有点苛刻）
 
-3. 第二关：图形验证码
+3. 第二关：图形验证码（任选以下一种类型，默认采用本地识别）
 
-    1. 本地识别，来自[@AntonVanke](https://github.com/AntonVanke)大佬提供的 [JDCaptcha](https://github.com/AntonVanke/JDCaptcha)代码
+    1. 本地识别（再也不用花钱了👍），来自[@AntonVanke](https://github.com/AntonVanke)
+       大佬提供的 [JDCaptcha](https://github.com/AntonVanke/JDCaptcha) 项目(已集成)
+       ，[测试图在最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) ，
 
-    2. 收费的打码平台，超级鹰或图鉴
+    2. 收费的打码平台
+
+        * 图形验证码用 [超级鹰打码](https://www.chaojiying.com/) ，费用是1块=1000积分，一次扣15积分
+
+        * 图形验证码用 [图鉴打码](http://www.ttshitu.com/) ，费用是1块=1积分，一次扣0.01积分
 
 ## 操作
 
-### 1. 下载项目
+### 1. 下载项目以及配置浏览器驱动
 
-1. 克隆到本地
+**注意：** 以下关于`python3`， `pip3` 命令只代表`python3.x`环境，故如果电脑`python`环境已是3.x，可直接用`python`、`pip`代替
+
+1. 克隆到本地或下载项目压缩包到本地
 
    ```shell
    git clone https://github.com/yqchilde/JDMemberCloseAccount.git
    ```
 
-2. 安装所需要的包
+2. 在项目根目录下打开终端执行以下命令，安装所需要的包
 
    ```shell
    pip3 install -r requirements.txt
@@ -127,7 +130,8 @@
 3. 下载对应的浏览器驱动放到项目的`drivers`文件夹下面
 
     * `chrome`请访问`chrome://version/`查看浏览器的版本，然后去 [chromedriver](http://chromedriver.storage.googleapis.com/index.html)
-      下载对应的版本/系统驱动
+      下载对应的版本/系统驱动（只需要保证版本号前三段一致即可，比如`91.0.4472.77`只需要保证`91.0.4472.x`就行），下载后解压，将其可执行文件（mac为`chromedriver`
+      ，win为`chromedriver.exe`放在项目的`drivers`目录下即可）
 
 ### 2. 补充配置文件
 
@@ -217,7 +221,7 @@ user-agent:
 
 大体说一下，这块是关于手机端短信验证码的配置
 
-1. 安卓推荐使用tasker或macrodroid，不要用ocr，不必须，是为了你省事，IOS必须OCR
+1. 安卓推荐使用tasker或macrodroid，不要用ocr，不必须，是为了你省事，IOS越狱设备也可以使用短信转发功能，IOS非越狱必须使用OCR
 
 2. 如果是使用tasker / macrodroid，is_ocr肯定是false，代表不用ocr
 
@@ -231,7 +235,7 @@ user-agent:
 
 7. 下面的配置，就是type你用baidu，下面id，key啥的你就写baidu的，阿里同样原理，easyocr不用写
 
-### 5. 启动 `jd_wstool` 工具（使用OCR的不用开）
+### 5. 启动 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases) 工具（使用OCR的不用开）
 
 这个步骤只需要安卓端手机用了tasker 或 macrodroid 或其他自动化工具的开启
 
@@ -257,7 +261,7 @@ user-agent:
     * 小米手机：权限-允许读取短信 & 允许读取通知类短信
 
     * 华为手机：短信-右上角三个点-设置-验证码安全保护关闭
-    
+
     * 权限没问题的，看下tasker的日志或macrodroid的日志，有错误会显示
 
 2. 百度OCR报错 `{'error_code': 18, 'error_msg': 'Open api qps request limit reached'}`
