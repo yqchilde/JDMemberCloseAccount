@@ -36,54 +36,71 @@
 2. 第一关：手机验证码
 
     1. 安卓端（以下两种任选一个用就行）：
+
         * 利用[macrodroid软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool` 工具监听并送到selenium中填写
 
-        * 利用[tasker软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，同上
+        * 利用[macrodroid软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool` 工具监听并送到selenium中填写
+
+        * 利用[tasker软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，同上
 
         * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
 
     2. ios端：
+    
+        1. 越狱机（来自[@curtinlv](https://github.com/curtinlv) 大佬的越狱监听短信方法，[#61](https://github.com/yqchilde/JDMemberCloseAccount/pull/61) ）
+    
+            * 像安卓端一样传验证码（基本逻辑：iOS设备通过访问短信数据库，监听最新的jd验证码并传到 `jd_wstool`）
 
-       > 首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg)
-       提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好截取那一整条短信的坐标，当然截取范围越小，识别越快)，然后通过ocr工具识别数字验证码
+                1. 下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py) 传到手机上（测试Pythonista 3可以，其他软件自行研究）
 
-       > **注意：** OCR只是处理识别短信验证码并填入，不要误解为图形验证码也可以解决。如果定位不准，看一下项目目录生成的`ios_code_pic.png`
-       图片位置在当前屏幕的哪个位置，[测试识别效果gif点我查看](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) , 此外，坐标和电脑分辨率有关，如果分辨是是1080P，那么qq截图识别的坐标就是刚好一比一的，比我的是4k显示器，是以百分之200显示的，那所有坐标就要乘以2了
+                2. 填写`jd_wstool` 监听地址ip
 
-       百度ocr (之前用过的用户还是免费500次/天的额度，新用户调整为1000次/月的额度，调整详情参考[这里](https://ai.baidu.com/support/news?action=detail&id=2390))
+                    如：监听地址1： http://192.168.0.101:5201，填在脚本开头 ipaddr= '192.168.0.101'
+                
+                3. 运行脚本
+    
+        2. 非越狱机
 
-        * 需要在`config.yaml`中配置如下参数：
+            > 首先感谢tg群的朋友[@millerchen](https://github.com/bluewatercg)
+            提供的思路，具体实现方案是电脑屏幕留出一个区域用来显示手机投屏的地方，然后打开短信列表，然后找个截图工具记一下当前需要识别的的`左上角`和`右下角`坐标(最好截取那一整条短信的坐标，当然截取范围越小，识别越快)，然后通过ocr工具识别数字验证码
 
-            * `sms_captcha.is_ocr`设置为`true`
+            > **注意：** OCR只是处理识别短信验证码并填入，不要误解为图形验证码也可以解决。如果定位不准，看一下项目目录生成的`ios_code_pic.png`
+            图片位置在当前屏幕的哪个位置，[测试识别效果gif点我查看](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) , 此外，坐标和电脑分辨率有关，如果分辨是是1080P，那么qq截图识别的坐标就是刚好一比一的，比我的是4k显示器，是以百分之200显示的，那所有坐标就要乘以2了
 
-            * `sms_captcha.is_ocr.type`设置为`baidu`
+            百度ocr (之前用过的用户还是免费500次/天的额度，新用户调整为1000次/月的额度，调整详情参考[这里](https://ai.baidu.com/support/news?action=detail&id=2390))
 
-            * `sms_captcha.is_ocr.baidu_app_id`补充完整
+                * 需要在`config.yaml`中配置如下参数：
+    
+                * `sms_captcha.is_ocr`设置为`true`
+    
+                * `sms_captcha.is_ocr.type`设置为`baidu`
+    
+                * `sms_captcha.is_ocr.baidu_app_id`补充完整
+    
+                * `sms_captcha.is_ocr.baidu_api_key`补充完整
+    
+                * `sms_captcha.is_ocr.baidu_secret_key`补充完整
 
-            * `sms_captcha.is_ocr.baidu_api_key`补充完整
+           阿里云ocr (
+           用户新购0元500次，后续500次/0.01元，开通地址[阿里云市场](https://market.aliyun.com/products/57124001/cmapi028554.html?spm=5176.2020520132.101.2.608172181RzlnC#sku=yuncode2255400000))
+    
+                * 同上，需要在`config.yaml`中配置如下参数：
+    
+                * `sms_captcha.is_ocr`设置为`true`
+    
+                * `sms_captcha.is_ocr.type`设置为`aliyun`
+    
+                * `sms_captcha.is_ocr.aliyun_appcode`补充完整
 
-            * `sms_captcha.is_ocr.baidu_secret_key`补充完整
+           easyocr (免费，本地识别)
+    
+                * 同上，需要在`config.yaml`中配置如下参数：
+    
+                * `sms_captcha.is_ocr`设置为`true`
+    
+                * `sms_captcha.is_ocr.type`设置为`easyocr`
 
-       阿里云ocr (
-       用户新购0元500次，后续500次/0.01元，开通地址[阿里云市场](https://market.aliyun.com/products/57124001/cmapi028554.html?spm=5176.2020520132.101.2.608172181RzlnC#sku=yuncode2255400000))
-
-        * 同上，需要在`config.yaml`中配置如下参数：
-
-            * `sms_captcha.is_ocr`设置为`true`
-
-            * `sms_captcha.is_ocr.type`设置为`aliyun`
-
-            * `sms_captcha.is_ocr.aliyun_appcode`补充完整
-
-       easyocr (免费，本地识别)
-
-        * 同上，需要在`config.yaml`中配置如下参数：
-
-            * `sms_captcha.is_ocr`设置为`true`
-
-            * `sms_captcha.is_ocr.type`设置为`easyocr`
-
-        * 使用时注意框选识别的范围只显示6位数字验证码(现支持一整条完整短信的区域，当然范围越大识别速度也会相应增加，区域扩大是为了优化某些用户短信验证码6位数字每次位置不一致问题)（毕竟免费开源，识别条件有点苛刻）
+                * 使用时注意框选识别的范围只显示6位数字验证码(现支持一整条完整短信的区域，当然范围越大识别速度也会相应增加，区域扩大是为了优化某些用户短信验证码6位数字每次位置不一致问题)（毕竟免费开源，识别条件有点苛刻）
 
 3. 第二关：图形验证码
 
@@ -277,6 +294,10 @@ image_captcha:
 
 <div align=center>
 <img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img4.png" width="800" />
+</div>
+
+<div align=center>
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/test.png" width="600" />
 </div>
 
 ## TG讨论群
