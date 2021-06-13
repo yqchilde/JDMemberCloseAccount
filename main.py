@@ -221,6 +221,7 @@ class JDMemberCloseAccount(object):
 
         cache_card_list, retried = [], 0
         cnt, member_close_max_number = 0, self.shop_cfg["member_close_max_number"]
+        disgusting_shop = False
 
         while True:
             # 获取店铺列表
@@ -240,15 +241,22 @@ class JDMemberCloseAccount(object):
                 # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
                 new_card_list = [item['brandId'] for item in card_list]
                 if set(new_card_list) <= set(cache_card_list) and len(new_card_list) == len(cache_card_list):
-                    INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，即将尝试刷新缓存")
-                    if self.refresh_cache():
-                        INFO("理论上缓存已经刷新成功，如页面未成功自动刷新请及时反馈")
-                        continue
+                    # 如果是第一次，先去刷新缓存
+                    if not disgusting_shop:
+                        INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，即将尝试刷新缓存")
+                        if self.refresh_cache():
+                            INFO("理论上缓存已经刷新成功，如页面未成功自动刷新请及时反馈")
+                            disgusting_shop = True
+                            continue
+                        else:
+                            INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
+                            time.sleep(30)
+                            retried += 1
+                            continue
                     else:
-                        INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
-                        time.sleep(30)
-                        retried += 1
-                        continue
+                        # 如果第二次仍然是这种情况，可能这家店无法退出
+                        INFO("可能遇到无法注销的店铺了，店铺名为%s，请设置跳过本店铺" % new_card_list[0]["brandName"])
+                        disgusting_shop = False
                 else:
                     cache_card_list = new_card_list
 
