@@ -11,7 +11,7 @@ if __name__ == '__main__':
     """
     用于获取手机端cookie
     """
-    browser = get_browser(get_config()["selenium"])
+    browser = get_browser(get_config())
     browser.get("https://plogin.m.jd.com/login/login")
     try:
         wait = WebDriverWait(browser, 135)
