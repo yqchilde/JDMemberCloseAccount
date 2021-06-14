@@ -26,9 +26,6 @@
 
     1. 安卓端（以下两种任选一个用就行）：
 
-        * 利用[macrodroid软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool`
-          工具监听并送到selenium中填写
-
         * 利用[macrodroid软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool`
           工具监听并送到selenium中填写
 
