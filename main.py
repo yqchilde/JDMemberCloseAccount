@@ -13,22 +13,23 @@ from captcha.jd_captcha import JDcaptcha_base64
 from utils.logger import Log
 from utils.config import get_config
 from utils.selenium_browser import get_browser
+from utils.listener import listener
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-async def ws_conn(ws_conn_url):
-    """
-    websocket连接
-    """
-    async with connect(ws_conn_url) as websocket:
-        try:
-            recv = await asyncio.wait_for(websocket.recv(), get_config()["sms_captcha"]["ws_timeout"])
-            return recv
-        except asyncio.TimeoutError:
-            return ""
+# async def ws_conn(ws_conn_url):
+#     """
+#     websocket连接
+#     """
+#     async with connect(ws_conn_url) as websocket:
+#         try:
+#             recv = await asyncio.wait_for(websocket.recv(), get_config()["sms_captcha"]["ws_timeout"])
+#             return recv
+#         except asyncio.TimeoutError:
+#             return ""
 
 
 logger = Log().logger
@@ -353,7 +354,8 @@ class JDMemberCloseAccount(object):
                                 sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
                     else:
                         try:
-                            recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
+                            # recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
+                            recv = listener()
                             if recv == "":
                                 INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                                 continue
