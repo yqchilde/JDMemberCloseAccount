@@ -256,17 +256,19 @@ class JDMemberCloseAccount(object):
                         cache_card_list = new_card_list
                 else:
                     # 发现第二次缓存，多半是无法注销的店铺
-                    INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，请先手动跳过" % card_list[0]["brandName"])
+                    INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，请先手动跳过" % card_list[len(black_list)]["brandName"])
                     disgusting_shop = False
-                    black_list.append(card_list[0])
+                    if card_list[len(black_list)] in black_list:
+                        black_list.append(card_list[len(black_list) + 1])
+                    else:
+                        black_list.append(card_list[len(black_list)])
 
             # 跳过无法注销的店铺
-            for item in card_list:
-                if item in black_list:
-                    card_list.remove(item)
-
-            # 加载需要跳过的店铺
             shops = []
+            for item in black_list:
+                shops.append(item["brandName"])
+
+            # 加载配置文件中需要跳过的店铺
             if self.shop_cfg['skip_shops'] != "":
                 shops = self.shop_cfg['skip_shops'].split(",")
 
