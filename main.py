@@ -221,7 +221,7 @@ class JDMemberCloseAccount(object):
 
         cache_card_list, retried = [], 0
         cnt, member_close_max_number = 0, self.shop_cfg["member_close_max_number"]
-        disgusting_shop = False
+        disgusting_shop, black_list = False, []
 
         while True:
             # 获取店铺列表
@@ -238,11 +238,10 @@ class JDMemberCloseAccount(object):
                     INFO("连续%d次获取到相同的店铺列表，判断为%d分钟左右的缓存仍未刷新，即将退出程序" % (retried, retried / 2))
                     sys.exit(0)
 
-                # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
-                new_card_list = [item['brandId'] for item in card_list]
-                if set(new_card_list) <= set(cache_card_list) and len(new_card_list) == len(cache_card_list):
-                    # 如果是第一次，先去刷新缓存
-                    if not disgusting_shop:
+                if not disgusting_shop:
+                    # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
+                    new_card_list = [item['brandId'] for item in card_list]
+                    if set(new_card_list) <= set(cache_card_list) and len(new_card_list) == len(cache_card_list):
                         INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，即将尝试刷新缓存")
                         if self.refresh_cache():
                             INFO("理论上缓存已经刷新成功，如页面未成功自动刷新请及时反馈")
@@ -254,11 +253,17 @@ class JDMemberCloseAccount(object):
                             retried += 1
                             continue
                     else:
-                        # 如果第二次仍然是这种情况，可能这家店无法退出
-                        INFO("可能遇到无法注销的店铺了，店铺名为%s，请设置跳过本店铺" % new_card_list[0]["brandName"])
-                        disgusting_shop = False
+                        cache_card_list = new_card_list
                 else:
-                    cache_card_list = new_card_list
+                    # 发现第二次缓存，多半是无法注销的店铺
+                    INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，请先手动跳过" % card_list[0]["brandName"])
+                    disgusting_shop = False
+                    black_list.append(card_list[0])
+
+            # 跳过无法注销的店铺
+            for item in card_list:
+                if item in black_list:
+                    card_list.remove(item)
 
             # 加载需要跳过的店铺
             shops = []
