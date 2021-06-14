@@ -153,21 +153,24 @@ class JDMemberCloseAccount(object):
         card_list = []
         urllib3.disable_warnings()
         resp = requests.request("POST", url, headers=headers, data=payload, verify=False)
-        ret = json.loads(resp.text)
-        if ret["code"] == "0":
-            if ret["message"] == "用户未登录":
-                WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
-                sys.exit(1)
+        if resp.content:
+            ret = json.loads(resp.text)
+            if ret["code"] == "0":
+                if ret["message"] == "用户未登录":
+                    WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
+                    sys.exit(1)
 
-            if "cardList" not in ret["result"]:
-                INFO("当前卡包中会员店铺为0个")
-                sys.exit(0)
+                if "cardList" not in ret["result"]:
+                    INFO("当前卡包中会员店铺为0个")
+                    sys.exit(0)
 
-            card_list = (ret["result"]["cardList"])
+                card_list = (ret["result"]["cardList"])
+            else:
+                ERROR(ret)
+
+            return card_list
         else:
-            ERROR(ret)
-
-        return card_list
+            ERROR("获取卡包列表接口返回None，请检查网络")
 
     def refresh_cache(self):
         """
@@ -256,12 +259,16 @@ class JDMemberCloseAccount(object):
                         cache_card_list = new_card_list
                 else:
                     # 发现第二次缓存，多半是无法注销的店铺
-                    INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，请先手动跳过" % card_list[len(black_list)]["brandName"])
-                    disgusting_shop = False
-                    if card_list[len(black_list)] in black_list:
-                        black_list.append(card_list[len(black_list) + 1])
-                    else:
-                        black_list.append(card_list[len(black_list)])
+                    try:
+                        INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，请先手动跳过" % card_list[len(black_list)]["brandName"])
+                        disgusting_shop = False
+                        if card_list[len(black_list)] in black_list:
+                            black_list.append(card_list[len(black_list) + 1])
+                        else:
+                            black_list.append(card_list[len(black_list)])
+                    except IndexError:
+                        INFO("好了🙆，剩下的店铺应该都是无法注销的，程序即将退出")
+                        sys.exit(0)
 
             # 跳过无法注销的店铺
             shops = []
