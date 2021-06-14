@@ -1,8 +1,9 @@
 import asyncio
 import json
 import sys
-
-from main import ws_conn
+import requests
+from utils.listener import listener
+from utils.listener import get_host_ip
 from utils.config import get_config
 
 
@@ -14,7 +15,8 @@ def test_websocket():
     print("开始测试websocket监听验证码转发")
     while True:
         try:
-            recv = asyncio.get_event_loop().run_until_complete(ws_conn(get_config()["sms_captcha"]["ws_conn_url"]))
+            print(f"短信验证码测试，请在手机上访问{get_host_ip()}:5201/publish?smsCode=123456测试连通性")
+            recv = listener()
             if recv != "":
                 sms_code = json.loads(recv)["sms_code"]
                 print("发送测试验证码", sms_code)
