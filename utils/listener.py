@@ -4,35 +4,23 @@ import sys
 import time
 import threading
 import socket
-from utils.logger import Log
-
-logger = Log().logger
-
-
-def INFO(*args):
-    logger.info(" ".join(map(str, args)))
+import psutil
+from socket import AddressFamily
 
 
-def WARN(*args):
-    logger.warning(" ".join(map(str, args)))
-
-
-def ERROR(*args):
-    logger.error(" ".join(map(str, args)))
-
-
-def get_host_ip():
+def get_inter_ip():
     """
-    查询本机ip地址
+    查询本机所有ip地址
     :return: ip
     """
-    try:
-        _ = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        _.connect(('1.2.3.4', 80))
-        ip = _.getsockname()[0]
-    finally:
-        _.close()
-        return ip
+    local_addrs = []
+    for name, info in psutil.net_if_addrs().items():
+        for addr in info:
+            if AddressFamily.AF_INET == addr.family:
+                if addr.address == "127.0.0.1":
+                    continue
+                local_addrs.append(addr.address)
+    return local_addrs
 
 
 class MyThread(threading.Thread):
@@ -82,43 +70,55 @@ def limit_decor(timeout, granularity):
     return functions
 
 
-try:
-    tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    tcp_server.bind(("", 5201))
-    tcp_server.listen(128)
-    font_color = ["\033[1;36m", "\033[0m"]
-    print(f"""{font_color[0] if sys.platform != "win32" else ""}注意事项：
-        1. 手机端请求IP地址为如下监听地址，请先用电脑点击一下哪个可以访问通！
-        2. 用手机浏览器测试访问说明1中尝试过的IP地址，如访问通代表无问题
-        3. 以下IP获取到的IP仅做参考，如果全部访问不通，请检查防火墙开启5201端口或使用ipconfig/ifconfig查看本地其他IP
-        4. 记得更改手机端的请求地址，并授权软件短信权限和验证码获取权限{font_color[1] if sys.platform != "win32" else ""}
-    """)
-    INFO(f"监听地址:\thttp://{get_host_ip()}:5201/publish?smsCode=123456\n其它的请 ipconfig/ifconfig 查看本地其他IP")
-except:
-    ERROR("监听失败,请查看是否有同端口脚本")
-
-
-# 等待时间30 轮询时间0.5
-@limit_decor(30, 0.5)
-def listener(*args, **kwargs):
+class WebSocket(object):
     """
-    通过 socket 监听
+    WebSocket服务端
     """
-    while True:
+
+    def __init__(self):
+        from utils.logger import Log
+        self.logger = Log().logger
+        self.tcp_server = None
+        self.bind()
+
+    def bind(self):
         try:
-            cs, ca = tcp_server.accept()
-            recv_data = cs.recv(1024)
-            try:
-                a = str(re.search(r'smsCode=(\d+)', str(recv_data)).group(1))
-                INFO(f'监听到京东验证码:\t{a}')
-                return json.dumps({"sms_code": a})
-            except AttributeError:
-                WARN(f"监听到IP: \t{ca[0]}\t访问，但未获取到短信验证码")
+            self.tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.tcp_server.bind(("", 5201))
+            self.tcp_server.listen(128)
+            font_color = ["\033[1;36m", "\033[0m"]
+            print(f"""{font_color[0] if sys.platform != "win32" else ""}注意事项：
+1. 手机端请求IP地址为如下监听地址，请先测试是否可以访问通
+2. 用手机浏览器测试访问说明1中尝试过的IP地址，如访问通代表无问题
+3. 以下IP获取到的IP仅做参考，如果全部访问不通，请检查防火墙开启5201端口或使用ipconfig/ifconfig查看本地其他IP
+4. 记得更改手机端的请求地址，并授权软件短信权限和验证码获取权限{font_color[1] if sys.platform != "win32" else ""}
+            """)
+            for idx, val in enumerate(get_inter_ip()):
+                self.logger.info(f"监听地址{idx+1}:\thttp://{val}:5201/publish?smsCode=123456")
         except:
-            return ""
+            self.logger.error("监听失败,请查看是否有同端口脚本")
+
+    # 等待时间30 轮询时间0.5
+    @limit_decor(30, 0.5)
+    def listener(self, *args, **kwargs):
+        """
+        通过 socket 监听
+        """
+        while True:
+            try:
+                cs, ca = self.tcp_server.accept()
+                recv_data = cs.recv(1024)
+                try:
+                    a = str(re.search(r'smsCode=(\d+)', str(recv_data)).group(1))
+                    self.logger.info(f'监听到京东验证码:\t{a}')
+                    return json.dumps({"sms_code": a})
+                except AttributeError:
+                    self.logger.warnning(f"监听到IP: \t{ca[0]}\t访问，但未获取到短信验证码")
+            except:
+                return ""
 
 
 if __name__ == '__main__':
     while True:
-        print(listener())
+        print(WebSocket().listener())
