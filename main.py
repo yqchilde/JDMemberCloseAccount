@@ -1,12 +1,10 @@
 import sys
 import time
 import json
-import asyncio
 import requests
 import urllib3
 
 from PIL import Image
-from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
@@ -17,19 +15,6 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-
-
-async def ws_conn(ws_conn_url):
-    """
-    websocket连接
-    """
-    async with connect(ws_conn_url) as websocket:
-        try:
-            recv = await asyncio.wait_for(websocket.recv(), get_config()["sms_captcha"]["ws_timeout"])
-            return recv
-        except asyncio.TimeoutError:
-            return ""
-
 
 logger = Log().logger
 
@@ -54,6 +39,7 @@ class JDMemberCloseAccount(object):
     """
 
     def __init__(self):
+        INFO("欢迎执行JD全自动退会程序，如有使用问题请加TG群https://t.me/jdMemberCloseAccount进行讨论")
         # 初始化基础配置
         self.config = get_config()
         self.selenium_cfg = get_config()["selenium"]
@@ -67,7 +53,10 @@ class JDMemberCloseAccount(object):
         self.wait = WebDriverWait(self.browser, self.selenium_cfg["selenium_timeout"])
 
         # 初始化短信验证码配置
-        if self.sms_captcha_cfg["is_ocr"]:
+        if not self.sms_captcha_cfg["is_ocr"]:
+            from utils.listener import WebSocket
+            self.WebSocket = WebSocket()
+        elif self.sms_captcha_cfg["is_ocr"]:
             if self.ocr_cfg["type"] == "":
                 WARN("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
                 sys.exit(1)
@@ -267,7 +256,7 @@ class JDMemberCloseAccount(object):
                         else:
                             black_list.append(card_list[len(black_list)])
                     except IndexError:
-                        INFO("好了🙆，剩下的店铺应该都是无法注销的，程序即将退出")
+                        INFO("好了🙆，剩下的店铺应该都是无法注销的，请手动打开手机查看对应店铺，程序即将退出")
                         sys.exit(0)
 
             # 跳过无法注销的店铺
@@ -353,14 +342,14 @@ class JDMemberCloseAccount(object):
                                 sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
                     else:
                         try:
-                            recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
+                            recv = self.WebSocket.listener()
                             if recv == "":
                                 INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                                 continue
                             else:
                                 sms_code = json.loads(recv)["sms_code"]
                         except Exception as e:
-                            WARN("请先启动 jd_wstool 工具监听退会短信验证码\n", e.args)
+                            WARN("WebSocket监听时发生了问题", e.args)
                             sys.exit(1)
 
                     # 输入短信验证码
