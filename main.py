@@ -39,6 +39,7 @@ class JDMemberCloseAccount(object):
     """
 
     def __init__(self):
+        INFO("欢迎执行JD全自动退会程序，如有使用问题请加TG群https://t.me/jdMemberCloseAccount进行讨论")
         # 初始化基础配置
         self.config = get_config()
         self.selenium_cfg = get_config()["selenium"]
