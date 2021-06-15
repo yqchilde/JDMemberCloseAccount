@@ -4,6 +4,21 @@ import sys
 import time
 import threading
 import socket
+from utils.logger import Log
+
+logger = Log().logger
+
+
+def INFO(*args):
+    logger.info(" ".join(map(str, args)))
+
+
+def WARN(*args):
+    logger.warning(" ".join(map(str, args)))
+
+
+def ERROR(*args):
+    logger.error(" ".join(map(str, args)))
 
 
 def get_host_ip():
@@ -76,11 +91,12 @@ try:
     print(f"""{font_color[0] if sys.platform != "win32" else ""}注意事项：
         1. 手机端请求IP地址为如下监听地址，请先用电脑点击一下哪个可以访问通！
         2. 用手机浏览器测试访问说明1中尝试过的IP地址，如访问通代表无问题
-        3. 以下IP获取到的IP仅做参考，如果全部访问不通，请检查防火墙开启5201端口或使用ipconfig/ifconfig查看本地其他IP{font_color[1] if sys.platform != "win32" else ""}
+        3. 以下IP获取到的IP仅做参考，如果全部访问不通，请检查防火墙开启5201端口或使用ipconfig/ifconfig查看本地其他IP
+        4. 记得更改手机端的请求地址，并授权软件短信权限和验证码获取权限{font_color[1] if sys.platform != "win32" else ""}
     """)
-    print(f"监听地址:\thttp://{get_host_ip()}:5201/\n其它的请 ipconfig/ifconfig 查看本地其他IP")
+    INFO(f"监听地址:\thttp://{get_host_ip()}:5201/publish?smsCode=123456\n其它的请 ipconfig/ifconfig 查看本地其他IP")
 except:
-    print("监听失败,请查看是否有同端口脚本")
+    ERROR("监听失败,请查看是否有同端口脚本")
 
 
 # 等待时间30 轮询时间0.5
@@ -89,14 +105,18 @@ def listener(*args, **kwargs):
     """
     通过 socket 监听
     """
-    try:
-        cs, ca = tcp_server.accept()
-        recv_data = cs.recv(1024)
-        a = str(re.search(r'smsCode=(\d+)', str(recv_data)).group(1))
-        print(f'{time.strftime("%Y/%m/%d %H:%M:%S", time.localtime())}\t监听到京东验证码:\t{a}')
-        return json.dumps({"sms_code": a})
-    except:
-        return ""
+    while True:
+        try:
+            cs, ca = tcp_server.accept()
+            recv_data = cs.recv(1024)
+            try:
+                a = str(re.search(r'smsCode=(\d+)', str(recv_data)).group(1))
+                INFO(f'监听到京东验证码:\t{a}')
+                return json.dumps({"sms_code": a})
+            except AttributeError:
+                WARN(f"监听到IP: \t{ca[0]}\t访问，但未获取到短信验证码")
+        except:
+            return ""
 
 
 if __name__ == '__main__':
