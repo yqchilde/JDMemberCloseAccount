@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import time
+from pathlib import Path
 
 from PIL import ImageGrab
 from cnocr import CnOcr
@@ -9,6 +10,7 @@ from cnocr import CnOcr
 sms_code = ""
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+VDIR = Path(__file__).resolve().parent.parent
 
 
 class CnOCR(object):
@@ -44,7 +46,7 @@ class CnOCR(object):
         global sms_code
         self.get_code_pic(_range)
 
-        cn_ocr = CnOcr(model_name="conv-lite-fc", context="cpu", root="conv-lite-fc")
+        cn_ocr = CnOcr(model_name="conv-lite-fc", context="cpu", root=str(VDIR / "conv-lite-fc"))
         ret = cn_ocr.ocr("ios_code_pic.png")
         result = ""
         for v in ret:
