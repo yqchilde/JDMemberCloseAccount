@@ -40,8 +40,8 @@
             * 像安卓端一样传验证码（基本逻辑：iOS设备通过访问短信数据库，监听最新的jd验证码）
 
                 1.
-                下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py)
-                传到手机上（测试Pythonista 3可以，其他软件自行研究）
+              下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py)
+              传到手机上（测试Pythonista 3可以，其他软件自行研究）
 
                 2. 填写执行主程序 `main.py` 中监听的地址ip
 
@@ -82,16 +82,18 @@
                 * `sms_captcha.is_ocr.type`设置为`aliyun`
 
                 * `sms_captcha.is_ocr.aliyun_appcode`补充完整
-
-           easyocr (免费，本地识别)
-
+    
+           cnocr (免费，本地识别，体积更小，速度更快)
+    
                 * 同上，需要在`config.yaml`中配置如下参数：
-
+    
                 * `sms_captcha.is_ocr`设置为`true`
 
-                * `sms_captcha.is_ocr.type`设置为`easyocr`
+                * `sms_captcha.is_ocr.type`设置为`cnocr`
 
-                * 使用时注意框选识别的范围只显示6位数字验证码(现支持一整条完整短信的区域，当然范围越大识别速度也会相应增加，区域扩大是为了优化某些用户短信验证码6位数字每次位置不一致问题)（毕竟免费开源，识别条件有点苛刻）
+           easyocr **已弃用** (免费，本地识别)
+
+                * 已弃用，请切换到cnocr
 
 3. 第二关：图形验证码（任选以下一种类型，默认采用本地识别）
 
@@ -162,7 +164,7 @@ shop:
 # sms_captcha.is_ocr: 是否开启OCR模式，IOS设备必须开启，安卓非必须
 # sms_captcha.ws_conn_url: websocket链接地址，不用动
 # sms_captcha.ws_timeout: websocket接收验证码时间超时时间，超时会跳过当前店铺，进行下一个店铺，默认为60秒
-# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、easyocr
+# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、cnocr
 # sms_captcha.ocr.ocr_range: 需要截取的投屏区域的验证码左上角和右下角坐标，顺序依次是 [左x,左y,右x,右y]，如[1,2,3,4]
 # sms_captcha.ocr.ocr_delay_time: OCR识别的延迟时间，如果没识别到就几秒后再次尝试，默认为5
 # sms_captcha.ocr.baidu_app_id: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`app_id`
@@ -223,13 +225,13 @@ user-agent:
 
 3. 如果用ocr，is_ocr写true，能理解吧
 
-4. ocr里面的type是三选一，baidu / aliyun / easyocr，代表你要用的ocr平台是哪个，easyocr是本地的，其他两个是线上的
+4. ocr里面的type是三选一，baidu / aliyun / cnocr，代表你要用的ocr平台是哪个，cnocr是本地的，其他两个是线上的
 
 5. ocr_range是你要截图的区域，不知道怎么截，往下翻，有截图
 
 6. ocr_delay_time是ocr延迟时间，不想改就保持默认
 
-7. 下面的配置，就是type你用baidu，下面id，key啥的你就写baidu的，阿里同样原理，easyocr不用写
+7. 下面的配置，就是type你用baidu，下面id，key啥的你就写baidu的，阿里同样原理，cnocr不用写
 
 ### 5. 启动主程序
 
