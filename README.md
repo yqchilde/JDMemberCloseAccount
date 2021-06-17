@@ -4,7 +4,23 @@
 
 该分支仅用于从`main`分支拉取最新代码并利用`pyinstall`进行打包，不会将其合并至`main`
 
-## Step
+了解其他详细配置请浏览 [配置说明](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/README.md)
+
+## Run
+
+1. 打包好的项目如何运行呢？
+
+    * **前提：** 在运行之前请确保目录下的`drivers`目录里有你的驱动，`config.yaml`配置完善
+
+    * macOS(amd64)：从终端中进入项目，然后 `./main` 即可运行并产生日志
+    
+    * win：
+
+## Build
+
+以下是构建时的操作，非自己有打包需求的用户不用关心
+
+### Step
 
 1.  首先配置好环境
 
@@ -41,7 +57,7 @@
     pyinstaller -F -y main.py --add-data="./conv-lite-fc:./conv-lite-fc" --icon=logo.ico
     ```
 
-## Question
+### Question
 
 1.  运行时出现`MxNET`报错怎么办？
 
@@ -68,7 +84,7 @@
     >   1.  打包的程序不应带有病毒破坏性程序
     >   2.  打包的程序不得收集用户信息(包括但不限于`Cookie`)和除改善程序为目的的数据收集
 
-## Copy file
+### Copy file
 
 复制以下文件夹到`dist`目录
 
