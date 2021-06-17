@@ -66,12 +66,9 @@ class JDMemberCloseAccount(object):
             elif self.ocr_cfg["type"] == "aliyun":
                 from captcha.aliyun_ocr import AliYunOCR
                 self.aliyun_ocr = AliYunOCR(self.ocr_cfg)
-            elif self.ocr_cfg["type"] == "cnocr":
-                from captcha.cn_ocr import CnOCR
-                self.cn_ocr = CnOCR()
             elif self.ocr_cfg["type"] == "easyocr":
-                WARN("easyocr在当前版本中已弃用，请将类型换成cnocr")
-                sys.exit(1)
+                from captcha.easy_ocr import EasyOCR
+                self.easy_ocr = EasyOCR()
 
         # 初始化图形验证码配置
         if self.image_captcha_cfg["type"] == "cjy":
@@ -340,9 +337,9 @@ class JDMemberCloseAccount(object):
                             elif self.ocr_cfg["type"] == "aliyun":
                                 INFO("开始调用阿里云OCR识别")
                                 sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
-                            elif self.ocr_cfg["type"] == "cnocr":
-                                INFO("开始调用CnOCR识别")
-                                sms_code = self.cn_ocr.cn_ocr(_range, ocr_delay_time)
+                            elif self.ocr_cfg["type"] == "easyocr":
+                                INFO("开始调用EasyOCR识别")
+                                sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
                     else:
                         try:
                             recv = self.WebSocket.listener()

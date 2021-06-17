@@ -26,7 +26,7 @@ shop:
 # sms_captcha.is_ocr: 是否开启OCR模式，IOS设备必须开启，安卓非必须
 # sms_captcha.ws_conn_url: websocket链接地址，不用动
 # sms_captcha.ws_timeout: websocket接收验证码时间超时时间，超时会跳过当前店铺，进行下一个店铺，默认为60秒
-# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、cnocr
+# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、easyocr
 # sms_captcha.ocr.ocr_range: 需要截取的投屏区域的验证码左上角和右下角坐标，顺序依次是 [左x,左y,右x,右y]，如[1,2,3,4]
 # sms_captcha.ocr.ocr_delay_time: OCR识别的延迟时间，如果没识别到就几秒后再次尝试，默认为5
 # sms_captcha.ocr.baidu_app_id: 百度通用文字识别应用的`app_id`
