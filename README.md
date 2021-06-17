@@ -38,23 +38,21 @@
 
 3.  使用虚拟环境的 Pyinstaller 打包
 
-    >   在打包之前，你还需要确认你的文件夹下是否有`conv-lite-fc`，它是模型集。如果没有的话，可能会导致打包失败。运行一下`captcha/cn_ocr.py`就会自动下载。
-
     #### mac
 
     ```shell
-    pyinstaller -F -y main.py --add-data="./conv-lite-fc:./conv-lite-fc"
+    pyinstaller -F -y main.py
     ```
 
     ```shell
     # 同样你可以打包 MAC APP 但你必须解决好`config.yaml`和浏览器驱动问题
-    pyinstaller --onedir -y -w main.py --add-data="./conv-lite-fc:./conv-lite-fc" --icon=logo.icns
+    pyinstaller --onedir -y -w main.py --icon=logo.icns
     ```
 
     #### win
 
     ```shell
-    pyinstaller -F -y main.py --add-data="./conv-lite-fc:./conv-lite-fc" --icon=logo.ico
+    pyinstaller -F -y main.py --icon=screenshots/logo.ico
     ```
 
 ### Question
