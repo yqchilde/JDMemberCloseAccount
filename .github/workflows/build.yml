@@ -37,7 +37,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         pip3 install pyinstaller
-        pyinstaller -F -y main.py --icon=logo.ico
+        pyinstaller -F -y main.py --icon=screenshots/logo.ico
 
     # Tar dist for mac / win
     - name: Tar dist for mac
