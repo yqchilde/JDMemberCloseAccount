@@ -1,3 +1,5 @@
+-i https://mirrors.aliyun.com/pypi/simple/
+
 requests~=2.25.1
 PyYAML~=5.4.1
 psutil~=5.8.0

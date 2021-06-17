@@ -53,7 +53,7 @@ class EasyOCR(object):
             find_all = re.findall(r'(您的验证码为[\d]{6})', str(result))
 
         # 识别结果
-        self.logger.info(str(result))
+        self.logger.info("EasyOCR识别结果：" + str(result))
 
         if len(find_all) == 1:
             code = find_all[0].strip("'")
