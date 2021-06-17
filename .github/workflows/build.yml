@@ -27,16 +27,23 @@ jobs:
       run: |
         pip3 install -r requirements.txt
 
-    - name: Run pyinstaller
+    # Run pyinstaller for mac / win
+    - name: Run pyinstaller for mac
+      if: matrix.os == 'macos-latest'
+      run: |
+        pip3 install pyinstaller
+        pyinstaller -F -y main.py
+    - name: Run pyinstaller for windows
+      if: matrix.os == 'windows-latest'
       run: |
         pip3 install pyinstaller
         pyinstaller -F -y main.py --icon=logo.ico
 
+    # Tar dist for mac / win
     - name: Tar dist for mac
       if: matrix.os == 'macos-latest'
       run: |
         ls
-        mkdir dist
         cp -r drivers dist/
         cp -r extra dist/
         cp LICENSE dist/
@@ -46,12 +53,10 @@ jobs:
         tar -czvf jd-tuihui-mac.tar.gz jd-tuihui-mac
         mkdir artifacts
         mv jd-tuihui-mac.tar.gz artifacts || true
-
     - name: Tar dist for windows
       if: matrix.os == 'windows-latest'
       run: |
         ls
-        mkdir dist
         cp drivers/ dist/
         cp extra/ dist/
         cp LICENSE dist/
