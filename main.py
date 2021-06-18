@@ -207,7 +207,7 @@ class JDMemberCloseAccount(object):
         self.browser.delete_all_cookies()
         for cookie in self.config['cookie'].split(";", 1):
             self.browser.add_cookie(
-                {"name": cookie.split("=")[0], "value": cookie.split("=")[1].strip(";"), "domain": ".jd.com"}
+                {"name": cookie.split("=")[0].strip(" "), "value": cookie.split("=")[1].strip(";"), "domain": ".jd.com"}
             )
         self.browser.refresh()
 
