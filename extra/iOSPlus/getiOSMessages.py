@@ -3,14 +3,15 @@
 '''
 项目名称: JDMemberCloseAccount / getiOSMessages
 Author: Curtin
-功能：像安卓端一样传验证码（基本逻辑：iOS设备通过访问短信数据库，监听最新的jd验证码并传到jd_wstool。）
+功能：
 Date: 2021/6/12 上午9:20
 '''
-##### 设置jd_wstool的ip地址，端口默认
+##### 设置jd_wstool的ip地址
 ipaddr = '192.168.0.101'
 ## 刷新时间（秒）
 sleepTIme = 3
-
+#iOS14.3测试正常
+smsdb='/private/var/mobile/Library/SMS/sms.db'
 #####
 
 import sys
@@ -30,7 +31,7 @@ if sys.platform != 'ios':
     print("sorry，仅支持ios且越狱的设备~")
     exit(0)
 try:
-    conn = sqlite3.connect('/private/var/mobile/Library/SMS/sms.db')
+    conn = sqlite3.connect(smsdb)
     curs = conn.cursor()
     result = curs.execute("SELECT rowid,date FROM message order by date desc limit 1")
     for i in result:
@@ -60,8 +61,8 @@ def postCode(code):
         "Connection": "keep-alive"
     }
     try:
-        resp = get(url=f'http://{ipaddr}:5201/publish?smsCode={code}', headers=headers)
-        print(resp.json())
+        get(url=f'http://{ipaddr}:5201/publish?smsCode={code}', headers=headers)
+        #print(resp.json())
     except:
         aginNUm += 1
         if aginNUm < 2:
@@ -96,3 +97,4 @@ def run():
 
 if __name__ == '__main__':
     run()
+
