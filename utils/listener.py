@@ -114,7 +114,7 @@ class WebSocket(object):
                     self.logger.info(f'监听到京东验证码:\t{a}')
                     return json.dumps({"sms_code": a})
                 except AttributeError:
-                    self.logger.warnning(f"监听到IP: \t{ca[0]}\t访问，但未获取到短信验证码")
+                    self.logger.warning(f"监听到IP: {ca[0]}访问，但未获取到短信验证码")
             except:
                 return ""
 
