@@ -54,8 +54,8 @@ class JDMemberCloseAccount(object):
 
         # 初始化短信验证码配置
         if not self.sms_captcha_cfg["is_ocr"]:
-            from utils.listener import WebSocket
-            self.WebSocket = WebSocket()
+            from utils.listener import SmsSocket
+            self.sms = SmsSocket()
         elif self.sms_captcha_cfg["is_ocr"]:
             if self.ocr_cfg["type"] == "":
                 WARN("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
@@ -342,7 +342,7 @@ class JDMemberCloseAccount(object):
                                 sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
                     else:
                         try:
-                            recv = self.WebSocket.listener()
+                            recv = self.sms.listener()
                             if recv == "":
                                 INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                                 continue
