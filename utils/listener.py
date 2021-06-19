@@ -106,7 +106,7 @@ class SmsSocket:
 
                     return json.dumps({"sms_code": a})
                 except AttributeError:
-                    logger.warning(f"监听到IP: \t{ca[0]}\t访问，但未获取到短信验证码")
+                    logger.warning(f"监听到IP: {ca[0]}访问，但未获取到短信验证码")
             except OSError:
                 logger.warning("请确保你没有打开另外一个监听脚本或jd_tools")
 
