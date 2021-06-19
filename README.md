@@ -26,7 +26,8 @@
 
     1. 安卓端（以下两种任选一个用就行）：
 
-        * 利用[macrodroid软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来并送到selenium中填写
+        * 利用[macrodroid软件](https://wwa.lanzoui.com/iSwocpqow3a) 监听，一旦监听到就立即通过HTTP请求利用websocket推送过来，由`jd_wstool`
+          工具监听并送到selenium中填写
 
         * 利用[tasker软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，同上
     
@@ -39,12 +40,12 @@
         1. 越狱机（来自[@curtinlv](https://github.com/curtinlv)
            大佬的越狱监听短信方法，[#61](https://github.com/yqchilde/JDMemberCloseAccount/pull/61) ）
 
-            * 像安卓端一样传验证码（基本逻辑：iOS设备通过访问短信数据库，监听最新的jd验证码）
+            * 像安卓端一样传验证码（基本逻辑：iOS设备通过访问短信数据库，监听最新的jd验证码并传到 `jd_wstool`）
 
                 1. 下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py)
               传到手机上（测试Pythonista 3可以，其他软件自行研究）
 
-                2. 填写执行主程序 `main.py` 中监听的地址ip
+                2. 填写`jd_wstool` 监听地址ip
 
                    如：监听地址1： http://192.168.0.101:5201，填在脚本开头 ipaddr= '192.168.0.101'
 
@@ -167,6 +168,7 @@ shop:
 
 # sms_captcha 短信验证码相关
 # sms_captcha.is_ocr: 是否开启OCR模式，IOS设备必须开启，安卓非必须
+# sms_captcha.jd_wstool: 是否调用jd_wstool工具监听验证码，默认为开启，如果不想开启，设置为false会调用内置websocket监听
 # sms_captcha.ws_conn_url: websocket链接地址，不用动
 # sms_captcha.ws_timeout: websocket接收验证码时间超时时间，超时会跳过当前店铺，进行下一个店铺，默认为60秒
 # sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、easyocr
@@ -178,6 +180,7 @@ shop:
 # sms_captcha.ocr.aliyun_appcode: 需要在[阿里云市场](https://market.aliyun.com/products/57124001/cmapi028554.html?spm=5176.2020520132.101.2.608172181RzlnC#sku=yuncode2255400000) 购买后的`AppCode`
 sms_captcha:
   is_ocr: false
+  jd_wstool: true
   ws_conn_url: "ws://localhost:5201/subscribe"
   ws_timeout: 60
   ocr:
@@ -238,13 +241,21 @@ user-agent:
 
 7. 下面的配置，就是type你用baidu，下面id，key啥的你就写baidu的，阿里同样原理，easyocr不用写
 
-### 5. 启动主程序
+### 5. 启动 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases) 工具（使用OCR的不用开）
+
+这个步骤只需要安卓端手机用了tasker 或 macrodroid 或其他自动化工具的开启
+
+什么意思呢？就是配置文件中你的 `is_ocr`为false的，就要开启，否则不用开启
+
+### 6. 启动主程序
 
 在项目目录下执行`python3 main.py`，等待执行完毕即可
 
-## 关于 `jd_wstool` 工具（已弃用）
+## 关于 `jd_wstool` 工具
 
 该工具是用来监听手机端发送HTTP请求传递验证码的，实现原理是websocket
+
+如果不想用`jd_wstool`，配置文件`sms_captcha`下面的`jd_wstool`设置为false，就会走内置websocket，默认为true
 
 1. 我编译好了各种操作系统的包，直接下载 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases), 选择自己的电脑系统对应的压缩包，解压运行
 2. 自行编译，代码在 [cmd](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/cmd) 目录下
@@ -268,13 +279,19 @@ user-agent:
 3. 百度OCR报错 `{'error_code': 14, 'error_msg': 'IAM Certification failed'}`
 
     * 说明从百度复制到配置文件的`baidu_app_id`, `baidu_api_key`, `baidu_secret_key` 不正确
+    
+4. 电脑端没有监听到验证码，显示等待websocket推送短信验证码超时
+
+    * 先用手机浏览器访问监听地址，确保能访问通
+
+    * 如果访问通说明IP没问题，请查看手机端MacroDroid或Tasker里main的日志，确保有监听到
 
 ## 测试
 
 1. websocket转发验证码
 
-    1. 电脑运行`python3 test_main.py` ，此时模拟启动main程序和监听验证码程序
-    2. 手机访问 `http://你的IP:5201/publish?smsCode=1234522`，之后查看电脑上`test_main.py` 的控制台输出信息
+    1. 电脑运行`python3 test_main.py`和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
+    2. 手机访问 `http://你的IP:5201/publish?smsCode=1234522`，之后查看电脑上`jd_wstool` 和 `test_main.py` 的控制台输出信息
 
 2. 百度OCR
 
@@ -283,6 +300,10 @@ user-agent:
 3. Easy OCR
 
     1. 运行`python3 ./captcha/easy_ocr.py`测试
+    
+4. `main.py`执行报错
+
+    1. 在`config.yaml`里设置`debug: true`再次执行可以看到具体报错，如解决不了请反馈tg群
 
 ## ScreenShots
 

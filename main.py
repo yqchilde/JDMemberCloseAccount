@@ -1,10 +1,12 @@
 import sys
 import time
 import json
+import asyncio
 import requests
 import urllib3
 
 from PIL import Image
+from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
@@ -15,6 +17,19 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+
+
+async def ws_conn(ws_conn_url):
+    """
+    websocket连接
+    """
+    async with connect(ws_conn_url) as websocket:
+        try:
+            recv = await asyncio.wait_for(websocket.recv(), get_config()["sms_captcha"]["ws_timeout"])
+            return recv
+        except asyncio.TimeoutError:
+            return ""
+
 
 logger = Log().logger
 
@@ -54,8 +69,9 @@ class JDMemberCloseAccount(object):
 
         # 初始化短信验证码配置
         if not self.sms_captcha_cfg["is_ocr"]:
-            from utils.listener import WebSocket
-            self.WebSocket = WebSocket()
+            if not self.sms_captcha_cfg["jd_wstool"]:
+                from utils.listener import WebSocket
+                self.WebSocket = WebSocket()
         elif self.sms_captcha_cfg["is_ocr"]:
             if self.ocr_cfg["type"] == "":
                 WARN("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
@@ -342,7 +358,11 @@ class JDMemberCloseAccount(object):
                                 sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
                     else:
                         try:
-                            recv = self.WebSocket.listener()
+                            if self.sms_captcha_cfg["jd_wstool"]:
+                                recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
+                            else:
+                                recv = self.WebSocket.listener()
+
                             if recv == "":
                                 INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                                 continue

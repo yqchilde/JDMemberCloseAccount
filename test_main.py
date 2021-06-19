@@ -1,7 +1,9 @@
-import json
 import sys
+import asyncio
+
 from utils.listener import WebSocket
-from utils.listener import get_inter_ip
+from main import ws_conn
+from utils.config import get_config
 
 
 def test_websocket():
@@ -10,10 +12,13 @@ def test_websocket():
     :return:
     """
     print("开始测试websocket监听验证码转发")
-    print(f"短信验证码测试，请在手机上访问以下任一个监听地址测试连通性")
     while True:
         try:
-            recv = WebSocket().listener()
+            if get_config()["sms_captcha"]["jd_wstool"]:
+                recv = asyncio.get_event_loop().run_until_complete(ws_conn(get_config()["sms_captcha"]["ws_conn_url"]))
+            else:
+                print(f"短信验证码测试，请在手机上访问以下任一个监听地址测试连通性")
+                recv = WebSocket().listener()
             if recv != "":
                 pass
         except Exception as e:
