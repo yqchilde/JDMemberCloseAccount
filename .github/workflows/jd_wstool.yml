@@ -17,7 +17,7 @@ jobs:
         run: |
           make release
           mkdir artifacts
-          mv jd_wstool-*.tar.gz artifacts || true
+          mv *.tar.gz artifacts || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
