@@ -1,10 +1,10 @@
 {
-  "device": "",
+  "device": "ios",
   "baidu_app_id": "",
   "baidu_api_key": "",
   "baidu_secret_key": "",
-  "baidu_range": [1904,634,2036,676],
-  "ocr_delay_time": 1,
+  "baidu_range": [1904,634,2030,676],
+  "ocr_delay_time": 2,
   "first_time_delay_time": 5,
   "browserType": "Chrome",
   "headless": false,
