@@ -1,6 +1,10 @@
+import os
+import sys
 import base64
 import json
 import requests
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 class TuJian(object):
@@ -9,9 +13,12 @@ class TuJian(object):
     图鉴打码地址：https://www.ttshitu.com
     """
 
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
+    def __init__(self, _config):
+        from utils.logger import Log
+        self.logger = Log().logger
+
+        self.username = _config["tj_username"]
+        self.password = _config["tj_password"]
 
     def post_pic(self, im, type_id):
         """
@@ -25,7 +32,8 @@ class TuJian(object):
         if ret['success']:
             return ret["data"]
         else:
-            return ret["message"]
+            self.logger.error(ret["message"])
+            sys.exit(1)
 
     @staticmethod
     def report_error(pid):

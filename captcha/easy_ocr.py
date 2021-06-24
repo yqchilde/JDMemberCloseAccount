@@ -1,11 +1,13 @@
+import os
 import re
+import sys
 import time
-
 import easyocr
 
-from captcha.baidu_ocr import BaiduOCR
+from PIL import ImageGrab
 
 sms_code = ""
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 class EasyOCR(object):
@@ -14,7 +16,22 @@ class EasyOCR(object):
     """
 
     def __init__(self):
-        pass
+        from utils.logger import Log
+        self.logger = Log().logger
+
+    @staticmethod
+    def get_code_pic(_range, name='ios_code_pic.png'):
+        """
+        获取验证码图像
+        :param _range:
+        :param name:
+        :return:
+        """
+
+        # 确定验证码的左上角和右下角坐标
+        code_pic = ImageGrab.grab(_range)
+        code_pic.save(name)
+        return code_pic
 
     def easy_ocr(self, _range, delay_time=5):
         """
@@ -24,19 +41,25 @@ class EasyOCR(object):
         :return: 识别到的数字
         """
         global sms_code
-        BaiduOCR.get_code_pic(_range)
+        self.get_code_pic(_range)
 
         reader = easyocr.Reader(['ch_sim', 'en'])
         result = reader.readtext('ios_code_pic.png')
+
         find_all = re.findall(r'\'[\d]{6}\'', str(result))
-        print(f"easy-ocr:{len(find_all)}\n"
-              f"{str(result)}")
+        if len(find_all) != 1:
+            find_all = re.findall(r'([\d]{6})[\u3002]', str(result))
+        if len(find_all) != 1:
+            find_all = re.findall(r'(您的验证码为[\d]{6})', str(result))
+
+        # 识别结果
+        self.logger.info("EasyOCR识别结果：" + str(result))
 
         if len(find_all) == 1:
             code = find_all[0].strip("'")
 
             if sms_code == code:
-                print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+                self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
                 time.sleep(delay_time)
                 return self.easy_ocr(_range, delay_time)
             else:
@@ -44,12 +67,15 @@ class EasyOCR(object):
 
             return code
         else:
-            print("暂未获取到最新验证码，%d秒后重试" % delay_time)
+            self.logger.info("暂未获取到最新验证码，%d秒后重试" % delay_time)
             time.sleep(delay_time)
             return self.easy_ocr(_range, delay_time)
 
 
 if __name__ == '__main__':
-    _range = (3460, 590, 3658, 638)
-    sms_code = EasyOCR().easy_ocr(_range, 4)
+    from utils.config import get_config
+
+    ocr_cfg = get_config("../config.yaml")["sms_captcha"]["ocr"]
+    _range = ocr_cfg["ocr_range"]
+    sms_code = EasyOCR().easy_ocr(_range, ocr_cfg["ocr_delay_time"])
     print("Easy OCR识别到的验证码是：", sms_code)

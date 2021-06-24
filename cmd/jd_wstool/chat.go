@@ -77,7 +77,7 @@ func (cs *chatServer) introduction(w http.ResponseWriter, _ *http.Request) {
     <title>注意</title>
 </head>
 <body>
-<strong>1. 这个地址是可以访问的，请用手机连接这个IP吧</strong><br>
+<strong>1. 这个地址是可以访问的，请用手机连接这个IP吧，请在MacroDroid或Tasker里面替换监听的IP</strong><br>
 <strong>2. 使用说明请看 <a href="https://github.com/yqchilde/JDMemberCloseAccount">https://github.com/yqchilde/JDMemberCloseAccount</a> </strong>
 </body>
 </html>`

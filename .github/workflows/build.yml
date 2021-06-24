@@ -1,0 +1,87 @@
+name: Build JD-TuiHui
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: build and release
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, windows-latest ]
+
+    steps:
+    - uses: actions/checkout@v2
+        
+    - name: Install python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Build
+      run: |
+        pip3 install -r requirements.txt
+
+    # Run pyinstaller for mac / win
+    - name: Run pyinstaller for mac
+      if: matrix.os == 'macos-latest'
+      run: |
+        pip3 install pyinstaller
+        pyinstaller -F -y main.py
+    - name: Run pyinstaller for windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        pip3 install pyinstaller
+        pyinstaller -F -y main.py --icon=screenshots/logo.ico
+
+    # Tar dist for mac / win
+    - name: Tar dist for mac
+      if: matrix.os == 'macos-latest'
+      run: |
+        ls
+        cp -r drivers dist/
+        cp -r extra dist/
+        cp LICENSE dist/
+        cp README.md dist/
+        cp config.yaml dist/
+        mv dist jd-tuihui-mac
+        tar -czvf jd-tuihui-mac.tar.gz jd-tuihui-mac
+        mkdir artifacts
+        mv jd-tuihui-mac.tar.gz artifacts || true
+    - name: Tar dist for windows
+      if: matrix.os == 'windows-latest'
+      run: |
+        ls
+        cp drivers/ dist/
+        cp extra/ dist/
+        cp LICENSE dist/
+        cp README.md dist/
+        cp config.yaml dist/
+        mv dist jd-tuihui-windows
+        tar -czvf jd-tuihui-windows.tar.gz jd-tuihui-windows
+        mkdir artifacts
+        mv jd-tuihui-windows.tar.gz artifacts || true
+
+    - name: upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.os }}
+        path: artifacts
+
+    - name: Get version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+    - name: Upload gzip file to release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        name: 京东全自动退会助手
+        files: 'artifacts/**'
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
