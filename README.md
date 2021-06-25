@@ -97,9 +97,13 @@
 
 3. 第二关：图形验证码（任选以下一种类型，默认采用本地识别）
 
-    1. 本地识别（再也不用花钱了👍），来自[@AntonVanke](https://github.com/AntonVanke)
+    1. 本地识别（再也不用花钱了👍）
+       
+        * 来自[@AntonVanke](https://github.com/AntonVanke)
        大佬提供的 [JDCaptcha](https://github.com/AntonVanke/JDCaptcha) 项目(已集成)
-       ，[测试图在最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) ，
+       ，[测试图在最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) 
+          
+        * [@dd178](https://github.com/dd178) 使用 [yolov4](https://github.com/AlexeyAB/darknet) 训练的权重
 
     2. 收费的打码平台
 
@@ -131,12 +135,19 @@
    pip3 install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
    ```
 
-3. 下载对应的浏览器驱动放到项目的`drivers`文件夹下面
+3. 下载必要文件
 
-    * `chrome`请访问`chrome://version/`查看浏览器的版本，然后去 [chromedriver](http://chromedriver.storage.googleapis.com/index.html)
+    3.1 下载对应的浏览器驱动放到项目的`drivers`文件夹下面
+      
+    `chrome`请访问`chrome://version/`查看浏览器的版本，然后去 [chromedriver](http://chromedriver.storage.googleapis.com/index.html)
       下载对应的版本/系统驱动（只需要保证版本号前三段一致即可，比如`91.0.4472.77`只需要保证`91.0.4472.x`就行），下载后解压，将其可执行文件（mac为`chromedriver`
       ，win为`chromedriver.exe`放在项目的`drivers`目录下即可）
+   
+    3.2 如果想使用yolov4识别验证码
 
+    下载[权重文件](https://github.com/dd178/JDMemberCloseAccount/releases/download/v1.0.3/yolov4-custom.tar.gz) ，将`yolov4-custom.weights`解压至`yolov4`文件夹下
+   
+    
 ### 2. 补充配置文件
 
 * `config.yaml`文件
@@ -193,7 +204,7 @@ sms_captcha:
     aliyun_appcode: ""
 
 # image_captcha 图形验证码相关
-# image_captcha.type: 图形验证码类型，可选：local、cjy、tj
+# image_captcha.type: 图形验证码类型，可选：local、cjy、tj、yolov4
 # image_captcha.cjy_username: 超级鹰账号，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_password: 超级鹰密码，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_soft_id: 超级鹰软件ID，仅在 image_captcha.type 为 cjy 时需要设置
@@ -202,7 +213,7 @@ sms_captcha:
 # image_captcha.tj_password: 图鉴密码，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_type_id: 图鉴验证码类型，仅在 image_captcha.type 为 tj 时需要设置，且该项目指定为 19
 image_captcha:
-  type: "local"
+  type: "yolov4"
   cjy_username: ""
   cjy_password: ""
   cjy_soft_id: ""

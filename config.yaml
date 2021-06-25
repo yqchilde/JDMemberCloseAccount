@@ -49,7 +49,7 @@ sms_captcha:
     aliyun_appcode: ""
 
 # image_captcha 图形验证码相关
-# image_captcha.type: 图形验证码类型，可选：local、cjy、tj
+# image_captcha.type: 图形验证码类型，可选：local、cjy、tj、yolov4
 # image_captcha.cjy_username: 超级鹰账号，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_password: 超级鹰密码，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_soft_id: 超级鹰软件ID，仅在 image_captcha.type 为 cjy 时需要设置
@@ -58,7 +58,7 @@ sms_captcha:
 # image_captcha.tj_password: 图鉴密码，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_type_id: 图鉴验证码类型，仅在 image_captcha.type 为 tj 时需要设置，且该项目指定为 19
 image_captcha:
-  type: "local"
+  type: "yolov4"
   cjy_username: ""
   cjy_password: ""
   cjy_soft_id: ""
