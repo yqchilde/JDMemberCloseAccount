@@ -10,7 +10,7 @@ from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
-from captcha.jd_yolo_captcha import JDyolo
+from captcha.jd_yolo_captcha import JDyolocaptcha
 from utils.logger import Log
 from utils.config import get_config
 from utils.selenium_browser import get_browser
@@ -92,8 +92,10 @@ class JDMemberCloseAccount(object):
             self.cjy = ChaoJiYing(self.image_captcha_cfg)
         elif self.image_captcha_cfg["type"] == "tj":
             self.tj = TuJian(self.image_captcha_cfg)
-        elif self.image_captcha_cfg["type"] in ["local", "yolov4"]:
+        elif self.image_captcha_cfg["type"] == "local":
             pass
+        elif self.image_captcha_cfg["type"] == "yolov4":
+            self.JDyolo = JDyolocaptcha(self.image_captcha_cfg)
         else:
             WARN("请在config.yaml中补充image_captcha.type")
 
@@ -457,7 +459,7 @@ class JDMemberCloseAccount(object):
                                 res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
                             else:
                                 INFO("正在通过深度学习引擎识别")
-                                res = JDyolo(cpc_img_path_base64, pcp_show_picture_path_base64)
+                                res = self.JDyolo.JDyolo(cpc_img_path_base64, pcp_show_picture_path_base64)
                             if res[0]:
                                 ActionChains(self.browser).move_to_element_with_offset(
                                     cpc_img, int(res[1][0] * zoom),

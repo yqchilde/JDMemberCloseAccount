@@ -47,7 +47,7 @@
 
                 2. 填写`jd_wstool` 监听地址ip
 
-                   如：监听地址1： http://192.168.0.101:5201，填在脚本开头 ipaddr= '192.168.0.101'
+                   如：监听地址1： http://192.168.0.101:5201 ，填在脚本开头 ipaddr= '192.168.0.101'
 
                 3. 运行脚本
 
@@ -212,8 +212,11 @@ sms_captcha:
 # image_captcha.tj_username: 图鉴账号，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_password: 图鉴密码，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_type_id: 图鉴验证码类型，仅在 image_captcha.type 为 tj 时需要设置，且该项目指定为 19
+# yolov4_weights: yolov4权重文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
+# yolov4_cfg: yolov4配置文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
+# CUDA: 尝试使用CUDA加速，据说速度可提升几倍到几十倍，需要编译安装opencv，仅在 image_captcha.type 为 yolov4 时需要设置
 image_captcha:
-  type: "yolov4"
+  type: "local"
   cjy_username: ""
   cjy_password: ""
   cjy_soft_id: ""
@@ -221,6 +224,9 @@ image_captcha:
   tj_username: ""
   tj_password: ""
   tj_type_id: 19
+  yolov4_weights: "yolov4/yolov4-custom.weights"
+  yolov4_cfg: "yolov4/yolov4-custom.cfg"
+  CUDA: false
 
 # user-agent 用户代理，可自行配置
 user-agent:
