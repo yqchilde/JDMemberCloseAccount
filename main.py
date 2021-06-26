@@ -10,6 +10,7 @@ from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
+from captcha.jd_yolo_captcha import JDyolocaptcha
 from utils.logger import Log
 from utils.config import get_config
 from utils.selenium_browser import get_browser
@@ -93,6 +94,8 @@ class JDMemberCloseAccount(object):
             self.tj = TuJian(self.image_captcha_cfg)
         elif self.image_captcha_cfg["type"] == "local":
             pass
+        elif self.image_captcha_cfg["type"] == "yolov4":
+            self.JDyolo = JDyolocaptcha(self.image_captcha_cfg)
         else:
             WARN("请在config.yaml中补充image_captcha.type")
 
@@ -451,8 +454,12 @@ class JDMemberCloseAccount(object):
                             pcp_show_picture_path_base64 = self.wait.until(EC.presence_of_element_located(
                                 (By.XPATH, '//*[@class="pcp_showPicture"]'))).get_attribute('src')
                             # 正在识别验证码
-                            INFO("正在通过本地引擎识别")
-                            res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
+                            if self.image_captcha_cfg["type"] == "local":
+                                INFO("正在通过本地引擎识别")
+                                res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
+                            else:
+                                INFO("正在通过深度学习引擎识别")
+                                res = self.JDyolo.JDyolo(cpc_img_path_base64, pcp_show_picture_path_base64)
                             if res[0]:
                                 ActionChains(self.browser).move_to_element_with_offset(
                                     cpc_img, int(res[1][0] * zoom),
@@ -475,7 +482,7 @@ class JDMemberCloseAccount(object):
                         return False
 
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
-                    if self.image_captcha_cfg["type"] == "local":
+                    if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
                         if not local_auto_identify_captcha_click():
                             INFO("验证码位置点击错误，尝试再试一次")
                             local_auto_identify_captcha_click()
