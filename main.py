@@ -6,7 +6,7 @@ import requests
 import urllib3
 
 from PIL import Image
-from websockets import connect
+import websockets.legacy.client
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
@@ -24,7 +24,7 @@ async def ws_conn(ws_conn_url):
     """
     websocket连接
     """
-    async with connect(ws_conn_url) as websocket:
+    async with websockets.legacy.client.connect(ws_conn_url) as websocket:
         try:
             recv = await asyncio.wait_for(websocket.recv(), get_config()["sms_captcha"]["ws_timeout"])
             return recv
@@ -98,6 +98,7 @@ class JDMemberCloseAccount(object):
             self.JDyolo = JDyolocaptcha(self.image_captcha_cfg)
         else:
             WARN("请在config.yaml中补充image_captcha.type")
+            sys.exit(1)
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -221,6 +222,7 @@ class JDMemberCloseAccount(object):
 
         if self.config["cookie"] == "":
             WARN("请先在 config.yaml 里配置好cookie")
+            sys.exit(1)
 
         # 写入 cookie
         self.browser.delete_all_cookies()
