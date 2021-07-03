@@ -346,6 +346,8 @@ user-agent:
 
 ## TG讨论群
 
+[JD退会频道 https://t.me/JDCloseAccount](https://t.me/JDCloseAccount)
+
 [JD退会讨论群 https://t.me/jdMemberCloseAccount](https://t.me/jdMemberCloseAccount)
 
 # Thanks
