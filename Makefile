@@ -17,7 +17,7 @@ release:
 		# Build for mac with amd64
 		@for project in $$(ls cmd); \
 		do \
-			GO111MODULE=on go build "./cmd/$$project"; \
+			CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 GO111MODULE=on go build "./cmd/$$project"; \
 			upx "./$$project"; \
 			tar czvf $$project-darwin-amd64.tar.gz ./$$project; \
 		done
