@@ -50,7 +50,6 @@ class JDyolocaptcha(object):
         img = np.zeros((206, 275, 3), np.uint8)
         img[0:170, 0:275] = cpc
         img[170:206, 167:275] = pcp
-        self.logger.info('返回图片')
         return img
 
 
