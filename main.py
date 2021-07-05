@@ -447,7 +447,6 @@ class JDMemberCloseAccount(object):
                     # 本地识别图形验证码并模拟点击
                     def local_auto_identify_captcha_click():
                         for _ in range(4):
-                            time.sleep(1)
                             cpc_img = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]')))
                             zoom = cpc_img.size['height'] / 170
                             cpc_img_path_base64 = self.wait.until(
@@ -474,6 +473,7 @@ class JDMemberCloseAccount(object):
                                     WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
                                         (By.XPATH, "//p[text()='验证失败，请重新验证']")
                                     ))
+                                    time.sleep(1)
                                     return False
                                 except Exception as _:
                                     return True
@@ -481,17 +481,18 @@ class JDMemberCloseAccount(object):
                                 INFO("识别未果")
                                 self.wait.until(
                                     EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
+                                time.sleep(1)
                         return False
 
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
                     if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
                         if not local_auto_identify_captcha_click():
                             INFO("验证码位置点击错误，尝试再试一次")
-                            local_auto_identify_captcha_click()
+                            assert local_auto_identify_captcha_click()
                     else:
                         if not auto_identify_captcha_click():
                             INFO("验证码位置点击错误，尝试再试一次")
-                            auto_identify_captcha_click()
+                            assert auto_identify_captcha_click()
 
                     # 解绑成功页面
                     self.wait.until(EC.presence_of_element_located(
