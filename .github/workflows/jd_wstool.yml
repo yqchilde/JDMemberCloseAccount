@@ -15,9 +15,10 @@ jobs:
 
       - name: Run Makefile
         run: |
-          make release
           mkdir artifacts
-          mv *.tar.gz artifacts || true
+          cd jd_wstool
+          make release
+          mv *.tar.gz ../artifacts || true
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2

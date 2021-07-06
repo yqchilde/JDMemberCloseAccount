@@ -276,7 +276,7 @@ user-agent:
 如果不想用`jd_wstool`，配置文件`sms_captcha`下面的`jd_wstool`设置为false，就会走内置websocket，默认为true
 
 1. 我编译好了各种操作系统的包，直接下载 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases), 选择自己的电脑系统对应的压缩包，解压运行
-2. 自行编译，代码在 [cmd](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/cmd) 目录下
+2. 自行编译，代码在 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/jd_wstool) 目录下
 
 ## 常见问题
 
@@ -308,7 +308,7 @@ user-agent:
 
 1. websocket转发验证码
 
-    1. 电脑运行`python3 test_main.py`和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
+    1. 电脑运行`python3 ./tests/test_websocket.py`和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
     2. 手机访问 `http://你的IP:5201/publish?smsCode=1234522`，之后查看电脑上`jd_wstool` 和 `test_main.py` 的控制台输出信息
 
 2. 百度OCR
