@@ -20,13 +20,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 
-async def ws_conn(ws_conn_url):
+async def ws_conn(ws_conn_url, ws_timeout):
     """
     websocket连接
     """
     async with websockets.legacy.client.connect(ws_conn_url) as websocket:
         try:
-            recv = await asyncio.wait_for(websocket.recv(), get_config()["sms_captcha"]["ws_timeout"])
+            recv = await asyncio.wait_for(websocket.recv(), ws_timeout)
             return recv
         except asyncio.TimeoutError:
             return ""
@@ -339,7 +339,8 @@ class JDMemberCloseAccount(object):
                     ), "发送短信验证码超时 " + card["brandName"]).click()
 
                     # 要连接的websocket地址
-                    sms_code, ws_conn_url = "", self.sms_captcha_cfg["ws_conn_url"]
+                    sms_code = ""
+                    ws_conn_url, ws_timeout = self.sms_captcha_cfg["ws_conn_url"], self.sms_captcha_cfg["ws_timeout"]
 
                     # ocr识别投屏验证码
                     if self.sms_captcha_cfg["is_ocr"]:
@@ -364,7 +365,7 @@ class JDMemberCloseAccount(object):
                     else:
                         try:
                             if self.sms_captcha_cfg["jd_wstool"]:
-                                recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url))
+                                recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url, ws_timeout))
                             else:
                                 recv = self.sms.listener()
 
@@ -447,7 +448,6 @@ class JDMemberCloseAccount(object):
                     # 本地识别图形验证码并模拟点击
                     def local_auto_identify_captcha_click():
                         for _ in range(4):
-                            time.sleep(1)
                             cpc_img = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]')))
                             zoom = cpc_img.size['height'] / 170
                             cpc_img_path_base64 = self.wait.until(
@@ -474,6 +474,7 @@ class JDMemberCloseAccount(object):
                                     WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
                                         (By.XPATH, "//p[text()='验证失败，请重新验证']")
                                     ))
+                                    time.sleep(1)
                                     return False
                                 except Exception as _:
                                     return True
@@ -481,17 +482,18 @@ class JDMemberCloseAccount(object):
                                 INFO("识别未果")
                                 self.wait.until(
                                     EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
+                                time.sleep(1)
                         return False
 
                     # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
                     if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
                         if not local_auto_identify_captcha_click():
                             INFO("验证码位置点击错误，尝试再试一次")
-                            local_auto_identify_captcha_click()
+                            assert local_auto_identify_captcha_click()
                     else:
                         if not auto_identify_captcha_click():
                             INFO("验证码位置点击错误，尝试再试一次")
-                            auto_identify_captcha_click()
+                            assert auto_identify_captcha_click()
 
                     # 解绑成功页面
                     self.wait.until(EC.presence_of_element_located(

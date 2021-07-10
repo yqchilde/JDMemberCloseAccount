@@ -13,8 +13,8 @@ class JDyolocaptcha(object):
     yolov4类
     """
     def __init__(self, _config):
-        self.CONFIDENCE_THRESHOLD = 0.8  # 最低置信度
-        self.NMS_THRESHOLD = 0.01  # 去除重复匹配
+        self.CONFIDENCE_THRESHOLD = 0.8  # 置信阈值
+        self.NMS_THRESHOLD = 0.01  # 非极大值抑制
         from utils.logger import Log
         self.logger = Log().logger
         weights = _config['yolov4_weights']
@@ -24,14 +24,9 @@ class JDyolocaptcha(object):
         else:
             self.logger.error("找不到权重文件")
             sys.exit(1)
-        if _config['CUDA']:
-            self.net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
-            self.net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
-        # 由于两张图片大小不一样，因此要使用两个不同大小的网络去识别，否则识别率极低
-        self.cpc_model = cv2.dnn_DetectionModel(self.net)
-        self.pcp_model = cv2.dnn_DetectionModel(self.net)
-        self.cpc_model.setInputParams(size=(320, 320), scale=1/255, swapRB=True)  # size为32的倍数，越大越慢，但不一定识别率越高
-        self.pcp_model.setInputParams(size=(224, 128), scale=1/255, swapRB=True)  # size为32的倍数
+        self.model = cv2.dnn_DetectionModel(self.net)
+        size = (_config['yolov4_net_size'], _config['yolov4_net_size'])
+        self.model.setInputParams(size=size, scale=1/255, swapRB=True)
 
 
     def base64_conversion(self, data):
@@ -45,7 +40,20 @@ class JDyolocaptcha(object):
         return cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
 
-    def identify(self, cpc, pcp):
+    def img_merge(self, cpc, pcp):
+        """
+        将两张图合成为一张大图，节省一次识别次数
+        :param cpc:
+        :param pcp:
+        :return:
+        """
+        img = np.zeros((206, 275, 3), np.uint8)
+        img[0:170, 0:275] = cpc
+        img[170:206, 167:275] = pcp
+        return img
+
+
+    def detect(self, cpc, pcp):
         """
         识别验证码并返回坐标
         :param cpc:
@@ -53,15 +61,17 @@ class JDyolocaptcha(object):
         :return:
         """
         try:
-            cpc_classes, cpc_scores, cpc_boxes = self.cpc_model.detect(cpc, self.CONFIDENCE_THRESHOLD, self.NMS_THRESHOLD)
-            pcp_classes, pcp_scores, pcp_boxes = self.pcp_model.detect(pcp, self.CONFIDENCE_THRESHOLD, self.NMS_THRESHOLD)
-            if pcp_classes[0] in cpc_classes:  # 判断识别小图的结果是否在大图里面
-                x1, y1, x2, y2 = cpc_boxes[cpc_classes.tolist().index(pcp_classes[0])]
-                if x2 - x1 < 200:  # 防止结果为背景，因此要剔除x差值在200以上的结果
-                    r = (x1*2+x2)//2, (y1*2+y2)//2
-                    return True, r
-                else:
-                    return False, (None, None)
+            classes, scores, boxes = self.model.detect(self.img_merge(cpc, pcp), self.CONFIDENCE_THRESHOLD, self.NMS_THRESHOLD)  # 将验证码进行识别
+            classes, scores, boxes = classes.tolist(), scores.tolist(), boxes.tolist()  # 将识别结果转化为list
+            pcp_index = boxes.index(max(boxes))  # 获得pcp的索引
+            pcp_class = classes[pcp_index]  # 获得pcp类名
+            classes.pop(pcp_index)  # 从识别结果中剔除pcp
+            scores.pop(pcp_index)  # 从识别结果中剔除pcp
+            boxes.pop(pcp_index)  # 从识别结果中剔除pcp
+            x1, y1, x2, y2 = boxes[classes.index(pcp_class)]  # 从剩下的结果中找到坐标，如果不存在则报错返回False
+            if x2 - x1 < 200:  # 防止识别到的结果是背景，早期训练的很差的时候有这种现象，现在应该不存在，大概可以删了吧
+                r = (x1*2+x2)//2, (y1*2+y2)//2
+                return True, r
             else:
                 return False, (None, None)
         except:
@@ -69,4 +79,4 @@ class JDyolocaptcha(object):
 
 
     def JDyolo(self, cpc_img_path_base64, pcp_show_picture_path_base64):
-        return self.identify(self.base64_conversion(cpc_img_path_base64), self.base64_conversion(pcp_show_picture_path_base64))
+        return self.detect(self.base64_conversion(cpc_img_path_base64), self.base64_conversion(pcp_show_picture_path_base64))

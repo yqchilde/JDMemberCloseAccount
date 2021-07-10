@@ -111,7 +111,7 @@
 
         * 图形验证码用 [图鉴打码](http://www.ttshitu.com/) ，费用是1块=1积分，一次扣0.01积分
 
-## 操作
+## 如何使用本项目
 
 ### 1. 下载项目以及配置浏览器驱动
 
@@ -135,19 +135,12 @@
    pip3 install -r requirements.txt -i https://mirrors.aliyun.com/pypi/simple/
    ```
 
-3. 下载必要文件
-
-    3.1 下载对应的浏览器驱动放到项目的`drivers`文件夹下面
-      
+3. 下载对应的浏览器驱动
+   
     `chrome`请访问`chrome://version/`查看浏览器的版本，然后去 [chromedriver](http://chromedriver.storage.googleapis.com/index.html)
       下载对应的版本/系统驱动（只需要保证版本号前三段一致即可，比如`91.0.4472.77`只需要保证`91.0.4472.x`就行），下载后解压，将其可执行文件（mac为`chromedriver`
       ，win为`chromedriver.exe`放在项目的`drivers`目录下即可）
    
-    3.2 如果想使用yolov4识别验证码
-
-    下载[权重文件](https://github.com/dd178/JDMemberCloseAccount/releases/download/v1.0.3/yolov4-custom.tar.gz) ，将`yolov4-custom.weights`解压至`yolov4`文件夹下
-   
-    
 ### 2. 补充配置文件
 
 * `config.yaml`文件
@@ -214,9 +207,9 @@ sms_captcha:
 # image_captcha.tj_type_id: 图鉴验证码类型，仅在 image_captcha.type 为 tj 时需要设置，且该项目指定为 19
 # yolov4_weights: yolov4权重文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
 # yolov4_cfg: yolov4配置文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
-# CUDA: 尝试使用CUDA加速，据说速度可提升几倍到几十倍，需要编译安装opencv，仅在 image_captcha.type 为 yolov4 时需要设置
+# yolov4_net_size: yolov4网络size，仅在 image_captcha.type 为 yolov4 时需要设置
 image_captcha:
-  type: "local"
+  type: "yolov4"
   cjy_username: ""
   cjy_password: ""
   cjy_soft_id: ""
@@ -224,9 +217,9 @@ image_captcha:
   tj_username: ""
   tj_password: ""
   tj_type_id: 19
-  yolov4_weights: "yolov4/yolov4-custom.weights"
-  yolov4_cfg: "yolov4/yolov4-custom.cfg"
-  CUDA: false
+  yolov4_weights: "yolov4/yolov4-tiny-custom.weights"
+  yolov4_cfg: "yolov4/yolov4-tiny-custom.cfg"
+  yolov4_net_size: 512
 
 # user-agent 用户代理，可自行配置
 user-agent:
@@ -236,27 +229,35 @@ user-agent:
 
 ### 3. 添加`cookie` （二选一）
 
-* 使用`add_cookie.py`可以获取手机端`Cookie` 并自动配置到 `config.yaml` 文件中
+**自动添加：** 使用`add_cookie.py`可以获取手机端`Cookie` 并自动配置到 `config.yaml` 文件中
 
-* 手动在 `config.yaml` 中写入 `cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
+**手动添加：** 在 `config.yaml` 中第二行写入 `cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
 
 ### 4. 根据手机终端类型补充配置 （其实还是第2步，这里详细再讲下）
 
 大体说一下，这块是关于手机端短信验证码的配置
 
-1. 安卓推荐使用tasker或macrodroid，不要用ocr，不必须，是为了你省事，IOS越狱设备也可以使用短信转发功能，IOS非越狱必须使用OCR
+1. 选择转发验证码方式
+   
+    **安卓：** 使用tasker或macrodroid
+   
+    **IOS越狱：** 使用短信转发功能
 
-2. 如果是使用tasker / macrodroid，is_ocr肯定是false，代表不用ocr
+    **IOS非越狱：** 使用OCR
 
-3. 如果用ocr，is_ocr写true，能理解吧
+2. 软件配置
+    
+    **[tasker：](https://wwa.lanzoui.com/iLeAYps1x1i)** 参照 [tasker_1.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/tasker_1.jpg) 和 [tasker_2.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/tasker_2.jpg) 进行设置，或者直接导入 [配置文件](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/%E7%9B%91%E5%90%AC%E4%BA%AC%E4%B8%9C%E9%80%80%E4%BC%9A%E9%AA%8C%E8%AF%81%E7%A0%81.prf.xml)
+   
+    **[macrodroid：](https://wwa.lanzoui.com/iSwocpqow3a)** 参照 [macrodroid.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/macrodroid/macrodroid.jpg) 进行设置，或者直接导入 [配置文件](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/macrodroid/%E7%9B%91%E5%90%AC%E4%BA%AC%E4%B8%9C%E9%80%80%E4%BC%9A%E9%AA%8C%E8%AF%81%E7%A0%81.macro)
+    
+    **OCR：** 
+   
+    1. 修改`config.yaml`文件38行为`is_ocr: true`
+    2. 按prtsc键（F12旁边）截图或其他软件截全屏，打开Windows附件-画图，粘贴进去，切换铅笔工具，就可以在左下角查看坐标，坐标格式请查看[图片](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/screenshots/test_img3.png) ，将坐标填入`ocr_range`
+    3. baidu、aliyun、easyocr三选一填入43行`type`
+    4. `type`为baidu需要填写46-48行，为aliyun则填写49行，easyocr不用填，具体怎么填看注释
 
-4. ocr里面的type是三选一，baidu / aliyun / easyocr，代表你要用的ocr平台是哪个，easyocr是本地的，其他两个是线上的
-
-5. ocr_range是你要截图的区域，不知道怎么截，往下翻，有截图
-
-6. ocr_delay_time是ocr延迟时间，不想改就保持默认
-
-7. 下面的配置，就是type你用baidu，下面id，key啥的你就写baidu的，阿里同样原理，easyocr不用写
 
 ### 5. 启动 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases) 工具（使用OCR的不用开）
 
@@ -275,7 +276,7 @@ user-agent:
 如果不想用`jd_wstool`，配置文件`sms_captcha`下面的`jd_wstool`设置为false，就会走内置websocket，默认为true
 
 1. 我编译好了各种操作系统的包，直接下载 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases), 选择自己的电脑系统对应的压缩包，解压运行
-2. 自行编译，代码在 [cmd](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/cmd) 目录下
+2. 自行编译，代码在 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/jd_wstool) 目录下
 
 ## 常见问题
 
@@ -307,7 +308,7 @@ user-agent:
 
 1. websocket转发验证码
 
-    1. 电脑运行`python3 test_main.py`和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
+    1. 电脑运行`python3 ./tests/test_websocket.py`和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
     2. 手机访问 `http://你的IP:5201/publish?smsCode=1234522`，之后查看电脑上`jd_wstool` 和 `test_main.py` 的控制台输出信息
 
 2. 百度OCR
