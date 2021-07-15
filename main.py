@@ -67,6 +67,7 @@ class JDMemberCloseAccount(object):
         # 初始化selenium配置
         self.browser = get_browser(self.config)
         self.wait = WebDriverWait(self.browser, self.selenium_cfg["selenium_timeout"])
+        self.wait2s = WebDriverWait(self.browser, 2)
 
         # 初始化短信验证码配置
         if not self.sms_captcha_cfg["is_ocr"]:
@@ -338,6 +339,11 @@ class JDMemberCloseAccount(object):
                         (By.XPATH, "//button[text()='发送验证码']")
                     ), "发送短信验证码超时 " + card["brandName"]).click()
 
+                    # 判断是否发送成功，发送失败为黑店，直接跳过
+                    self.wait2s.until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[text()='发送成功']")
+                    ), f'发送失败，黑店【{card["brandName"]}】跳过')
+
                     # 要连接的websocket地址
                     sms_code = ""
                     ws_conn_url, ws_timeout = self.sms_captcha_cfg["ws_conn_url"], self.sms_captcha_cfg["ws_timeout"]
@@ -496,9 +502,9 @@ class JDMemberCloseAccount(object):
                             assert auto_identify_captcha_click()
 
                     # 解绑成功页面
-                    self.wait.until(EC.presence_of_element_located(
+                    self.wait2s.until(EC.presence_of_element_located(
                         (By.XPATH, "//div[text()='解绑会员成功']")
-                    ), "图形验证码识别超时 " + card["brandName"])
+                    ), f'解绑失败，黑店【{card["brandName"]}】跳过')
 
                     time.sleep(1)
                     cnt += 1
