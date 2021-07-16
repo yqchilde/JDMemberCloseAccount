@@ -22,8 +22,14 @@ class JDyolocaptcha(object):
         if os.path.exists(weights):
             self.net = cv2.dnn.readNet(weights, cfg)
         else:
-            self.logger.error("找不到权重文件")
-            sys.exit(1)
+            self.logger.warning(f"找不到权重文件，当前工作目录{os.getcwd()} 应为{os.path.dirname(os.path.dirname(__file__))} 正在尝试更换工作目录")
+            os.chdir(os.path.dirname(os.path.dirname(__file__)))
+            if os.path.exists(weights):
+                self.logger.info('已找到权重文件')
+                self.net = cv2.dnn.readNet(weights, cfg)
+            else:
+                self.logger.error(f"找不到权重文件，请检查权重文件路径是否正确{os.getcwd()}/{weights}，及时进行反馈")
+                sys.exit(1)
         self.model = cv2.dnn_DetectionModel(self.net)
         size = (_config['yolov4_net_size'], _config['yolov4_net_size'])
         self.model.setInputParams(size=size, scale=1/255, swapRB=True)
