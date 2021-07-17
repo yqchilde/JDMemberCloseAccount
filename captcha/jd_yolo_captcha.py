@@ -59,6 +59,18 @@ class JDyolocaptcha(object):
         return img
 
 
+    def get_box(self, data):
+        """
+        获取坐标
+        """
+        def key(list):
+            return list[1][1]
+        data.sort(key=key, reverse=True)
+        pcp_class = data[0][0]
+        data.pop(0)
+        return dict(data)[pcp_class]
+
+
     def detect(self, cpc, pcp):
         """
         识别验证码并返回坐标
@@ -68,18 +80,10 @@ class JDyolocaptcha(object):
         """
         try:
             classes, scores, boxes = self.model.detect(self.img_merge(cpc, pcp), self.CONFIDENCE_THRESHOLD, self.NMS_THRESHOLD)  # 将验证码进行识别
-            classes, scores, boxes = classes.tolist(), scores.tolist(), boxes.tolist()  # 将识别结果转化为list
-            pcp_index = boxes.index(max(boxes))  # 获得pcp的索引
-            pcp_class = classes[pcp_index]  # 获得pcp类名
-            classes.pop(pcp_index)  # 从识别结果中剔除pcp
-            scores.pop(pcp_index)  # 从识别结果中剔除pcp
-            boxes.pop(pcp_index)  # 从识别结果中剔除pcp
-            x1, y1, x2, y2 = boxes[classes.index(pcp_class)]  # 从剩下的结果中找到坐标，如果不存在则报错返回False
-            if x2 - x1 < 200:  # 防止识别到的结果是背景，早期训练的很差的时候有这种现象，现在应该不存在，大概可以删了吧
-                r = (x1*2+x2)//2, (y1*2+y2)//2
-                return True, r
-            else:
-                return False, (None, None)
+            data = list(zip([c[0] for c in classes.tolist()], boxes.tolist()))
+            x1, y1, x2, y2 = self.get_box(data)
+            r = (x1*2+x2)//2, (y1*2+y2)//2
+            return True, r
         except:
             return False, (None, None)
 
