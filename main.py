@@ -66,8 +66,8 @@ class JDMemberCloseAccount(object):
 
         # 初始化selenium配置
         self.browser = get_browser(self.config)
-        self.wait = WebDriverWait(self.browser, self.selenium_cfg["selenium_timeout"])
-        self.wait2s = WebDriverWait(self.browser, 2)
+        self.wait = WebDriverWait(self.browser, self.selenium_cfg["timeout"])
+        self.wait_check = WebDriverWait(self.browser, self.selenium_cfg["check_wait"])
 
         # 初始化短信验证码配置
         if not self.sms_captcha_cfg["is_ocr"]:
@@ -340,7 +340,7 @@ class JDMemberCloseAccount(object):
                     ), "发送短信验证码超时 " + card["brandName"]).click()
 
                     # 判断是否发送成功，发送失败为黑店，直接跳过
-                    self.wait2s.until(EC.presence_of_element_located(
+                    self.wait_check.until(EC.presence_of_element_located(
                         (By.XPATH, "//div[text()='发送成功']")
                     ), f'发送失败，黑店【{card["brandName"]}】跳过')
 
@@ -376,6 +376,7 @@ class JDMemberCloseAccount(object):
                                 recv = self.sms.listener()
 
                             if recv == "":
+                                cache_card_list = []
                                 INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                                 continue
                             else:
@@ -502,7 +503,7 @@ class JDMemberCloseAccount(object):
                             assert auto_identify_captcha_click()
 
                     # 解绑成功页面
-                    self.wait2s.until(EC.presence_of_element_located(
+                    self.wait_check.until(EC.presence_of_element_located(
                         (By.XPATH, "//div[text()='解绑会员成功']")
                     ), f'解绑失败，黑店【{card["brandName"]}】跳过')
 
