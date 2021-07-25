@@ -373,7 +373,7 @@ class JDMemberCloseAccount(object):
                             if self.sms_captcha_cfg["jd_wstool"]:
                                 recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url, ws_timeout))
                             else:
-                                recv = self.sms.listener()
+                                recv = self.sms.get_code()
 
                             if recv == "":
                                 cache_card_list = []
