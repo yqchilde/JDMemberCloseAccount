@@ -3,11 +3,10 @@ import sys
 import json
 import yaml
 import psutil
-import signal
 import socket
 from pathlib import Path
 from utils.logger import Log
-
+from func_timeout import func_set_timeout, FunctionTimedOut
 # 日志
 logger = Log().logger
 # 获取配置
@@ -25,38 +24,6 @@ _readme = """注意事项：
 3. 以下IP获取到的IP仅做参考，如果全部访问不通，请检查防火墙开启5201端口或使用ipconfig/ifconfig查看本地其他IP
 4. 记得更改手机端的请求地址，并授权软件短信权限和验证码获取权限
 5. 访问测试链接后：务必关闭页面，防止浏览器一直后台请求(像：验证码一直是123456)"""
-
-
-def timer(time, callback):
-    """
-    定时器
-    参考：@ViolainOt
-    """
-
-    def wrap(func):
-        def handle(signum, frame):
-            raise RuntimeError
-
-        def to_do(*args, **kwargs):
-            try:
-                signal.signal(signal.SIGALRM, handle)
-                signal.alarm(time)
-                r = func(*args, **kwargs)
-                signal.alarm(0)
-                return r
-            except RuntimeError as e:
-                return callback()
-
-        return to_do
-
-    return wrap
-
-
-def timeout():
-    """
-    超时返回
-    """
-    return ""
 
 
 def get_inter_ip():
@@ -92,10 +59,10 @@ class SmsSocket:
             self.tcp_server.listen(128)
             self._readme()
         except OSError:
-            logger.warning("请确保你没有打开另外一个监听脚本或jd_tools")
+            logger.warning("请确保你没有打开另外一个监听脚本或jd_tools   ")
 
-    @timer(sms_timeout, timeout)
-    def listener(self, *args, **kwargs):
+    @func_set_timeout(sms_timeout)
+    def listener(self):
         while True:
             try:
                 cs, ca = self.tcp_server.accept()
@@ -110,8 +77,14 @@ class SmsSocket:
             except OSError:
                 logger.warning("请确保你没有打开另外一个监听脚本或jd_tools")
 
+    def get_code(self):
+        try:
+            return self.listener()
+        except FunctionTimedOut:
+            return ""
+
 
 if __name__ == '__main__':
     a = SmsSocket()
     while True:
-        print(a.listener())
+        print(a.get_code())

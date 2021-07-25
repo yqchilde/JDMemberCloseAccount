@@ -1,5 +1,21 @@
 # JDMemberCloseAccount
 
+* [介绍](#介绍)
+* [声明](#声明)
+* [须知](#须知)
+* [思路](#思路)
+* [如何使用本项目](#如何使用本项目)
+    * [一、下载项目以及配置浏览器驱动](#一下载项目以及配置浏览器驱动)
+    * [二、获取 jd\_wstool 监听地址及选择 jd\_wstool 工具（IOS未越狱跳过此步骤）](#二获取-jd_wstool-监听地址及选择-jd_wstool-工具ios未越狱跳过此步骤)
+    * [三、填写配置](#三配置项目)
+    * [四、运行程序](#四运行程序)
+* [关于 jd\_wstool 工具](#关于-jd_wstool-工具)
+* [常见问题](#常见问题)
+* [测试](#测试)
+* [ScreenShots](#screenshots)
+* [TG讨论群](#tg讨论群)
+* [Thanks](#thanks)
+
 ## 介绍
 
 本项目是我学习python操作selenium的一个🌰，也是一种京东自动退会方案，用来全自动退出京东加入的所有店铺会员
@@ -30,7 +46,7 @@
           工具监听并送到selenium中填写
 
         * 利用[tasker软件](https://wwa.lanzoui.com/iLeAYps1x1i) 监听，同上
-    
+
         * 使用方法：下载以上任一软件，导入相应的配置，并修改自己的IP为`main.py`程序监听的IP即可
 
         * 关于 `tasker` 和 `macrodroid` 配置均在 [extra](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/extra) 目录下
@@ -42,7 +58,8 @@
 
             * 像安卓端一样传验证码（基本逻辑：iOS设备通过访问短信数据库，监听最新的jd验证码并传到 `jd_wstool`）
 
-                1. 下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py)
+                1.
+              下载 [getiOSMessages.py](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/extra/iOSPlus/getiOSMessages.py)
               传到手机上（测试Pythonista 3可以，其他软件自行研究）
 
                 2. 填写`jd_wstool` 监听地址ip
@@ -98,11 +115,11 @@
 3. 第二关：图形验证码（任选以下一种类型，默认采用本地识别）
 
     1. 本地识别（再也不用花钱了👍）
-       
+
         * 来自[@AntonVanke](https://github.com/AntonVanke)
-       大佬提供的 [JDCaptcha](https://github.com/AntonVanke/JDCaptcha) 项目(已集成)
-       ，[测试图在最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots) 
-          
+          大佬提供的 [JDCaptcha](https://github.com/AntonVanke/JDCaptcha) 项目(已集成)
+          ，[测试图在最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots)
+
         * [@dd178](https://github.com/dd178) 使用 [yolov4](https://github.com/AlexeyAB/darknet) 训练的权重
 
     2. 收费的打码平台
@@ -113,7 +130,7 @@
 
 ## 如何使用本项目
 
-### 1. 下载项目以及配置浏览器驱动
+### 一、下载项目以及配置浏览器驱动
 
 **注意：** 以下关于`python3`， `pip3` 命令只代表`python3.x`环境，故如果电脑`python`环境已是3.x，可直接用`python`、`pip`代替
 
@@ -136,14 +153,106 @@
    ```
 
 3. 下载对应的浏览器驱动
-   
-    `chrome`请访问`chrome://version/`查看浏览器的版本，然后去 [chromedriver](http://chromedriver.storage.googleapis.com/index.html)
-      下载对应的版本/系统驱动（只需要保证版本号前三段一致即可，比如`91.0.4472.77`只需要保证`91.0.4472.x`就行），下载后解压，将其可执行文件（mac为`chromedriver`
-      ，win为`chromedriver.exe`放在项目的`drivers`目录下即可）
-   
-### 2. 补充配置文件
 
-* `config.yaml`文件
+   `chrome`请打开`设置-关于chrome`查看浏览器的版本，然后去 [chromedriver](http://chromedriver.storage.googleapis.com/index.html)
+   下载对应的版本/系统驱动，[如图所示](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/screenshots/test_img5.png)
+   ，将解压出来的`chromedriver`文件放入项目的`drivers`目录下即可）
+
+### 二、获取 jd_wstool 监听地址及选择 jd_wstool 工具（IOS未越狱跳过此步骤）
+
+两种方式二选一即可
+
+1. 外置 jd_wstool 工具: [点击下载](https://github.com/yqchilde/JDMemberCloseAccount/releases) 对应系统的 jd_wstool 工具
+
+    * 运行下载的 jd_wstool，使用 **手机** 打开 jd_wstool 显示的url地址，记下能打开的url地址
+
+
+2. 内置 jd_wstool 工具: 将`config.yaml`文件第41行改为`jd_wstool: false`
+
+    * 打开命令行工具，使用`cd`命令进入项目的`utils`文件夹下运行`python listener.py`，使用 **手机** 访问 jd_wstool
+      显示的url地址，记下访问时控制台有反应的url地址（手机无法访问但是控制台有反应）
+
+### 三、配置项目
+
+#### 1. 添加`cookie`
+
+* **自动添加：** 使用`add_cookie.py`可以获取手机端`Cookie` 并自动配置到 `config.yaml` 文件中
+
+
+* **手动添加：** 在 `config.yaml` 中第2行写入 `cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
+
+#### 2. 配置转发短信验证码
+
+<details>
+<summary><b>安卓</b></summary>
+
+* 安装 [tasker](https://wwa.lanzoui.com/iLeAYps1x1i) 或 [macrodroid](https://wwa.lanzoui.com/iSwocpqow3a) 并开放**短信权限**
+    * **tasker：**
+      参照 [tasker_1.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/tasker_1.jpg)
+      和 [tasker_2.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/tasker_2.jpg)
+      进行设置，记得修改IP为在 jd_wstool
+      获得的IP地址，或者直接导入 [配置文件](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/%E7%9B%91%E5%90%AC%E4%BA%AC%E4%B8%9C%E9%80%80%E4%BC%9A%E9%AA%8C%E8%AF%81%E7%A0%81.prf.xml)
+
+    * **macrodroid：**
+      参照 [macrodroid.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/macrodroid/macrodroid.jpg)
+      进行设置，记得修改IP为在 jd_wstool
+      获得的IP地址，或者直接导入 [配置文件](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/macrodroid/%E7%9B%91%E5%90%AC%E4%BA%AC%E4%B8%9C%E9%80%80%E4%BC%9A%E9%AA%8C%E8%AF%81%E7%A0%81.macro)
+
+</details>
+
+<details>
+<summary><b>IOS越狱</b></summary>
+
+* 安装 Pythonista 3
+
+    * 下载 [监听脚本](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/iOSPlus/getiOSMessages.py)
+      ，修改第10行的`ipaddr = '192.168.0.101'`为第二步得到的IP地址
+
+</details>
+
+<details>
+<summary><b>IOS未越狱</b></summary>
+
+1. 使用投屏软件将手机投射到电脑上
+
+
+2. 获取验证码区域的坐标
+
+    * **windows**：按prtsc键（F12旁边）截图或其他软件截**全屏**，打开Windows附件*
+      画图，粘贴进去，切换铅笔工具，就可以在左下角查看坐标，坐标格式请查看[图片](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/screenshots/test_img3.png)
+      ，将坐标填入`ocr_range`，例`ocr_range: [100, 200, 300, 400]`，填完坐标后不要移动投屏软件的窗口
+
+    * **mac**：参考windows，请注意，windows坐标原点\(0, 0)位于左上角，而mac坐标原点\(0, 0)位于左下角
+
+
+3. 去百度云或阿里云申请一个OCR，或者使用本地OCR（三选一）
+
+
+4. 修改`config.yaml`文件
+
+    1. 第40行改为`is_ocr: true`
+
+    2. 将百度云`baidu`或阿里云`aliyun`或本地OCR`easyocr`（第三步选什么就填什么）填入45行`type`，例`type: "easyocr"`
+
+    3. （本地OCR跳过此步）选择百度OCR请填写第48-50行`baidu_app_id` `baidu_api_key` `baidu_secret_key`，选择阿里OCR请填写第51行`aliyun_appcode`
+       ，不会填就看第35-38行注释
+
+</details>
+
+#### 3. 选择图形验证码识别方式（可跳过）
+
+* **深度学习识别（默认）：** `config.yaml`第66行改为`type: "yolov4"`
+
+* **本地识别：** `config.yaml`第66行改为`type: "local"`
+
+* **超级鹰（付费）：** `config.yaml`第66行改为`type: "cjy"`，并填写第67-69行
+
+* **图鉴（付费）：** `config.yaml`第66行改为`type: "tj"`，并填写第71-72行
+
+#### 👇👇👇本项目配置文件详细说明👇👇👇
+
+<details>
+<summary><b>config.yaml</b> - 详细说明</summary>
 
 ```yaml
 # 手机端cookie，是pt_key=xxx;pt_pin=xxx;
@@ -229,47 +338,17 @@ user-agent:
   - okhttp/3.12.1;jdmall;android;version/10.0.2;build/88569;screen/1080x2266;os/11;network/wifi;
 ```
 
-### 3. 添加`cookie` （二选一）
+</details>
 
-**自动添加：** 使用`add_cookie.py`可以获取手机端`Cookie` 并自动配置到 `config.yaml` 文件中
+### 四、运行程序
 
-**手动添加：** 在 `config.yaml` 中第二行写入 `cookie` 项，注意是pt_key=123456;pt_pin=jd_987654的那个（**请不要随意泄露你的cookie**）
+* 如果你选择外置 jd_wstool 请保持**开启**
 
-### 4. 根据手机终端类型补充配置 （其实还是第2步，这里详细再讲下）
+* 如果你选择内置 jd_wstool 请**关闭**所有 jd_wstool 工具，防止堵塞
 
-大体说一下，这块是关于手机端短信验证码的配置
+* 保持手机短信监听软件开启，IOS未越狱请保持开启短信界面的投屏
 
-1. 选择转发验证码方式
-   
-    **安卓：** 使用tasker或macrodroid
-   
-    **IOS越狱：** 使用短信转发功能
-
-    **IOS非越狱：** 使用OCR
-
-2. 软件配置
-    
-    **[tasker：](https://wwa.lanzoui.com/iLeAYps1x1i)** 参照 [tasker_1.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/tasker_1.jpg) 和 [tasker_2.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/tasker_2.jpg) 进行设置，或者直接导入 [配置文件](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/tasker/%E7%9B%91%E5%90%AC%E4%BA%AC%E4%B8%9C%E9%80%80%E4%BC%9A%E9%AA%8C%E8%AF%81%E7%A0%81.prf.xml)
-   
-    **[macrodroid：](https://wwa.lanzoui.com/iSwocpqow3a)** 参照 [macrodroid.jpg](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/macrodroid/macrodroid.jpg) 进行设置，或者直接导入 [配置文件](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/extra/macrodroid/%E7%9B%91%E5%90%AC%E4%BA%AC%E4%B8%9C%E9%80%80%E4%BC%9A%E9%AA%8C%E8%AF%81%E7%A0%81.macro)
-    
-    **OCR：** 
-   
-    1. 修改`config.yaml`文件38行为`is_ocr: true`
-    2. 按prtsc键（F12旁边）截图或其他软件截全屏，打开Windows附件-画图，粘贴进去，切换铅笔工具，就可以在左下角查看坐标，坐标格式请查看[图片](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/screenshots/test_img3.png) ，将坐标填入`ocr_range`
-    3. baidu、aliyun、easyocr三选一填入43行`type`
-    4. `type`为baidu需要填写46-48行，为aliyun则填写49行，easyocr不用填，具体怎么填看注释
-
-
-### 5. 启动 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases) 工具（使用OCR的不用开）
-
-这个步骤只需要安卓端手机用了tasker 或 macrodroid 或其他自动化工具的开启
-
-什么意思呢？就是配置文件中你的 `is_ocr`为false的，就要开启，否则不用开启
-
-### 6. 启动主程序
-
-在项目目录下执行`python3 main.py`，等待执行完毕即可
+以上条件满足后在项目目录下执行`python3 main.py`，等待执行完毕即可
 
 ## 关于 `jd_wstool` 工具
 
@@ -278,6 +357,7 @@ user-agent:
 如果不想用`jd_wstool`，配置文件`sms_captcha`下面的`jd_wstool`设置为false，就会走内置websocket，默认为true
 
 1. 我编译好了各种操作系统的包，直接下载 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/releases), 选择自己的电脑系统对应的压缩包，解压运行
+
 2. 自行编译，代码在 [jd_wstool](https://github.com/yqchilde/JDMemberCloseAccount/tree/main/jd_wstool) 目录下
 
 ## 常见问题
@@ -299,10 +379,10 @@ user-agent:
 3. 百度OCR报错 `{'error_code': 14, 'error_msg': 'IAM Certification failed'}`
 
     * 说明从百度复制到配置文件的`baidu_app_id`, `baidu_api_key`, `baidu_secret_key` 不正确
-    
+
 4. 电脑端没有监听到验证码，显示等待websocket推送短信验证码超时
 
-    * 先用手机浏览器访问监听地址，确保能访问通
+    * 先用手机浏览器访问监听地址，确保能访问通，如果访问不通可尝试更改电脑网络配置文件为专用或开放防火墙
 
     * 如果访问通说明IP没问题，请查看手机端MacroDroid或Tasker里main的日志，确保有监听到
 
@@ -311,6 +391,7 @@ user-agent:
 1. websocket转发验证码
 
     1. 电脑运行`python3 ./tests/test_websocket.py`和 `./jd_wstool` 工具，windows记得 `.exe` ，此时模拟启动main程序和监听验证码程序
+
     2. 手机访问 `http://你的IP:5201/publish?smsCode=1234522`，之后查看电脑上`jd_wstool` 和 `test_main.py` 的控制台输出信息
 
 2. 百度OCR
@@ -320,7 +401,7 @@ user-agent:
 3. Easy OCR
 
     1. 运行`python3 ./captcha/easy_ocr.py`测试
-    
+
 4. `main.py`执行报错
 
     1. 在`config.yaml`里设置`debug: true`再次执行可以看到具体报错，如解决不了请反馈tg群
@@ -353,9 +434,16 @@ user-agent:
 
 [JD退会讨论群 https://t.me/jdMemberCloseAccount](https://t.me/jdMemberCloseAccount)
 
-# Thanks
+## Thanks
 
-感谢以下作者开源JD相关项目供我学习使用
+本项目感谢以下大佬帮助构建本项目👍(排名不分先后)
 
-[@AntonVanke](https://github.com/AntonVanke/JDBrandMember)
+[@AntonVanke](https://github.com/AntonVanke)
 
+[@lowking](https://github.com/lowking)
+
+[@dd178](https://github.com/dd178)
+
+[@hyzaw](https://github.com/hyzaw)
+
+[@curtinlv](https://github.com/curtinlv)
