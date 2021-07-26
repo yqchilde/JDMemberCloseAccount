@@ -88,3 +88,4 @@ def get_browser(_config):
     except WebDriverException:
         # 驱动问题
         print("ERROR", "浏览器错误", "请检查你下载并解压好的驱动是否放在drivers目录下")
+        sys.exit(1)

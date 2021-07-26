@@ -436,7 +436,7 @@ user-agent:
 
 ## Thanks
 
-本项目感谢以下大佬帮助构建本项目👍(排名不分先后)
+感谢以下大佬帮助构建完善本项目👍(排名不分先后)
 
 [@AntonVanke](https://github.com/AntonVanke)
 
