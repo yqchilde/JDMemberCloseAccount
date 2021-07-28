@@ -327,12 +327,16 @@ class JDMemberCloseAccount(object):
                         pass
 
                     # 检查手机尾号是否正确
+                    phone = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[@class='cm-ec']"))).text
                     if self.shop_cfg['phone_tail_number'] != "":
-                        if self.wait.until(EC.presence_of_element_located(
-                                (By.XPATH, "//div[@class='cm-ec']")
-                        )).text[-4:] != self.shop_cfg['phone_tail_number']:
-                            INFO("当前店铺手机尾号不是规定的尾号，已跳过")
+                        if phone[-4:] != self.shop_cfg['phone_tail_number']:
+                            INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
                             continue
+
+                    if "*" not in phone[:4]:
+                        INFO("当前店铺绑定手机号为%s，明显为无效号码，跳过店铺" % phone)
+                        continue
+                    time.sleep(10000)
 
                     # 发送短信验证码
                     self.wait.until(EC.presence_of_element_located(
