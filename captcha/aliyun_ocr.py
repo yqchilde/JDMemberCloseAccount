@@ -53,7 +53,9 @@ class AliYunOCR(object):
 
         resp = requests.request("POST", url=self.api_url, headers=headers, data=json.dumps(payload))
         if resp.status_code != 200:
-            self.logger.warning(resp)
+            self.logger.warning("阿里云OCR请求错误，错误原因：" + resp.text)
+            self.logger.warning("阿里云OCR请求错误，大概率是次数用光，如非次数用光请将该问题反馈给开发者，程序即将退出")
+            sys.exit(1)
         else:
             ocr_ret = json.loads(resp.text)["content"].strip(" ")
             self.logger.info("阿里云OCR识别结果：" + ocr_ret)
