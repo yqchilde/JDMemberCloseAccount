@@ -336,7 +336,6 @@ class JDMemberCloseAccount(object):
                     if "*" not in phone[:4]:
                         INFO("当前店铺绑定手机号为%s，明显为无效号码，跳过店铺" % phone)
                         continue
-                    time.sleep(10000)
 
                     # 发送短信验证码
                     self.wait.until(EC.presence_of_element_located(
