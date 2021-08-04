@@ -380,7 +380,11 @@ user-agent:
 
     * 说明从百度复制到配置文件的`baidu_app_id`, `baidu_api_key`, `baidu_secret_key` 不正确
 
-4. 电脑端没有监听到验证码，显示等待websocket推送短信验证码超时
+4. 百度OCR报错，根据错误码在官方API文档中查找原因
+
+    * [查询百度文字识别API错误码文档](https://ai.baidu.com/ai-doc/OCR/dk3h7y5vr)
+
+5. 电脑端没有监听到验证码，显示等待websocket推送短信验证码超时
 
     * 先用手机浏览器访问监听地址，确保能访问通，如果访问不通可尝试更改电脑网络配置文件为专用或开放防火墙
 
