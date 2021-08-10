@@ -223,6 +223,8 @@
       ，将坐标填入`ocr_range`，例`ocr_range: [100, 200, 300, 400]`，填完坐标后不要移动投屏软件的窗口
 
     * **mac**：参考windows，请注意，windows坐标原点\(0, 0)位于左上角，而mac坐标原点\(0, 0)位于左下角
+    
+    * **Tips**：推荐使用[snipaste](https://zh.snipaste.com)截图软件查看屏幕坐标，屏幕左上角为原点
 
 
 3. 去百度云或阿里云申请一个OCR，或者使用本地OCR（三选一）
@@ -389,6 +391,10 @@ user-agent:
     * 先用手机浏览器访问监听地址，确保能访问通，如果访问不通可尝试更改电脑网络配置文件为专用或开放防火墙
 
     * 如果访问通说明IP没问题，请查看手机端MacroDroid或Tasker里main的日志，确保有监听到
+
+6. EasyOCR报错 `[ERROR] 发生了一点小问题：（'title cannot extend outside image'）`
+
+    * 该报错说明配置文件`config.yaml`中的`ocr_range`坐标超出屏幕，导致异常，请重新填写坐标
 
 ## 测试
 
