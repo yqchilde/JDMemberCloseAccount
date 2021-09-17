@@ -327,7 +327,11 @@ class JDMemberCloseAccount(object):
                         pass
 
                     # 检查手机尾号是否正确
-                    phone = self.wait.until(EC.presence_of_element_located((By.XPATH, "(//div[@class='cm-c6']//div)[3]"))).text
+                    phone = self.wait.until(
+                        EC.presence_of_element_located(
+                            (By.XPATH, "//div[text()='手机号']/following-sibling::div[1]")
+                        )
+                    ).text
                     if self.shop_cfg['phone_tail_number'] != "":
                         if phone[-4:] != self.shop_cfg['phone_tail_number']:
                             INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
