@@ -139,16 +139,16 @@ class JDMemberCloseAccount(object):
         :return: 返回店铺列表
         """
 
-        url = "https://api.m.jd.com/client.action?functionId=getWalletReceivedCardList_New&clientVersion=9.5.2&build" \
-              "=87971&client=android&d_brand=Xiaomi&d_model=M2007J3SC&osVersion=11&screen=2266*1080&partner=xiaomi001" \
-              "&oaid=e02a70327f315862&openudid=3dab9a16bd95e38a&eid=eidA24e181233bsdmxzC3hIpQF2nJhWGGLb" \
-              "%2F1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1%2F7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54%2FyNK&sdkVersion=30" \
-              "&lang=zh_CN&uuid=3dab9a16bd95e38a&aid=3dab9a16bd95e38a&area=13_1000_40488_54442&networkType=wifi" \
-              "&wifiBssid=c609e931512437a8806ae06b86d3977b&uts=0f31TVRjBSsu47QjbY5aZUsO5LYa1B%2F3wqL7JjlFB60vmw6" \
-              "%2F8Xbj74d3sWoT4CTQgX7X0M07W75JvIfz5eu7NxdNJ73NSVbgTHkdsiVZ770PEn0MWPywxr4glUdddS6uxIQ5VfPG65uoUmlB6" \
-              "%2BBwwDqO1Nfxv8%2Bdm15xR%2BFG4fJWb6wCFO7DFMtnoOMo2CQ8mYoECYG3qT%2Bso7P%2FKLgQcg%3D%3D&uemps=0-0&st" \
-              "=1620105615175&sign=65996ece830b41aabdaba32c9d782d07&sv=100"
-        payload = "body=%7B%22v%22%3A%224.1%22%2C%22version%22%3A1580659200%7D&"
+        url = "https://api.m.jd.com/client.action?functionId=getWalletReceivedCardList_New&clientVersion=10.1.4&" \
+              "build=90060&client=android&d_brand=Xiaomi&d_model=M2007J3SC&osVersion=11&screen=2266*1080&" \
+              "partner=xiaomi001&oaid=e02a70327f315862&openudid=3dab9a16bd95e38a&eid=eidA24e181233bsdmxzC3hIpQF2nJh" \
+              "WGGLb%2F1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1%2F7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54%2FyNK&" \
+              "sdkVersion=30&lang=zh_CN&uuid=3dab9a16bd95e38a&aid=3dab9a16bd95e38a&area=13_1000_40491_59669&" \
+              "networkType=wifi&wifiBssid=5c17cbcf50fc7445c661d5ff983be706&uts=0f31TVRjBSv%2Fq885zwC0QPtoV8iFuQOfG" \
+              "tVKIAxAO6aUAj9NI4EYPu%2BJs3H04GllKmmxDKR3Kc4oo%2FatOWpP0CODzovaXjH1t%2Bx8q%2FkNQ6bIjZ2tt1VKtIRjeqPg" \
+              "ppGQ0bis7oW9fXmPxOep38MSmZL9IBs4rqPqBiBvYHPgNP8RZixKe4mePuMSXx2RnT6a%2BbjBA7TCLvXMtoOMpx6X9w%3D%3D&" \
+              "uemps=0-0&harmonyOs=0&st=1632387576221&sign=a81ef4aaa650a55114ddab7b7850e71b&sv=111"
+        payload = "body=%7B%22v%22%3A%224.8%22%2C%22version%22%3A1580659200%7D&"
         headers = {
             'Host': 'api.m.jd.com',
             'cookie': self.config["cookie"],
@@ -271,7 +271,7 @@ class JDMemberCloseAccount(object):
                 else:
                     # 发现第二次缓存，多半是无法注销的店铺
                     try:
-                        INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，请先手动跳过" % card_list[len(black_list)]["brandName"])
+                        INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，程序自动跳过" % card_list[len(black_list)]["brandName"])
                         disgusting_shop = False
                         if card_list[len(black_list)] in black_list:
                             black_list.append(card_list[len(black_list) + 1])
@@ -503,11 +503,13 @@ class JDMemberCloseAccount(object):
                     if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
                         if not local_auto_identify_captcha_click():
                             INFO("验证码位置点击错误，尝试再试一次")
-                            assert local_auto_identify_captcha_click()
+                            if not local_auto_identify_captcha_click():
+                                INFO("验证码位置点击错误，跳过店铺")
                     else:
                         if not auto_identify_captcha_click():
                             INFO("验证码位置点击错误，尝试再试一次")
-                            assert auto_identify_captcha_click()
+                            if not auto_identify_captcha_click():
+                                INFO("验证码位置点击错误，跳过店铺")
 
                     # 解绑成功页面
                     self.wait_check.until(EC.presence_of_element_located(
