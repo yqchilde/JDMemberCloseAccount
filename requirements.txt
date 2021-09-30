@@ -10,3 +10,4 @@ baidu-aip==2.2.18.0
 websockets~=9.1
 opencv_python~=4.5.2.54
 func-timeout~=4.3.5
+msedge-selenium-tools~=3.141.3
