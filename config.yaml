@@ -21,7 +21,7 @@ selenium:
 # shop.member_close_max_number: 设置本次运行注销的最大店铺数，默认为0，代表不限制
 shop:
   skip_shops: ""
-  phone_tail_number: ""
+  phone_tail_number: []
   member_close_max_number: 0
 
 # sms_captcha 短信验证码相关

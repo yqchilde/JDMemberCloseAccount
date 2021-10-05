@@ -332,13 +332,11 @@ class JDMemberCloseAccount(object):
                             (By.XPATH, "//div[text()='手机号']/following-sibling::div[1]")
                         )
                     ).text
-                    if self.shop_cfg['phone_tail_number'] != "":
-                        if phone[-4:] != self.shop_cfg['phone_tail_number']:
-                            INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
-                            continue
-
                     if "*" not in phone[:4]:
                         INFO("当前店铺绑定手机号为%s，明显为无效号码，跳过店铺" % phone)
+                        continue
+                    elif self.shop_cfg['phone_tail_number'] and int(phone[-4:]) not in self.shop_cfg['phone_tail_number']:
+                        INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
                         continue
 
                     # 发送短信验证码
