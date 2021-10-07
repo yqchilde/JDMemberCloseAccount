@@ -335,7 +335,7 @@ class JDMemberCloseAccount(object):
                     if "*" not in phone[:4]:
                         INFO("当前店铺绑定手机号为%s，明显为无效号码，跳过店铺" % phone)
                         continue
-                    elif self.shop_cfg['phone_tail_number'] and int(phone[-4:]) not in self.shop_cfg['phone_tail_number']:
+                    elif self.shop_cfg['phone_tail_number'] and phone[-4:] not in list(map(str, self.shop_cfg['phone_tail_number'])):
                         INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
                         continue
 
