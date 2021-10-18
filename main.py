@@ -49,9 +49,7 @@ def ERROR(*args):
 
 class JDMemberCloseAccount(object):
     """
-    京东退店铺会员
-    1. 全自动(超级鹰验证)
-    2. 半自动(手动点击图形验证码)
+    京东全自动退店铺会员
     """
 
     def __init__(self):
@@ -100,6 +98,24 @@ class JDMemberCloseAccount(object):
         else:
             WARN("请在config.yaml中补充image_captcha.type")
             sys.exit(1)
+
+        # 初始化店铺变量
+        # 错误店铺页面数量
+        self.wrong_store_page_count = 0
+        # 最后一次打开错误店铺页面时间
+        self.wrong_store_page_last_time = 0
+        # 黑名单店铺缓存
+        self.black_list_shops = []
+        # 会员关闭最大数量
+        self.member_close_max_number = self.shop_cfg["member_close_max_number"]
+        # 注销成功店铺数量
+        self.member_close_count = 0
+        # 店铺列表缓存，只存brandId
+        self.card_list_cache = []
+        # 店铺列表重复是否缓存，用于比对是否刷新数据后仍然在系统缓存中
+        self.card_list_duplicate_cache = False
+        # 需要跳过的店铺
+        self.need_skip_shops = []
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -217,15 +233,234 @@ class JDMemberCloseAccount(object):
             ERROR(ret)
             return False
 
+    def close_member(self, card):
+        """
+        进行具体店铺注销页面的注销操作
+        :return:
+        """
+
+        # 页面链接
+        page_link = "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"]
+
+        # 检查手机尾号是否正确
+        phone = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, "//div[text()='手机号']/following-sibling::div[1]")
+            )
+        ).text
+
+        if "*" not in phone[:4]:
+            if not self.card_list_duplicate_cache:
+                INFO("当前店铺绑定手机号为%s，明显为无效号码，挂载到新标签页" % phone)
+                self.browser.execute_script('window.open("{}")'.format(page_link))
+                self.browser.switch_to.window(self.browser.current_window_handle)
+                self.wrong_store_page_count += 1
+                self.wrong_store_page_last_time = time.time()
+            else:
+                INFO("当前店铺绑定手机号为%s，明显为无效号码，取消尝试该店铺" % phone)
+
+            # 加入黑名单缓存
+            if card not in self.black_list_shops:
+                self.black_list_shops.append(card)
+                self.need_skip_shops.append(card["brandName"])
+            return False
+        elif self.shop_cfg['phone_tail_number'] and \
+                phone[-4:] not in list(map(str, self.shop_cfg['phone_tail_number'])):
+            INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
+            return False
+
+        # 发送短信验证码
+        self.wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//button[text()='发送验证码']")
+        ), "发送短信验证码超时 " + card["brandName"]).click()
+
+        # 判断是否发送成功，发送失败为黑店，直接跳过
+        self.wait_check.until(EC.presence_of_element_located(
+            (By.XPATH, "//div[text()='发送成功']")
+        ), f'发送失败，黑店【{card["brandName"]}】跳过')
+
+        # 要连接的websocket地址
+        sms_code = ""
+        ws_conn_url, ws_timeout = self.sms_captcha_cfg["ws_conn_url"], self.sms_captcha_cfg["ws_timeout"]
+
+        # ocr识别投屏验证码
+        if self.sms_captcha_cfg["is_ocr"]:
+            if len(self.ocr_cfg["ocr_range"]) != 4:
+                WARN("请在config.yaml中配置 ocr_range")
+                sys.exit(1)
+            else:
+                _range = (self.ocr_cfg["ocr_range"])
+                ocr_delay_time = self.ocr_cfg["ocr_delay_time"]
+                INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
+                time.sleep(ocr_delay_time)
+
+                if self.ocr_cfg["type"] == "baidu":
+                    INFO("开始调用百度OCR识别")
+                    sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                elif self.ocr_cfg["type"] == "aliyun":
+                    INFO("开始调用阿里云OCR识别")
+                    sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
+                elif self.ocr_cfg["type"] == "easyocr":
+                    INFO("开始调用EasyOCR识别")
+                    sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
+        else:
+            try:
+                if self.sms_captcha_cfg["jd_wstool"]:
+                    recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url, ws_timeout))
+                else:
+                    recv = self.sms.get_code()
+
+                if recv == "":
+                    self.card_list_cache = []
+                    INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
+                    return False
+                else:
+                    sms_code = json.loads(recv)["sms_code"]
+            except Exception as e:
+                WARN("WebSocket监听时发生了问题", e.args)
+                sys.exit(1)
+
+        # 输入短信验证码
+        self.wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//input[@type='number']")
+        ), "输入短信验证码超时 " + card["brandName"]).send_keys(sms_code)
+        time.sleep(1)
+
+        # 点击注销按钮
+        self.wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//div[text()='注销会员']")
+        ), "点击注销按钮超时 " + card["brandName"]).click()
+
+        # 利用打码平台识别图形验证码并模拟点击
+        def auto_identify_captcha_click():
+            # 分割图形验证码
+            code_img = self.get_code_pic()
+            img = open('code_pic.png', 'rb').read()
+
+            pic_str, pic_id = "", ""
+            if self.image_captcha_cfg["type"] == "cjy":
+                # 调用超级鹰API接口识别点触验证码
+                INFO("开始调用超级鹰识别验证码")
+                resp = self.cjy.post_pic(img, self.image_captcha_cfg["cjy_kind"])
+                if "pic_str" in resp and resp["pic_str"] == "":
+                    INFO("超级鹰验证失败，原因为：", resp["err_str"])
+                else:
+                    pic_str = resp["pic_str"]
+                    pic_id = resp["pic_id"]
+            elif self.image_captcha_cfg["type"] == "tj":
+                # 调用图鉴API接口识别点触验证码
+                INFO("开始调用图鉴识别验证码")
+                resp = self.tj.post_pic(img, self.image_captcha_cfg["tj_type_id"])
+                pic_str = resp["result"]
+                pic_id = resp["id"]
+
+            # 处理要点击的坐标
+            all_list = []
+            xy_list = []
+            x = int(pic_str.split(',')[0])
+            xy_list.append(x)
+            y = int(pic_str.split(',')[1])
+            xy_list.append(y)
+            all_list.append(xy_list)
+
+            # 循环遍历点击图片
+            for i in all_list:
+                x = i[0]
+                y = i[1]
+                ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
+                time.sleep(1)
+
+            # 图形验证码坐标点击错误尝试重试
+            # noinspection PyBroadException
+            try:
+                WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
+                    (By.XPATH, "//p[text()='验证失败，请重新验证']")
+                ))
+                INFO("验证码坐标识别出错，将上报平台处理")
+
+                # 上报错误的图片到平台
+                if self.image_captcha_cfg["type"] == "cjy":
+                    self.cjy.report_error(pic_id)
+                elif self.image_captcha_cfg["type"] == "tj":
+                    self.tj.report_error(pic_id)
+                return False
+            except Exception as _:
+                return True
+
+        # 本地识别图形验证码并模拟点击
+        def local_auto_identify_captcha_click():
+            for _ in range(4):
+                cpc_img = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]')))
+                zoom = cpc_img.size['height'] / 170
+                cpc_img_path_base64 = self.wait.until(
+                    EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]'))).get_attribute(
+                    'src').replace("data:image/jpeg;base64,", "")
+                pcp_show_picture_path_base64 = self.wait.until(EC.presence_of_element_located(
+                    (By.XPATH, '//*[@class="pcp_showPicture"]'))).get_attribute('src')
+                # 正在识别验证码
+                if self.image_captcha_cfg["type"] == "local":
+                    INFO("正在通过本地引擎识别")
+                    res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
+                else:
+                    INFO("正在通过深度学习引擎识别")
+                    res = self.JDyolo.JDyolo(cpc_img_path_base64, pcp_show_picture_path_base64)
+                if res[0]:
+                    ActionChains(self.browser).move_to_element_with_offset(
+                        cpc_img, int(res[1][0] * zoom),
+                        int(res[1][1] * zoom)
+                    ).click().perform()
+
+                    # 图形验证码坐标点击错误尝试重试
+                    # noinspection PyBroadException
+                    try:
+                        WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
+                            (By.XPATH, "//p[text()='验证失败，请重新验证']")
+                        ))
+                        time.sleep(1)
+                        return False
+                    except Exception as _:
+                        return True
+                else:
+                    INFO("识别未果")
+                    self.wait.until(
+                        EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
+                    time.sleep(1)
+            return False
+
+        # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
+        if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
+            if not local_auto_identify_captcha_click():
+                INFO("验证码位置点击错误，尝试再试一次")
+                if not local_auto_identify_captcha_click():
+                    INFO("验证码位置点击错误，跳过店铺")
+                    return False
+        else:
+            if not auto_identify_captcha_click():
+                INFO("验证码位置点击错误，尝试再试一次")
+                if not auto_identify_captcha_click():
+                    INFO("验证码位置点击错误，跳过店铺")
+                    return False
+
+        # 解绑成功页面
+        self.wait_check.until(EC.presence_of_element_located(
+            (By.XPATH, "//div[text()='解绑会员成功']")
+        ), f'解绑失败，黑店【{card["brandName"]}】跳过')
+
+        time.sleep(1)
+        self.member_close_count += 1
+        INFO("本次运行已成功注销店铺会员数量为：", self.member_close_count)
+        return True
+
     def main(self):
         # 打开京东
         self.browser.get("https://m.jd.com/")
 
+        # 检查Cookie配置
         if self.config["cookie"] == "":
             WARN("请先在 config.yaml 里配置好cookie")
             sys.exit(1)
 
-        # 写入 cookie
+        # 写入Cookie
         self.browser.delete_all_cookies()
         for cookie in self.config['cookie'].split(";", 1):
             self.browser.add_cookie(
@@ -233,10 +468,11 @@ class JDMemberCloseAccount(object):
             )
         self.browser.refresh()
 
-        cache_card_list, retried = [], 0
-        cnt, member_close_max_number = 0, self.shop_cfg["member_close_max_number"]
-        disgusting_shop, black_list = False, []
+        # 设置黑名单店铺名字数组
+        if self.shop_cfg["skip_shops"] != "":
+            self.need_skip_shops = self.shop_cfg["skip_shops"].split(",")
 
+        # 检查列表接口缓存
         while True:
             # 获取店铺列表
             card_list = self.get_shop_cards()
@@ -245,60 +481,76 @@ class JDMemberCloseAccount(object):
                 sys.exit(0)
 
             # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
-            if len(cache_card_list) == 0:
-                cache_card_list = [item['brandId'] for item in card_list]
+            if len(self.card_list_cache) == 0:
+                self.card_list_cache = [item['brandId'] for item in card_list]
             else:
-                if retried >= 10:
-                    INFO("连续%d次获取到相同的店铺列表，判断为%d分钟左右的缓存仍未刷新，即将退出程序" % (retried, retried / 2))
-                    sys.exit(0)
-
-                if not disgusting_shop:
+                if not self.card_list_duplicate_cache:
                     # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
-                    new_card_list = [item['brandId'] for item in card_list]
-                    if set(new_card_list) <= set(cache_card_list) and len(new_card_list) == len(cache_card_list):
+                    card_list_new = [item['brandId'] for item in card_list]
+                    if set(card_list_new) <= set(self.card_list_cache) and \
+                            len(card_list_new) == len(self.card_list_cache):
                         INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，即将尝试刷新缓存")
                         if self.refresh_cache():
                             INFO("理论上缓存已经刷新成功，如页面未成功自动刷新请及时反馈")
-                            disgusting_shop = True
+                            self.card_list_duplicate_cache = True
                             continue
                         else:
                             INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
                             time.sleep(30)
-                            retried += 1
                             continue
                     else:
-                        cache_card_list = new_card_list
+                        self.card_list_cache = card_list_new
                 else:
                     # 发现第二次缓存，多半是无法注销的店铺
-                    try:
-                        INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，程序自动跳过" % card_list[len(black_list)]["brandName"])
-                        disgusting_shop = False
-                        if card_list[len(black_list)] in black_list:
-                            black_list.append(card_list[len(black_list) + 1])
-                        else:
-                            black_list.append(card_list[len(black_list)])
-                    except IndexError:
-                        INFO("好了🙆，剩下的店铺应该都是无法注销的，请手动打开手机查看对应店铺，程序即将退出")
-                        sys.exit(0)
+                    for card in card_list:
+                        if card not in self.black_list_shops:
+                            INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，程序加入黑名单后自动跳过" % card["brandName"])
+                            self.black_list_shops.append(card)
+                            self.need_skip_shops.append(card["brandName"])
 
-            # 跳过无法注销的店铺
-            shops = []
-            for item in black_list:
-                shops.append(item["brandName"])
+                    # 二次缓存中已经在黑名单的店铺，那就直接切换标签页进行处理
+                    wait_refresh_time = self.shop_cfg["wait_refresh_time"]
+                    loop_for_wait_time = int(wait_refresh_time * 60 - (time.time() - self.wrong_store_page_last_time))
+                    while loop_for_wait_time:
+                        print("\r[%s] [INFO] 挂载乱码店铺中(总时间为%s分钟)，页面还需等待: %s秒" %
+                              (
+                                  time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                                  wait_refresh_time,
+                                  str(loop_for_wait_time)), end=''
+                              )
+                        time.sleep(1)
+                        loop_for_wait_time -= 1
 
-            # 加载配置文件中需要跳过的店铺
-            if self.shop_cfg['skip_shops'] != "":
-                shops = self.shop_cfg['skip_shops'].split(",")
+                    print("\n[%s] [INFO] 开始刷新页面进行再次尝试乱码页面" %
+                          time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                    now_handle = self.browser.current_window_handle
+                    for handles in self.browser.window_handles:
+                        if now_handle != handles:
+                            self.browser.switch_to.window(handles)
+                            self.browser.refresh()
+                            time.sleep(3)
+                            vender_id = self.browser.current_url[self.browser.current_url.rfind("venderId=") + 9:]
+                            for card in self.black_list_shops:
+                                if card["brandId"] == vender_id:
+                                    INFO("开始从新标签页注销问题店铺", card["brandName"])
+                                    if self.close_member(card):
+                                        self.black_list_shops.remove(card)
+                                        self.need_skip_shops.remove(card["brandName"])
+                                    self.browser.close()
+                    self.card_list_duplicate_cache = False
+                    INFO("本次运行记录的黑名单店铺名字为", self.need_skip_shops)
+                    INFO("🤔 剩下的店铺都是疑难杂症，请配置到黑名单中或联系客服解决，程序即将退出")
+                    sys.exit(0)
 
             INFO("本轮运行获取到", len(card_list), "家店铺会员信息")
             for card in card_list:
                 # 判断本次运行数是否达到设置
-                if member_close_max_number != 0 and cnt >= member_close_max_number:
+                if self.member_close_max_number != 0 and self.member_close_count >= self.member_close_max_number:
                     INFO("已注销店铺数达到配置中允许注销的最大次数，程序退出")
                     sys.exit(0)
 
                 # 判断该店铺是否要跳过
-                if card["brandName"] in shops:
+                if card["brandName"] in self.need_skip_shops:
                     INFO("发现需要跳过的店铺", card["brandName"])
                     continue
 
@@ -326,197 +578,9 @@ class JDMemberCloseAccount(object):
                     except Exception as _:
                         pass
 
-                    # 检查手机尾号是否正确
-                    phone = self.wait.until(
-                        EC.presence_of_element_located(
-                            (By.XPATH, "//div[text()='手机号']/following-sibling::div[1]")
-                        )
-                    ).text
-                    if "*" not in phone[:4]:
-                        INFO("当前店铺绑定手机号为%s，明显为无效号码，跳过店铺" % phone)
+                    # 注销具体店铺操作
+                    if not self.close_member(card):
                         continue
-                    elif self.shop_cfg['phone_tail_number'] and phone[-4:] not in list(map(str, self.shop_cfg['phone_tail_number'])):
-                        INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
-                        continue
-
-                    # 发送短信验证码
-                    self.wait.until(EC.presence_of_element_located(
-                        (By.XPATH, "//button[text()='发送验证码']")
-                    ), "发送短信验证码超时 " + card["brandName"]).click()
-
-                    # 判断是否发送成功，发送失败为黑店，直接跳过
-                    self.wait_check.until(EC.presence_of_element_located(
-                        (By.XPATH, "//div[text()='发送成功']")
-                    ), f'发送失败，黑店【{card["brandName"]}】跳过')
-
-                    # 要连接的websocket地址
-                    sms_code = ""
-                    ws_conn_url, ws_timeout = self.sms_captcha_cfg["ws_conn_url"], self.sms_captcha_cfg["ws_timeout"]
-
-                    # ocr识别投屏验证码
-                    if self.sms_captcha_cfg["is_ocr"]:
-                        if len(self.ocr_cfg["ocr_range"]) != 4:
-                            WARN("请在config.yaml中配置 ocr_range")
-                            sys.exit(1)
-                        else:
-                            _range = (self.ocr_cfg["ocr_range"])
-                            ocr_delay_time = self.ocr_cfg["ocr_delay_time"]
-                            INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
-                            time.sleep(ocr_delay_time)
-
-                            if self.ocr_cfg["type"] == "baidu":
-                                INFO("开始调用百度OCR识别")
-                                sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
-                            elif self.ocr_cfg["type"] == "aliyun":
-                                INFO("开始调用阿里云OCR识别")
-                                sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
-                            elif self.ocr_cfg["type"] == "easyocr":
-                                INFO("开始调用EasyOCR识别")
-                                sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
-                    else:
-                        try:
-                            if self.sms_captcha_cfg["jd_wstool"]:
-                                recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url, ws_timeout))
-                            else:
-                                recv = self.sms.get_code()
-
-                            if recv == "":
-                                cache_card_list = []
-                                INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
-                                continue
-                            else:
-                                sms_code = json.loads(recv)["sms_code"]
-                        except Exception as e:
-                            WARN("WebSocket监听时发生了问题", e.args)
-                            sys.exit(1)
-
-                    # 输入短信验证码
-                    self.wait.until(EC.presence_of_element_located(
-                        (By.XPATH, "//input[@type='number']")
-                    ), "输入短信验证码超时 " + card["brandName"]).send_keys(sms_code)
-                    time.sleep(1)
-
-                    # 点击注销按钮
-                    self.wait.until(EC.presence_of_element_located(
-                        (By.XPATH, "//div[text()='注销会员']")
-                    ), "点击注销按钮超时 " + card["brandName"]).click()
-
-                    # 利用打码平台识别图形验证码并模拟点击
-                    def auto_identify_captcha_click():
-                        # 分割图形验证码
-                        code_img = self.get_code_pic()
-                        img = open('code_pic.png', 'rb').read()
-
-                        pic_str, pic_id = "", ""
-                        if self.image_captcha_cfg["type"] == "cjy":
-                            # 调用超级鹰API接口识别点触验证码
-                            INFO("开始调用超级鹰识别验证码")
-                            resp = self.cjy.post_pic(img, self.image_captcha_cfg["cjy_kind"])
-                            if "pic_str" in resp and resp["pic_str"] == "":
-                                INFO("超级鹰验证失败，原因为：", resp["err_str"])
-                            else:
-                                pic_str = resp["pic_str"]
-                                pic_id = resp["pic_id"]
-                        elif self.image_captcha_cfg["type"] == "tj":
-                            # 调用图鉴API接口识别点触验证码
-                            INFO("开始调用图鉴识别验证码")
-                            resp = self.tj.post_pic(img, self.image_captcha_cfg["tj_type_id"])
-                            pic_str = resp["result"]
-                            pic_id = resp["id"]
-
-                        # 处理要点击的坐标
-                        all_list = []
-                        xy_list = []
-                        x = int(pic_str.split(',')[0])
-                        xy_list.append(x)
-                        y = int(pic_str.split(',')[1])
-                        xy_list.append(y)
-                        all_list.append(xy_list)
-
-                        # 循环遍历点击图片
-                        for i in all_list:
-                            x = i[0]
-                            y = i[1]
-                            ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
-                            time.sleep(1)
-
-                        # 图形验证码坐标点击错误尝试重试
-                        # noinspection PyBroadException
-                        try:
-                            WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
-                                (By.XPATH, "//p[text()='验证失败，请重新验证']")
-                            ))
-                            INFO("验证码坐标识别出错，将上报平台处理")
-
-                            # 上报错误的图片到平台
-                            if self.image_captcha_cfg["type"] == "cjy":
-                                self.cjy.report_error(pic_id)
-                            elif self.image_captcha_cfg["type"] == "tj":
-                                self.tj.report_error(pic_id)
-                            return False
-                        except Exception as _:
-                            return True
-
-                    # 本地识别图形验证码并模拟点击
-                    def local_auto_identify_captcha_click():
-                        for _ in range(4):
-                            cpc_img = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]')))
-                            zoom = cpc_img.size['height'] / 170
-                            cpc_img_path_base64 = self.wait.until(
-                                EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]'))).get_attribute(
-                                'src').replace("data:image/jpeg;base64,", "")
-                            pcp_show_picture_path_base64 = self.wait.until(EC.presence_of_element_located(
-                                (By.XPATH, '//*[@class="pcp_showPicture"]'))).get_attribute('src')
-                            # 正在识别验证码
-                            if self.image_captcha_cfg["type"] == "local":
-                                INFO("正在通过本地引擎识别")
-                                res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
-                            else:
-                                INFO("正在通过深度学习引擎识别")
-                                res = self.JDyolo.JDyolo(cpc_img_path_base64, pcp_show_picture_path_base64)
-                            if res[0]:
-                                ActionChains(self.browser).move_to_element_with_offset(
-                                    cpc_img, int(res[1][0] * zoom),
-                                    int(res[1][1] * zoom)
-                                ).click().perform()
-
-                                # 图形验证码坐标点击错误尝试重试
-                                # noinspection PyBroadException
-                                try:
-                                    WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
-                                        (By.XPATH, "//p[text()='验证失败，请重新验证']")
-                                    ))
-                                    time.sleep(1)
-                                    return False
-                                except Exception as _:
-                                    return True
-                            else:
-                                INFO("识别未果")
-                                self.wait.until(
-                                    EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
-                                time.sleep(1)
-                        return False
-
-                    # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
-                    if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
-                        if not local_auto_identify_captcha_click():
-                            INFO("验证码位置点击错误，尝试再试一次")
-                            if not local_auto_identify_captcha_click():
-                                INFO("验证码位置点击错误，跳过店铺")
-                    else:
-                        if not auto_identify_captcha_click():
-                            INFO("验证码位置点击错误，尝试再试一次")
-                            if not auto_identify_captcha_click():
-                                INFO("验证码位置点击错误，跳过店铺")
-
-                    # 解绑成功页面
-                    self.wait_check.until(EC.presence_of_element_located(
-                        (By.XPATH, "//div[text()='解绑会员成功']")
-                    ), f'解绑失败，黑店【{card["brandName"]}】跳过')
-
-                    time.sleep(1)
-                    cnt += 1
-                    INFO("本次运行已成功注销店铺会员数量为：", cnt)
                 except Exception as e:
                     ERROR("发生了一点小问题：", e.args)
 
