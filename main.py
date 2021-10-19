@@ -102,8 +102,6 @@ class JDMemberCloseAccount(object):
         # 初始化店铺变量
         # 错误店铺页面数量
         self.wrong_store_page_count = 0
-        # 最后一次打开错误店铺页面时间
-        self.wrong_store_page_last_time = 0
         # 黑名单店铺缓存
         self.black_list_shops = []
         # 会员关闭最大数量
@@ -255,7 +253,6 @@ class JDMemberCloseAccount(object):
                 self.browser.execute_script('window.open("{}")'.format(page_link))
                 self.browser.switch_to.window(self.browser.current_window_handle)
                 self.wrong_store_page_count += 1
-                self.wrong_store_page_last_time = time.time()
             else:
                 INFO("当前店铺绑定手机号为%s，明显为无效号码，取消尝试该店铺" % phone)
 
@@ -510,12 +507,7 @@ class JDMemberCloseAccount(object):
 
                     # 二次缓存中已经在黑名单的店铺，那就直接切换标签页进行处理
                     wait_refresh_time = self.shop_cfg["wait_refresh_time"]
-                    if self.wrong_store_page_last_time == 0:
-                        loop_for_wait_time = int(wait_refresh_time * 60)
-                    else:
-                        loop_for_wait_time = int(
-                            wait_refresh_time * 60 - (time.time() - self.wrong_store_page_last_time)
-                        )
+                    loop_for_wait_time = int(wait_refresh_time * 60)
                     while loop_for_wait_time:
                         print("\r[%s] [INFO] 挂载乱码店铺中(总时间为%s分钟)，页面还需等待: %s秒" %
                               (
