@@ -510,7 +510,12 @@ class JDMemberCloseAccount(object):
 
                     # 二次缓存中已经在黑名单的店铺，那就直接切换标签页进行处理
                     wait_refresh_time = self.shop_cfg["wait_refresh_time"]
-                    loop_for_wait_time = int(wait_refresh_time * 60 - (time.time() - self.wrong_store_page_last_time))
+                    if self.wrong_store_page_last_time == 0:
+                        loop_for_wait_time = int(wait_refresh_time * 60)
+                    else:
+                        loop_for_wait_time = int(
+                            wait_refresh_time * 60 - (time.time() - self.wrong_store_page_last_time)
+                        )
                     while loop_for_wait_time:
                         print("\r[%s] [INFO] 挂载乱码店铺中(总时间为%s分钟)，页面还需等待: %s秒" %
                               (
