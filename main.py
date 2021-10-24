@@ -1,4 +1,5 @@
 import sys
+import copy
 import time
 import json
 import asyncio
@@ -110,6 +111,8 @@ class JDMemberCloseAccount(object):
         self.member_close_count = 0
         # 需要跳过的店铺
         self.need_skip_shops = []
+        # 指定注销的店铺
+        self.specify_shops = []
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -475,7 +478,9 @@ class JDMemberCloseAccount(object):
             self.black_list_shops.remove(card)
         if card["brandName"] in self.need_skip_shops:
             self.need_skip_shops.remove(card["brandName"])
-        INFO("本次运行已成功注销店铺会员数量为：", self.member_close_count)
+        if card["brandName"] in self.specify_shops:
+            self.specify_shops.remove(card["brandName"])
+        INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
         return True
 
     def main(self):
@@ -496,8 +501,14 @@ class JDMemberCloseAccount(object):
         self.browser.refresh()
 
         # 设置黑名单店铺名字数组
-        if self.shop_cfg["skip_shops"] != "":
-            self.need_skip_shops = self.shop_cfg["skip_shops"].split(",")
+        if len(self.shop_cfg["skip_shops"]) > 0:
+            self.need_skip_shops = self.shop_cfg["skip_shops"]
+
+        # 指定注销店铺配置优先级最高，且self.specify_shops需浅拷贝
+        if len(self.shop_cfg["specify_shops"]) > 0:
+            INFO("👀 发现已配置指定店铺，优先指定店铺，不执行需要跳过店铺")
+            self.specify_shops = copy.copy(self.shop_cfg["specify_shops"])
+            self.need_skip_shops = []
 
         # 检查列表接口缓存
         while True:
@@ -508,6 +519,11 @@ class JDMemberCloseAccount(object):
             card_list = self.get_shop_cards()
             if len(card_list) == 0:
                 INFO("🎉 本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
+                sys.exit(0)
+
+            # 如果剩下的卡包
+            if len(self.shop_cfg["specify_shops"]) > 0 and len(self.specify_shops) == 0:
+                INFO("👋 指定店铺已全部注销完毕，程序即将退出")
                 sys.exit(0)
 
             # 如果剩下的卡包全部都是黑名单中的，直接就结束
@@ -552,16 +568,22 @@ class JDMemberCloseAccount(object):
                                 self.browser.close()
                 continue
 
-            INFO("本轮运行获取到", len(card_list), "家店铺会员信息")
+            INFO("🧐 本轮运行获取到", len(card_list), "家店铺会员信息")
             for card in card_list:
                 # 判断本次运行数是否达到设置
                 if self.member_close_max_number != 0 and self.member_close_count >= self.member_close_max_number:
                     INFO("已注销店铺数达到配置中允许注销的最大次数，程序退出")
                     sys.exit(0)
 
+                # 非指定店铺名字跳过
+                if len(self.shop_cfg["specify_shops"]) > 0:
+                    if card["brandName"] not in self.shop_cfg["specify_shops"]:
+                        INFO("发现非指定注销的店铺，跳过", card["brandName"])
+                        continue
+
                 # 判断该店铺是否要跳过
                 if card["brandName"] in self.need_skip_shops:
-                    INFO("发现需要跳过的店铺", card["brandName"])
+                    INFO("发现指定需要跳过的店铺，跳过", card["brandName"])
                     continue
 
                 try:
