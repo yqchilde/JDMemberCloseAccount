@@ -420,6 +420,10 @@ user-agent:
 
     1. 在`config.yaml`里设置`debug: true`再次执行可以看到具体报错，如解决不了请反馈tg群
 
+## ChangeLog
+
+- [更新日志](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/CHANGELOG.md)
+
 ## ScreenShots
 
 <div align=center>
