@@ -1,4 +1,5 @@
 import sys
+import copy
 import time
 import json
 import asyncio
@@ -108,12 +109,10 @@ class JDMemberCloseAccount(object):
         self.member_close_max_number = self.shop_cfg["member_close_max_number"]
         # 注销成功店铺数量
         self.member_close_count = 0
-        # 店铺列表缓存，只存brandId
-        self.card_list_cache = []
-        # 店铺列表重复是否缓存，用于比对是否刷新数据后仍然在系统缓存中
-        self.card_list_duplicate_cache = False
         # 需要跳过的店铺
         self.need_skip_shops = []
+        # 指定注销的店铺
+        self.specify_shops = []
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -153,16 +152,28 @@ class JDMemberCloseAccount(object):
         :return: 返回店铺列表
         """
 
-        url = "https://api.m.jd.com/client.action?functionId=getWalletReceivedCardList_New&clientVersion=10.1.4&" \
-              "build=90060&client=android&d_brand=Xiaomi&d_model=M2007J3SC&osVersion=11&screen=2266*1080&" \
-              "partner=xiaomi001&oaid=e02a70327f315862&openudid=3dab9a16bd95e38a&eid=eidA24e181233bsdmxzC3hIpQF2nJh" \
-              "WGGLb%2F1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1%2F7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54%2FyNK&" \
-              "sdkVersion=30&lang=zh_CN&uuid=3dab9a16bd95e38a&aid=3dab9a16bd95e38a&area=13_1000_40491_59669&" \
-              "networkType=wifi&wifiBssid=5c17cbcf50fc7445c661d5ff983be706&uts=0f31TVRjBSv%2Fq885zwC0QPtoV8iFuQOfG" \
-              "tVKIAxAO6aUAj9NI4EYPu%2BJs3H04GllKmmxDKR3Kc4oo%2FatOWpP0CODzovaXjH1t%2Bx8q%2FkNQ6bIjZ2tt1VKtIRjeqPg" \
-              "ppGQ0bis7oW9fXmPxOep38MSmZL9IBs4rqPqBiBvYHPgNP8RZixKe4mePuMSXx2RnT6a%2BbjBA7TCLvXMtoOMpx6X9w%3D%3D&" \
-              "uemps=0-0&harmonyOs=0&st=1632387576221&sign=a81ef4aaa650a55114ddab7b7850e71b&sv=111"
-        payload = "body=%7B%22v%22%3A%224.8%22%2C%22version%22%3A1580659200%7D&"
+        url = "https://api.m.jd.com/client.action?functionId=getWalletReceivedCardList_New&clientVersion=10.2.0&bui" \
+              "ld=90900&client=android&partner=xiaomi001&oaid=e02a70327f315862&eid=eidA24e181233bsdmxzC3hIpQF2nJhWG" \
+              "GLb/1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1/7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54/yNK&sdkVersion=30&l" \
+              "ang=zh_CN&harmonyOs=0&networkType=wifi&uts=0f31TVRjBSto8DL4K0ee85ZRt0rmw128U%2B6PiicSyj%2Bq9U2tA0gWy" \
+              "YjW29QZLyq5ebqz%2BLY0DD03RA0Pz%2B8PPqt%2FzmMyvdLqzrHQ4H1TLZ3qP0jDbUcDGjUcS0cJFuP%2F4Wb8%2Bi8BajbDrNw" \
+              "9yU5V6OumYiQALp8Jxh82E9QhngZT7ybL1zuXSzO%2BLvCgdg6BockZnd9hKMTFq4pY4oMMsg%3D%3D&uemps=0-0&ext=%7B%22" \
+              "prstate%22%3A%220%22%7D&ef=1&ep=%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22" \
+              "%2C%22ts%22%3A1634992423397%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22area%22%3A%22CJDpCJKmCP80CNG4EP" \
+              "81DNG0Cq%3D%3D%22%2C%22d_model%22%3A%22JJSmCNdAC1DN%22%2C%22wifiBssid%22%3A%22YzYmEWU5CzO1CJS0CzdrEN" \
+              "qmDwPvCNZsENZuCzu3D2S%3D%22%2C%22osVersion%22%3A%22CJO%3D%22%2C%22d_brand%22%3A%22WQvrb21f%22%2C%22s" \
+              "creen%22%3A%22CtS2DsenCNqm%22%2C%22uuid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%2C%22aid%22%3A%22C2H" \
+              "rYtvrCJZsZNu1ZJC4YG%3D%3D%22%2C%22openudid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%7D%2C%22ciphertyp" \
+              "e%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D&"
+
+        page_num = 5
+        var_name = locals()
+        var_name["sign_page1"] = "st=1634992661020&sign=83a87e33d52a73c3abf01217af277d7c&sv=101"
+        var_name["sign_page2"] = "st=1634992678131&sign=4da2fffa2375fd0f6f261ac70fcaad00&sv=102"
+        var_name["sign_page3"] = "st=1634992682728&sign=83815a83dedef47c5f908269aca3926c&sv=100"
+        var_name["sign_page4"] = "st=1634992686855&sign=f781c2707f70c8ffc98b28e091a56542&sv=121"
+        var_name["sign_page5"] = "st=1634992688025&sign=15680ac47fb873561fc9f38ff2411a5e&sv=122"
+
         headers = {
             'Host': 'api.m.jd.com',
             'cookie': self.config["cookie"],
@@ -176,42 +187,53 @@ class JDMemberCloseAccount(object):
 
         card_list = []
         urllib3.disable_warnings()
-        resp = requests.request("POST", url, headers=headers, data=payload, verify=False)
-        if resp.content:
-            ret = json.loads(resp.text)
-            if ret["code"] == "0":
-                if ret["message"] == "用户未登录":
-                    WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
-                    sys.exit(1)
 
-                if "cardList" not in ret["result"]:
-                    INFO("当前卡包中会员店铺为0个")
-                    sys.exit(0)
-
-                card_list = (ret["result"]["cardList"])
+        for i in range(1, page_num + 1):
+            body = "body=%7B%22pageNum%22%3A{}%2C%22pageSize%22%3A10%2C%22v%22%3A%225.0%22%2C%22" \
+                   "version%22%3A1580659200%7D&".format(str(i))
+            resp = requests.request(
+                "POST",
+                url + var_name.get("sign_page" + str(i)), headers=headers, data=body,
+                verify=False
+            )
+            if resp.content:
+                ret = json.loads(resp.text)
+                if ret["code"] == "0":
+                    if ret["message"] == "用户未登录":
+                        WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
+                        sys.exit(1)
+                    elif ret["message"] == "响应成功":
+                        if len(ret["result"]["cardList"]) == 0:
+                            break
+                        card_list.extend(ret["result"]["cardList"])
+                else:
+                    ERROR(ret)
+                    break
             else:
-                ERROR(ret)
-
-            return card_list
-        else:
-            ERROR("获取卡包列表接口返回None，请检查网络")
+                ERROR("获取卡包列表接口返回None，请检查网络")
+                break
+        return card_list
 
     def refresh_cache(self):
         """
         利用待领卡接口刷新卡包列表缓存
         :return:
         """
-        url = "https://api.m.jd.com/client.action?functionId=getWalletUnreceivedCardList_New&clientVersion=10.0.2" \
-              "&build=88569&client=android&d_brand=Xiaomi&d_model=M2007J3SC&osVersion=11&screen=2266*1080&partner" \
-              "=xiaomi001&oaid=e02a70327f315862&openudid=3dab9a16bd95e38a&eid=eidA24e181233bsdmxzC3hIpQF2nJhWGGLb" \
-              "%2F1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1%2F7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54%2FyNK&sdkVersion=30" \
-              "&lang=zh_CN&uuid=3dab9a16bd95e38a&aid=3dab9a16bd95e38a&area=13_1000_40488_54442&networkType=wifi" \
-              "&wifiBssid=unknown&uts=0f31TVRjBSsa33%2BKCXYEGxOEcvF5WoCTLW6zy4ICUIZSJDN7StKCM709NzfQ4TH7UyK43CcV9m" \
-              "8NBxDef2fv9lr5dGonowgeJ4YODX5Jeb5TRw1PUE0YmmEdsQw4TlvNc5umf1j%2FKrR%2F3FAfMh%2Bs8nQ%2BG8trnDhaJW2kJKg" \
-              "Hzq7N3es4kOmO4MEmUYf2putd%2BK0ZMPqJ8MfHJCta74kmAA%3D%3D&uemps=0-0&st=1623387008796&sign=d8297b1521c" \
-              "0d56cdf290e2de658452e&sv=100"
-        payload = "body=%7B%22pageNum%22%3A1%2C%22pageSize%22%3A10%2C%22v%22%3A%224.3%22%2C%22version%22%3A1580659200" \
-                  "%7D&"
+        url = "https://api.m.jd.com/client.action?functionId=getWalletUnreceivedCardList_New&clientVersion=10.2.0&bu" \
+              "ild=90900&client=android&partner=xiaomi001&oaid=e02a70327f315862&eid=eidA24e181233bsdmxzC3hIpQF2nJhWG" \
+              "GLb/1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1/7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54/yNK&sdkVersion=30&la" \
+              "ng=zh_CN&harmonyOs=0&networkType=wifi&uts=0f31TVRjBSto8DL4K0ee85ZRt0rmw1282OyO9rnqi1tOb%2F8sm56Ob%2B2" \
+              "cXRa7tHz7%2Brbnij%2FrCELTlgkV7kZeS2bYJHn1VmbuhkPZ%2FEdKSyksnAupmrbGMSyCNb4zYaLOIo4Ctbtqd6Z9k3de%2BrTH" \
+              "Uc0aeSTgZ%2FZ47Z%2Fe5b%2F%2Bt24iEsGelW3oJAs9OMvTYGqyA5dS%2BPKX5oHybFC4iYH2FA%3D%3D&uemps=0-0&ext=%7B%" \
+              "22prstate%22%3A%220%22%7D&ef=1&ep=%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%2" \
+              "2%2C%22ts%22%3A1635004927990%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22area%22%3A%22CJDpCJKmCP80CNG4EP" \
+              "81DNG0Cq%3D%3D%22%2C%22d_model%22%3A%22JJSmCNdAC1DN%22%2C%22wifiBssid%22%3A%22YzYmEWU5CzO1CJS0CzdrENq" \
+              "mDwPvCNZsENZuCzu3D2S%3D%22%2C%22osVersion%22%3A%22CJO%3D%22%2C%22d_brand%22%3A%22WQvrb21f%22%2C%22scr" \
+              "een%22%3A%22CtS2DsenCNqm%22%2C%22uuid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%2C%22aid%22%3A%22C2HrYt" \
+              "vrCJZsZNu1ZJC4YG%3D%3D%22%2C%22openudid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%7D%2C%22ciphertype%22" \
+              "%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D&st=1635004961154&" \
+              "sign=398298f4fbaf3e8218626e5c447c73f6&sv=100"
+        body = "body=%7B%22pageNum%22%3A1%2C%22pageSize%22%3A10%2C%22v%22%3A%225.0%22%2C%22version%22%3A1580659200%7D&"
         headers = {
             'Host': 'api.m.jd.com',
             'cookie': self.config["cookie"],
@@ -223,7 +245,7 @@ class JDMemberCloseAccount(object):
             'content-length': '102'
         }
         urllib3.disable_warnings()
-        resp = requests.request("POST", url, headers=headers, data=payload, verify=False)
+        resp = requests.request("POST", url, headers=headers, data=body, verify=False)
         ret = json.loads(resp.text)
         if ret["code"] == "0":
             return True
@@ -231,10 +253,11 @@ class JDMemberCloseAccount(object):
             ERROR(ret)
             return False
 
-    def close_member(self, card):
+    def close_member(self, card, flag=0):
         """
         进行具体店铺注销页面的注销操作
-        :return:
+        card: 具体店铺数据对象
+        flag: 乱码页面挂载状态
         """
 
         # 页面链接
@@ -248,13 +271,16 @@ class JDMemberCloseAccount(object):
         ).text
 
         if "*" not in phone[:4]:
-            if not self.card_list_duplicate_cache:
-                INFO("当前店铺绑定手机号为%s，明显为无效号码，挂载到新标签页" % phone)
-                self.browser.execute_script('window.open("{}")'.format(page_link))
-                self.browser.switch_to.window(self.browser.current_window_handle)
-                self.wrong_store_page_count += 1
+            if flag == 0:
+                if "AARm5gnNkBWoE8tQA5n" in phone:
+                    INFO("当前店铺绑定手机号为%s，明显为无效号码，挂载到新标签页" % phone)
+                    self.browser.execute_script('window.open("{}")'.format(page_link))
+                    self.browser.switch_to.window(self.browser.current_window_handle)
+                    self.wrong_store_page_count += 1
+                else:
+                    INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
             else:
-                INFO("当前店铺绑定手机号为%s，明显为无效号码，取消尝试该店铺" % phone)
+                INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
 
             # 加入黑名单缓存
             if card not in self.black_list_shops:
@@ -263,7 +289,11 @@ class JDMemberCloseAccount(object):
             return False
         elif self.shop_cfg['phone_tail_number'] and \
                 phone[-4:] not in list(map(str, self.shop_cfg['phone_tail_number'])):
-            INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，跳过店铺" % phone)
+            INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，程序加入黑名单后自动跳过" % phone)
+            # 加入黑名单缓存
+            if card not in self.black_list_shops:
+                self.black_list_shops.append(card)
+                self.need_skip_shops.append(card["brandName"])
             return False
 
         # 发送短信验证码
@@ -308,7 +338,6 @@ class JDMemberCloseAccount(object):
                     recv = self.sms.get_code()
 
                 if recv == "":
-                    self.card_list_cache = []
                     INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
                     return False
                 else:
@@ -445,7 +474,13 @@ class JDMemberCloseAccount(object):
 
         time.sleep(1)
         self.member_close_count += 1
-        INFO("本次运行已成功注销店铺会员数量为：", self.member_close_count)
+        if card in self.black_list_shops:
+            self.black_list_shops.remove(card)
+        if card["brandName"] in self.need_skip_shops:
+            self.need_skip_shops.remove(card["brandName"])
+        if card["brandName"] in self.specify_shops:
+            self.specify_shops.remove(card["brandName"])
+        INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
         return True
 
     def main(self):
@@ -466,97 +501,97 @@ class JDMemberCloseAccount(object):
         self.browser.refresh()
 
         # 设置黑名单店铺名字数组
-        if self.shop_cfg["skip_shops"] != "":
-            self.need_skip_shops = self.shop_cfg["skip_shops"].split(",")
+        if len(self.shop_cfg["skip_shops"]) > 0:
+            self.need_skip_shops = self.shop_cfg["skip_shops"]
+
+        # 指定注销店铺配置优先级最高，且self.specify_shops需浅拷贝
+        if len(self.shop_cfg["specify_shops"]) > 0:
+            INFO("👀 发现已配置指定店铺，优先指定店铺，不执行需要跳过店铺")
+            self.specify_shops = copy.copy(self.shop_cfg["specify_shops"])
+            self.need_skip_shops = []
 
         # 检查列表接口缓存
         while True:
+            # 执行一遍刷新接口
+            self.refresh_cache()
+
             # 获取店铺列表
             card_list = self.get_shop_cards()
             if len(card_list) == 0:
-                INFO("本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
+                INFO("🎉 本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
                 sys.exit(0)
 
-            # 记录一下所有请求数据，防止第一轮做完之后缓存没有刷新导致获取的链接请求失败
-            if len(self.card_list_cache) == 0:
-                self.card_list_cache = [item['brandId'] for item in card_list]
-            else:
-                if not self.card_list_duplicate_cache:
-                    # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
-                    card_list_new = [item['brandId'] for item in card_list]
-                    if set(card_list_new) <= set(self.card_list_cache) and \
-                            len(card_list_new) == len(self.card_list_cache):
-                        INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，即将尝试刷新缓存")
-                        if self.refresh_cache():
-                            INFO("理论上缓存已经刷新成功，如页面未成功自动刷新请及时反馈")
-                            self.card_list_duplicate_cache = True
-                            continue
-                        else:
-                            INFO("当前接口获取到的店铺列表和上一轮一致，认为接口缓存还未刷新，30秒后会再次尝试")
-                            time.sleep(30)
-                            continue
-                    else:
-                        self.card_list_cache = card_list_new
-                else:
-                    # 发现第二次缓存，多半是无法注销的店铺
-                    for card in card_list:
-                        if card not in self.black_list_shops:
-                            INFO("糟糕，这家店铺可能无法注销，该店铺名字为 %s，程序加入黑名单后自动跳过" % card["brandName"])
-                            self.black_list_shops.append(card)
-                            self.need_skip_shops.append(card["brandName"])
+            # 如果剩下的卡包
+            if len(self.shop_cfg["specify_shops"]) > 0 and len(self.specify_shops) == 0:
+                INFO("👋 指定店铺已全部注销完毕，程序即将退出")
+                sys.exit(0)
 
-                    # 二次缓存中已经在黑名单的店铺，那就直接切换标签页进行处理
-                    wait_refresh_time = self.shop_cfg["wait_refresh_time"]
-                    loop_for_wait_time = int(wait_refresh_time * 60)
-                    while loop_for_wait_time:
-                        print("\r[%s] [INFO] 挂载乱码店铺中(总时间为%s分钟)，页面还需等待: %s秒" %
-                              (
-                                  time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                                  wait_refresh_time,
-                                  str(loop_for_wait_time)), end=''
-                              )
-                        time.sleep(1)
-                        loop_for_wait_time -= 1
+            # 如果剩下的卡包全部都是黑名单中的，直接就结束
+            # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
+            card_list_new = [item['brandId'] for item in card_list]
+            card_list_black = [item['brandId'] for item in self.black_list_shops]
+            if set(card_list_new) <= set(card_list_black):
+                INFO("芜湖，剩下的店铺全部都在程序黑名单中")
+                INFO("本次运行记录的黑名单店铺名字为", self.need_skip_shops)
+                INFO("🤔 剩下的店铺都是疑难杂症，请配置到黑名单中或联系客服解决，程序即将退出")
+                sys.exit(0)
 
-                    print("\n[%s] [INFO] 开始刷新页面进行再次尝试乱码页面" %
-                          time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-                    now_handle = self.browser.current_window_handle
-                    for handles in self.browser.window_handles:
-                        if now_handle != handles:
-                            self.browser.switch_to.window(handles)
-                            self.browser.refresh()
-                            time.sleep(3)
-                            vender_id = self.browser.current_url[self.browser.current_url.rfind("venderId=") + 9:]
-                            for card in self.black_list_shops:
-                                if card["brandId"] == vender_id:
-                                    INFO("开始从新标签页注销问题店铺", card["brandName"])
-                                    if self.close_member(card):
-                                        self.black_list_shops.remove(card)
-                                        self.need_skip_shops.remove(card["brandName"])
-                                    self.browser.close()
-                    self.card_list_duplicate_cache = False
-                    INFO("本次运行记录的黑名单店铺名字为", self.need_skip_shops)
-                    INFO("🤔 剩下的店铺都是疑难杂症，请配置到黑名单中或联系客服解决，程序即将退出")
-                    sys.exit(0)
+            # 如果乱码的有，先乱码等待
+            if self.wrong_store_page_count > 0:
+                # 二次缓存中已经在黑名单的店铺，那就直接切换标签页进行处理
+                wait_refresh_time = self.shop_cfg["wait_refresh_time"]
+                loop_for_wait_time = int(wait_refresh_time * 60)
+                while loop_for_wait_time:
+                    print("\r[%s] [INFO] 挂载乱码店铺中(总时间为%s分钟)，页面还需等待: %s秒" %
+                          (
+                              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                              wait_refresh_time,
+                              str(loop_for_wait_time)), end=''
+                          )
+                    time.sleep(1)
+                    loop_for_wait_time -= 1
 
-            INFO("本轮运行获取到", len(card_list), "家店铺会员信息")
+                print("\n[%s] [INFO] 开始刷新页面进行再次尝试乱码页面" %
+                      time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                now_handle = self.browser.current_window_handle
+                for handles in self.browser.window_handles:
+                    if now_handle != handles:
+                        self.browser.switch_to.window(handles)
+                        self.browser.refresh()
+                        time.sleep(3)
+                        vender_id = self.browser.current_url[self.browser.current_url.rfind("venderId=") + 9:]
+                        for card in self.black_list_shops:
+                            if card["brandId"] == vender_id:
+                                INFO("开始从新标签页注销问题店铺", card["brandName"])
+                                if self.close_member(card, self.wrong_store_page_count):
+                                    self.wrong_store_page_count -= 1
+                                self.browser.close()
+                continue
+
+            INFO("🧐 本轮运行获取到", len(card_list), "家店铺会员信息")
             for card in card_list:
                 # 判断本次运行数是否达到设置
                 if self.member_close_max_number != 0 and self.member_close_count >= self.member_close_max_number:
                     INFO("已注销店铺数达到配置中允许注销的最大次数，程序退出")
                     sys.exit(0)
 
+                # 非指定店铺名字跳过
+                if len(self.shop_cfg["specify_shops"]) > 0:
+                    if card["brandName"] not in self.shop_cfg["specify_shops"]:
+                        INFO("发现非指定注销的店铺，跳过", card["brandName"])
+                        continue
+
                 # 判断该店铺是否要跳过
                 if card["brandName"] in self.need_skip_shops:
-                    INFO("发现需要跳过的店铺", card["brandName"])
+                    INFO("发现指定需要跳过的店铺，跳过", card["brandName"])
                     continue
 
                 try:
                     # 打开注销页面
+                    INFO("开始注销店铺", card["brandName"])
                     self.browser.get(
                         "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"]
                     )
-                    INFO("开始注销店铺", card["brandName"])
 
                     # 检查当前店铺退会链接是否失效
                     # noinspection PyBroadException
@@ -564,7 +599,7 @@ class JDMemberCloseAccount(object):
                         WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
                             (By.XPATH, "//p[text()='网络请求失败']")
                         ))
-                        INFO("当前店铺退会链接已失效，暂判定为缓存导致，正在尝试清除卡包列表缓存...")
+                        INFO("当前店铺退会链接已失效，暂判定为缓存导致，正在执行清除卡包列表缓存策略")
                         if self.refresh_cache():
                             INFO("理论上缓存已经刷新成功，如项目未继续执行请及时反馈")
                             break

@@ -275,12 +275,14 @@ selenium:
   check_wait: 3
 
 # shop 店铺设置相关
-# shop.skip_shops: 需要跳过的店铺，需要填写卡包中的完整店铺名称，为了效率没做模糊匹配，多个店铺用逗号隔开
-# shop.phone_tail_number: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过，支持多手机号，格式为[1234,4321]
+# shop.skip_shops: 需要跳过的店铺，需要填写卡包中的完整卡包名称，多个店铺用英文逗号隔开，格式为["aag会员中心", "大自然品牌会员"]
+# shop.specify_shops: 指定注销的店铺，指定店铺优先级大于需要跳过的店铺，多个店铺用英文逗号隔开，格式为["aag会员中心", "大自然品牌会员"]
+# shop.phone_tail_number: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过，支持多手机号，格式为["0123","1234"]
 # shop.member_close_max_number: 设置本次运行注销的最大店铺数，默认为0，代表不限制
 # shop.wait_refresh_time: 乱码店铺挂载时间，默认为挂31分钟，可自行调整
 shop:
-  skip_shops: ""
+  skip_shops: []
+  specify_shops: []
   phone_tail_number: []
   member_close_max_number: 0
   wait_refresh_time: 31
@@ -417,6 +419,10 @@ user-agent:
 4. `main.py`执行报错
 
     1. 在`config.yaml`里设置`debug: true`再次执行可以看到具体报错，如解决不了请反馈tg群
+
+## ChangeLog
+
+- [更新日志](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/CHANGELOG.md)
 
 ## ScreenShots
 
