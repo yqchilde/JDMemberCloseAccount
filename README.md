@@ -276,12 +276,14 @@ selenium:
 
 # shop 店铺设置相关
 # shop.skip_shops: 需要跳过的店铺，需要填写卡包中的完整店铺名称，为了效率没做模糊匹配，多个店铺用逗号隔开
-# shop.phone_tail_number: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过
+# shop.phone_tail_number: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过，支持多手机号，格式为[1234,4321]
 # shop.member_close_max_number: 设置本次运行注销的最大店铺数，默认为0，代表不限制
+# shop.wait_refresh_time: 乱码店铺挂载时间，默认为挂31分钟，可自行调整
 shop:
   skip_shops: ""
-  phone_tail_number: ""
+  phone_tail_number: []
   member_close_max_number: 0
+  wait_refresh_time: 31
 
 # sms_captcha 短信验证码相关
 # sms_captcha.is_ocr: 是否开启OCR模式，IOS设备必须开启，安卓非必须
