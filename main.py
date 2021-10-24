@@ -165,21 +165,11 @@ class JDMemberCloseAccount(object):
 
         page_num = 5
         var_name = locals()
-        var_name["page1"] = "st=1634992661020&sign=83a87e33d52a73c3abf01217af277d7c&sv=101"
-        var_name["page2"] = "st=1634992678131&sign=4da2fffa2375fd0f6f261ac70fcaad00&sv=102"
-        var_name["page3"] = "st=1634992682728&sign=83815a83dedef47c5f908269aca3926c&sv=100"
-        var_name["page4"] = "st=1634992686855&sign=f781c2707f70c8ffc98b28e091a56542&sv=121"
-        var_name["page5"] = "st=1634992688025&sign=15680ac47fb873561fc9f38ff2411a5e&sv=122"
-        var_name["body1"] = "body=%7B%22pageNum%22%3A1%2C%22pageSize%22%3A10%2C%22v%22%3" \
-                            "A%225.0%22%2C%22version%22%3A1580659200%7D&"
-        var_name["body2"] = "body=%7B%22pageNum%22%3A2%2C%22pageSize%22%3A10%2C%22v%22%3" \
-                            "A%225.0%22%2C%22version%22%3A1580659200%7D&"
-        var_name["body3"] = "body=%7B%22pageNum%22%3A3%2C%22pageSize%22%3A10%2C%22v%22%3" \
-                            "A%225.0%22%2C%22version%22%3A1580659200%7D&"
-        var_name["body4"] = "body=%7B%22pageNum%22%3A4%2C%22pageSize%22%3A10%2C%22v%22%3" \
-                            "A%225.0%22%2C%22version%22%3A1580659200%7D&"
-        var_name["body5"] = "body=%7B%22pageNum%22%3A5%2C%22pageSize%22%3A10%2C%22v%22%3" \
-                            "A%225.0%22%2C%22version%22%3A1580659200%7D&"
+        var_name["sign_page1"] = "st=1634992661020&sign=83a87e33d52a73c3abf01217af277d7c&sv=101"
+        var_name["sign_page2"] = "st=1634992678131&sign=4da2fffa2375fd0f6f261ac70fcaad00&sv=102"
+        var_name["sign_page3"] = "st=1634992682728&sign=83815a83dedef47c5f908269aca3926c&sv=100"
+        var_name["sign_page4"] = "st=1634992686855&sign=f781c2707f70c8ffc98b28e091a56542&sv=121"
+        var_name["sign_page5"] = "st=1634992688025&sign=15680ac47fb873561fc9f38ff2411a5e&sv=122"
 
         headers = {
             'Host': 'api.m.jd.com',
@@ -196,9 +186,11 @@ class JDMemberCloseAccount(object):
         urllib3.disable_warnings()
 
         for i in range(1, page_num + 1):
+            body = "body=%7B%22pageNum%22%3A{}%2C%22pageSize%22%3A10%2C%22v%22%3A%225.0%22%2C%22" \
+                   "version%22%3A1580659200%7D&".format(str(i))
             resp = requests.request(
                 "POST",
-                url + var_name.get("page" + str(i)), headers=headers, data=var_name.get("body" + str(i)),
+                url + var_name.get("sign_page" + str(i)), headers=headers, data=body,
                 verify=False
             )
             if resp.content:
