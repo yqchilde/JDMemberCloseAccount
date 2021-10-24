@@ -287,8 +287,7 @@ class JDMemberCloseAccount(object):
                 self.black_list_shops.append(card)
                 self.need_skip_shops.append(card["brandName"])
             return False
-        elif self.shop_cfg['phone_tail_number'] and \
-                phone[-4:] not in list(map(str, self.shop_cfg['phone_tail_number'])):
+        elif self.shop_cfg['phone_tail_number'] and phone[-4:] not in self.shop_cfg['phone_tail_number']:
             INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，程序加入黑名单后自动跳过" % phone)
             # 加入黑名单缓存
             if card not in self.black_list_shops:
