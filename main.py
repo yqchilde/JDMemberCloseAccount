@@ -86,6 +86,8 @@ class JDMemberCloseAccount(object):
             elif self.ocr_cfg["type"] == "easyocr":
                 from captcha.easy_ocr import EasyOCR
                 self.easy_ocr = EasyOCR()
+        self.ws_conn_url = self.sms_captcha_cfg["ws_conn_url"]
+        self.ws_timeout = self.sms_captcha_cfg["ws_timeout"]
 
         # 初始化图形验证码配置
         if self.image_captcha_cfg["type"] == "cjy":
@@ -305,9 +307,8 @@ class JDMemberCloseAccount(object):
             (By.XPATH, "//div[text()='发送成功']")
         ), f'发送失败，黑店【{card["brandName"]}】跳过')
 
-        # 要连接的websocket地址
+        # 验证码
         sms_code = ""
-        ws_conn_url, ws_timeout = self.sms_captcha_cfg["ws_conn_url"], self.sms_captcha_cfg["ws_timeout"]
 
         # ocr识别投屏验证码
         if self.sms_captcha_cfg["is_ocr"]:
@@ -332,7 +333,7 @@ class JDMemberCloseAccount(object):
         else:
             try:
                 if self.sms_captcha_cfg["jd_wstool"]:
-                    recv = asyncio.get_event_loop().run_until_complete(ws_conn(ws_conn_url, ws_timeout))
+                    recv = asyncio.get_event_loop().run_until_complete(ws_conn(self.ws_conn_url, self.ws_timeout))
                 else:
                     recv = self.sms.get_code()
 
@@ -341,8 +342,11 @@ class JDMemberCloseAccount(object):
                     return False
                 else:
                     sms_code = json.loads(recv)["sms_code"]
+            except OSError:
+                WARN("WebSocket监听时发生了问题，请检查是否开启外部jd_wstool工具或者使用内置的jd_wstool或者5201端口是否开放")
+                sys.exit(1)
             except Exception as e:
-                WARN("WebSocket监听时发生了问题", e.args)
+                WARN(e.__class__, e.args)
                 sys.exit(1)
 
         # 输入短信验证码
@@ -482,7 +486,25 @@ class JDMemberCloseAccount(object):
         INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
         return True
 
+    def test_jd_wsool_conn(self):
+        """
+        测试外部jd_wstool工具连通性
+        :return:
+        """
+        try:
+            if self.sms_captcha_cfg["jd_wstool"]:
+                asyncio.get_event_loop().run_until_complete(ws_conn(self.ws_conn_url, self.ws_timeout))
+        except OSError:
+            WARN("WebSocket监听时发生了问题，请检查是否开启外部jd_wstool工具或者使用内置的jd_wstool或者5201端口是否开放")
+            sys.exit(1)
+        except Exception as e:
+            WARN(e.__class__, e.args)
+            sys.exit(1)
+
     def main(self):
+        # 测试外部jd_wstool工具连通性
+        self.test_jd_wsool_conn()
+
         # 打开京东
         self.browser.get("https://m.jd.com/")
 

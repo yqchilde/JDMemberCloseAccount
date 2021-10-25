@@ -1,5 +1,10 @@
 ## Changelog
 
+## 2021-10-25
+
+- 修改启动检测jd_wstool连通性
+- README增加websocket错误说明
+
 ## 2021-10-24
 
 - 修改`config.yaml`中`shop.phone_tail_number`的配置说明
