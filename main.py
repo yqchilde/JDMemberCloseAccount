@@ -288,15 +288,13 @@ class JDMemberCloseAccount(object):
 
             # 加入黑名单缓存
             if card not in self.black_list_shops:
-                self.black_list_shops.append(card)
-                self.need_skip_shops.append(card["brandName"])
+                self.record_black_list(card)
             return False
         elif self.shop_cfg['phone_tail_number'] and phone[-4:] not in self.shop_cfg['phone_tail_number']:
             INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，程序加入黑名单后自动跳过" % phone)
             # 加入黑名单缓存
             if card not in self.black_list_shops:
-                self.black_list_shops.append(card)
-                self.need_skip_shops.append(card["brandName"])
+                self.record_black_list(card)
             return False
 
         # 发送短信验证码
@@ -479,14 +477,33 @@ class JDMemberCloseAccount(object):
 
         time.sleep(1)
         self.member_close_count += 1
-        if card in self.black_list_shops:
-            self.black_list_shops.remove(card)
-        if card["brandName"] in self.need_skip_shops:
-            self.need_skip_shops.remove(card["brandName"])
+        self.remove_black_list(card)
         if card["brandName"] in self.specify_shops:
             self.specify_shops.remove(card["brandName"])
         INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
         return True
+
+    def record_black_list(self, card):
+        """
+        记录黑名单店铺
+        :param card:
+        :return:
+        """
+        if card not in self.black_list_shops:
+            self.black_list_shops.append(card)
+        if card["brandName"] not in self.need_skip_shops:
+            self.need_skip_shops.append(card["brandName"])
+
+    def remove_black_list(self, card):
+        """
+        移除黑名单店铺
+        :param card:
+        :return:
+        """
+        if card in self.black_list_shops:
+            self.black_list_shops.remove(card)
+        if card["brandName"] in self.need_skip_shops:
+            self.need_skip_shops.remove(card["brandName"])
 
     def main(self):
         # 打开京东
@@ -589,6 +606,7 @@ class JDMemberCloseAccount(object):
                 # 判断该店铺是否要跳过
                 if card["brandName"] in self.need_skip_shops:
                     INFO("发现指定需要跳过的店铺，跳过", card["brandName"])
+                    self.record_black_list(card)
                     continue
 
                 try:
@@ -607,8 +625,7 @@ class JDMemberCloseAccount(object):
                         INFO("当前店铺退会链接已失效(缓存导致)，执行清除卡包列表缓存策略后跳过")
 
                         if card["brandName"] in self.failure_store:
-                            self.black_list_shops.append(card)
-                            self.need_skip_shops.append(card["brandName"])
+                            self.record_black_list(card)
                             self.failure_store.remove(card["brandName"])
                             INFO("当前店铺页面仍然失效，程序加入黑名单后自动跳过")
                             continue
