@@ -19,10 +19,15 @@ if __name__ == '__main__':
         wait.until(EC.presence_of_element_located((By.ID, 'msShortcutMenu')))
         browser.get("https://home.m.jd.com/myJd/newhome.action")
         username = wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'my_header_name'))).text
-        cookie = ""
+        pt_key, pt_pin, cookie = "", "", ""
         for _ in browser.get_cookies():
-            if _["name"] == "pt_key" or _["name"] == "pt_pin":
-                cookie += _["name"] + "=" + _["value"] + ";"
+            if _["name"] == "pt_key":
+                pt_key = _["value"]
+            if _["name"] == "pt_pin":
+                pt_pin = _["value"]
+            if pt_key and pt_pin:
+                break
+        cookie = "pt_key=" + pt_key + ";pt_pin=" + pt_pin + ";"
         print("获取的cookie是：" + cookie)
 
         new_lines = []
