@@ -486,25 +486,7 @@ class JDMemberCloseAccount(object):
         INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
         return True
 
-    def test_jd_wsool_conn(self):
-        """
-        测试外部jd_wstool工具连通性
-        :return:
-        """
-        try:
-            if self.sms_captcha_cfg["jd_wstool"]:
-                asyncio.get_event_loop().run_until_complete(ws_conn(self.ws_conn_url, self.ws_timeout))
-        except OSError:
-            WARN("WebSocket监听时发生了问题，请检查是否开启外部jd_wstool工具或者使用内置的jd_wstool或者5201端口是否开放")
-            sys.exit(1)
-        except Exception as e:
-            WARN(e.__class__, e.args)
-            sys.exit(1)
-
     def main(self):
-        # 测试外部jd_wstool工具连通性
-        self.test_jd_wsool_conn()
-
         # 打开京东
         self.browser.get("https://m.jd.com/")
 
