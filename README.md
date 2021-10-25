@@ -400,6 +400,12 @@ user-agent:
 
     * 该报错说明配置文件`config.yaml`中的`ocr_range`坐标超出屏幕，导致异常，请重新填写坐标
 
+7. 程序如下报错说明外部的jd_wstool没有开启，请开启外部jd_wstool或使用内置的jd_wstool，或者是5201端口未被开放：
+
+    * [WARNING] WebSocket监听时发生了问题 (22, '远程计算机拒绝网络连接。', None, 1225, None)
+
+    * [WARNING] WebSocket监听时发生了问题 ("Multiple exceptions: [Errno 61] Connect call failed ('::1', 5201, 0, 0), [Errno 61] Connect led ('127.0.0.1', 5201)",)
+
 ## 测试
 
 1. websocket转发验证码
