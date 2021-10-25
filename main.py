@@ -115,6 +115,8 @@ class JDMemberCloseAccount(object):
         self.need_skip_shops = []
         # 指定注销的店铺
         self.specify_shops = []
+        # 页面失效打不开的店铺
+        self.failure_store = []
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -602,13 +604,17 @@ class JDMemberCloseAccount(object):
                         WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
                             (By.XPATH, "//p[text()='网络请求失败']")
                         ))
-                        INFO("当前店铺退会链接已失效，暂判定为缓存导致，正在执行清除卡包列表缓存策略")
-                        if self.refresh_cache():
-                            INFO("理论上缓存已经刷新成功，如项目未继续执行请及时反馈")
-                            break
+                        INFO("当前店铺退会链接已失效(缓存导致)，执行清除卡包列表缓存策略后跳过")
+
+                        if card["brandName"] in self.failure_store:
+                            self.black_list_shops.append(card)
+                            self.need_skip_shops.append(card["brandName"])
+                            self.failure_store.remove(card["brandName"])
+                            INFO("当前店铺页面仍然失效，程序加入黑名单后自动跳过")
+                            continue
                         else:
-                            INFO("卡包列表缓存清除失败，即将跳过该店铺，失效店铺链接为：")
-                            INFO("https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"])
+                            self.failure_store.append(card["brandName"])
+                            self.refresh_cache()
                             continue
                     except Exception as _:
                         pass
