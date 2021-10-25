@@ -170,13 +170,16 @@ class JDMemberCloseAccount(object):
               "rYtvrCJZsZNu1ZJC4YG%3D%3D%22%2C%22openudid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%7D%2C%22ciphertyp" \
               "e%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D&"
 
-        page_num = 5
+        page_num = 8
         var_name = locals()
         var_name["sign_page1"] = "st=1634992661020&sign=83a87e33d52a73c3abf01217af277d7c&sv=101"
         var_name["sign_page2"] = "st=1634992678131&sign=4da2fffa2375fd0f6f261ac70fcaad00&sv=102"
         var_name["sign_page3"] = "st=1634992682728&sign=83815a83dedef47c5f908269aca3926c&sv=100"
         var_name["sign_page4"] = "st=1634992686855&sign=f781c2707f70c8ffc98b28e091a56542&sv=121"
         var_name["sign_page5"] = "st=1634992688025&sign=15680ac47fb873561fc9f38ff2411a5e&sv=122"
+        var_name["sign_page6"] = "st=1635177469421&sign=f9180d4e3989a78d07bf2dd4a276508c&sv=102"
+        var_name["sign_page7"] = "st=1635177470330&sign=de73d5da876afa061c61068d987c5f40&sv=100"
+        var_name["sign_page8"] = "st=1635177471053&sign=3305e1cf5833274f46169b4b8a811f4e&sv=100"
 
         headers = {
             'Host': 'api.m.jd.com',
