@@ -1,13 +1,16 @@
 import json
+import os
 import sys
 import time
-
 import requests
 import urllib3
+from selenium.webdriver.common.by import By
 
-from utils.config import get_config
-from utils.selenium_browser import get_browser
+from selenium.common import exceptions
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
 class JDMemberJoinAccount(object):
@@ -15,12 +18,11 @@ class JDMemberJoinAccount(object):
     本测试文件仅用于加入店铺会员
     """
 
-    def __init__(self):
+    def __init__(self, _config_, _browser_):
         # 初始化selenium配置
-        self.config = get_config()
-        self.browser = get_browser(self.config)
-        self.wait = WebDriverWait(self.browser, 30)
-        self.wait_check = WebDriverWait(self.browser, 30)
+        self.config = _config_
+        self.browser = _browser_
+        self.wait = WebDriverWait(_browser_, _config_["selenium"]["timeout"])
 
     def get_wallet_unreceived_card_list(self):
         """
@@ -77,7 +79,7 @@ class JDMemberJoinAccount(object):
         }
 
         card_list = []
-        urllib3.disable_printings()
+        urllib3.disable_warnings()
 
         for i in range(1, page_num + 1):
             body = "body=%7B%22pageNum%22%3A{}%2C%22pageSize%22%3A10%2C%22v%22%3A%225.0%22%2C%22" \
@@ -138,17 +140,47 @@ class JDMemberJoinAccount(object):
                         "https://shopmember.m.jd.com/shopcard/?venderId=" + card["brandId"]
                     )
 
-                    time.sleep(100000)
-                    # TODO 加入店铺会员操作
+                    # 判断是否已经在页面
+                    print("===判断是否已经在页面")
+                    try:
+                        if WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
+                                (By.XPATH, "//span[text()='我的积分']")
+                        )).text:
+                            print("已是店铺会员")
+                            continue
+                    except exceptions.TimeoutException:
+                        pass
+
+                    # 勾选协议
+                    print("===勾选协议")
+                    self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='react-view']/following-sibling::span[1]/preceding-sibling::div[1]")
+                    ), "勾选协议失败 " + card["brandName"]).click()
+
+                    # 点击加入店铺会员按钮
+                    print("===点击加入店铺会员按钮")
+                    self.wait.until(EC.presence_of_element_located(
+                        (By.XPATH, "//span[text()='确认授权并加入店铺会员']")
+                    ), "加入店铺会员按钮点击失败 " + card["brandName"]).click()
+
+                    time.sleep(1)
                 except Exception as e:
                     print("发生了一点小问题：", e.args)
 
                     if self.config["debug"]:
                         import traceback
                         traceback.print_exc()
+                    sys.exit(1)
 
             print("本轮店铺已执行完，即将开始获取下一轮店铺")
 
 
 if __name__ == '__main__':
-    JDMemberJoinAccount.main()
+    from utils.config import get_config
+    from utils.selenium_browser import get_browser
+
+    _config_ = get_config("../config.yaml")
+    _browser_ = get_browser(_config_, "../")
+
+    obj = JDMemberJoinAccount(_config_, _browser_)
+    obj.main()

@@ -6,15 +6,16 @@ from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 
 
-def get_browser(_config):
+def get_browser(_config_, path_prefix=""):
     """
     获取浏览器对象
     :return:
     """
-    browser_type = _config['selenium']['browserType']
-    headless = _config['selenium']['headless']
-    binary = _config['selenium']['binary']
-    user_agent = _config['user-agent'][0]
+    browser_type = _config_['selenium']['browserType']
+    headless = _config_['selenium']['headless']
+    binary = _config_['selenium']['binary']
+    user_agent = _config_['user-agent'][0]
+    _browser_ = None
     try:
         if browser_type == 'Chrome':
             chrome_options = webdriver.ChromeOptions()
@@ -30,15 +31,24 @@ def get_browser(_config):
                 chrome_options.add_argument('--headless')
                 chrome_options.add_argument('--disable-gpu')
             if sys.platform == 'linux':
-                _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
-                                            options=chrome_options)
+                _browser_ = webdriver.Chrome(
+                    executable_path=get_file(path_prefix + "./drivers/chromedriver"),
+                    desired_capabilities={},
+                    options=chrome_options
+                )
             elif sys.platform == 'darwin':
-                _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
-                                            options=chrome_options)
+                _browser_ = webdriver.Chrome(
+                    executable_path=get_file(path_prefix + "./drivers/chromedriver"),
+                    desired_capabilities={},
+                    options=chrome_options
+                )
             elif sys.platform == 'win32':
-                _browser = webdriver.Chrome(executable_path=get_file("./drivers/chromedriver"), desired_capabilities={},
-                                            options=chrome_options)
-            _browser.set_window_size(500, 700)
+                _browser_ = webdriver.Chrome(
+                    executable_path=get_file(path_prefix + "./drivers/chromedriver"),
+                    desired_capabilities={},
+                    options=chrome_options
+                )
+            _browser_.set_window_size(500, 700)
         elif browser_type == 'Edge':
             from msedge.selenium_tools import Edge, EdgeOptions
             edge_options = EdgeOptions()
@@ -52,15 +62,24 @@ def get_browser(_config):
                 edge_options.add_argument('--headless')
                 edge_options.add_argument('--disable-gpu')
             if sys.platform == 'linux':
-                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), options=edge_options,
-                                capabilities={})
+                _browser_ = Edge(
+                    executable_path=get_file(path_prefix + "./drivers/msedgedriver"),
+                    options=edge_options,
+                    capabilities={}
+                )
             elif sys.platform == 'darwin':
-                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), capabilities={},
-                                options=edge_options)
+                _browser_ = Edge(
+                    executable_path=get_file(path_prefix + "./drivers/msedgedriver"),
+                    capabilities={},
+                    options=edge_options
+                )
             elif sys.platform == 'win32':
-                _browser = Edge(executable_path=get_file("./drivers/msedgedriver"), capabilities={},
-                                options=edge_options)
-            _browser.set_window_size(500, 700)
+                _browser_ = Edge(
+                    executable_path=get_file(path_prefix + "./drivers/msedgedriver"),
+                    capabilities={},
+                    options=edge_options
+                )
+            _browser_.set_window_size(500, 700)
         elif browser_type == 'Firefox':
             # 先清除上次的日志
             if not os.path.exists(get_file("./logs")):
@@ -75,16 +94,25 @@ def get_browser(_config):
                 firefox_options.add_argument('--headless')
                 firefox_options.add_argument('--disable-gpu')
             if sys.platform == 'linux':
-                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options,
-                                             service_log_path=get_file("./logs/geckodriver.log"))
+                _browser_ = webdriver.Firefox(
+                    executable_path=get_file('./drivers/geckodriver'),
+                    options=firefox_options,
+                    service_log_path=get_file("./logs/geckodriver.log")
+                )
             elif sys.platform == 'darwin':
-                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
+                _browser_ = webdriver.Firefox(
+                    executable_path=get_file('./drivers/geckodriver'),
+                    options=firefox_options
+                )
             elif sys.platform == 'win32':
-                _browser = webdriver.Firefox(executable_path=get_file('./drivers/geckodriver'), options=firefox_options)
-            _browser.set_window_size(500, 700)
+                _browser_ = webdriver.Firefox(
+                    executable_path=get_file('./drivers/geckodriver'),
+                    options=firefox_options
+                )
+            _browser_.set_window_size(500, 700)
         else:
             raise WebDriverException
-        return _browser
+        return _browser_
     except WebDriverException:
         # 驱动问题
         print("ERROR", "浏览器错误", "请检查你下载并解压好的驱动是否放在drivers目录下")
