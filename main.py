@@ -25,7 +25,7 @@ async def ws_conn(ws_conn_url, ws_timeout):
     """
     websocket连接
     """
-    async with websockets.legacy.client.connect(ws_conn_url) as websocket:
+    async with websockets.legacy.client.connect(ws_conn_url, compression=None) as websocket:
         try:
             recv = await asyncio.wait_for(websocket.recv(), ws_timeout)
             return recv
