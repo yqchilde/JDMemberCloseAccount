@@ -22,7 +22,7 @@
 
 ## 声明
 
-1. 本项目仅限于学习研究selenium库的操作，以及一些python知识
+1. 本项目仅限于学习研究selenium库的操作，以及一些python知识，不含收集用户信息
 
 ## 须知
 
@@ -31,6 +31,7 @@
 3. 操作系统(只在mac上测试了，非M1)
 4. 使用`python3.x`版本执行
 5. 有一定python基础知识，没有的话先去学一下，起码得会搭python环境
+6. [视频讲解-脚本如何使用](https://www.bilibili.com/video/BV1aR4y1E7Eq/)
 
 ## 思路
 
@@ -458,16 +459,10 @@ user-agent:
 
 [JD退会讨论群 https://t.me/jdMemberCloseAccount](https://t.me/jdMemberCloseAccount)
 
-## Thanks
+## 贡献者
 
-感谢以下大佬帮助构建完善本项目👍(排名不分先后)
+感谢帮助构建完善本项目的所有开发者！
 
-[@AntonVanke](https://github.com/AntonVanke)
-
-[@lowking](https://github.com/lowking)
-
-[@dd178](https://github.com/dd178)
-
-[@hyzaw](https://github.com/hyzaw)
-
-[@curtinlv](https://github.com/curtinlv)
+<a href="https://github.com/yqchilde/JDMemberCloseAccount/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=yqchilde/JDMemberCloseAccount" />
+</a>
