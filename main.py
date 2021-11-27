@@ -14,6 +14,7 @@ from captcha.jd_captcha import JDcaptcha_base64
 from captcha.jd_yolo_captcha import JDyolocaptcha
 from utils.logger import Log
 from utils.config import get_config
+from utils.validator import verify_configuration
 from utils.selenium_browser import get_browser
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
@@ -55,6 +56,11 @@ class JDMemberCloseAccount(object):
 
     def __init__(self):
         INFO("欢迎执行JD全自动退会程序，如有使用问题请加TG群https://t.me/jdMemberCloseAccount进行讨论")
+        INFO("↓  " * 30)
+
+        # 检查配置
+        verify_configuration(logger)
+
         # 初始化基础配置
         self.config = get_config()
         self.selenium_cfg = get_config()["selenium"]
