@@ -24,6 +24,8 @@ key_list = [
     "sms_captcha.ocr.baidu_app_id",
     "sms_captcha.ocr.baidu_api_key",
     "sms_captcha.ocr.baidu_secret_key",
+    "sms_captcha.ocr.baidu_fanyi_appid",
+    "sms_captcha.ocr.baidu_fanyi_appkey",
     "sms_captcha.ocr.aliyun_appcode",
     "image_captcha.type",
     "image_captcha.cjy_username",

@@ -33,12 +33,14 @@ shop:
 # sms_captcha.jd_wstool: 是否调用jd_wstool工具监听验证码，默认为开启，如果不想开启，设置为false会调用内置websocket监听
 # sms_captcha.ws_conn_url: websocket链接地址，不用动
 # sms_captcha.ws_timeout: websocket接收验证码时间超时时间，超时会跳过当前店铺，进行下一个店铺，默认为60秒
-# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、easyocr
+# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、easyocr、baidu_fanyi
 # sms_captcha.ocr.ocr_range: 需要截取的投屏区域的验证码左上角和右下角坐标，顺序依次是 [左x,左y,右x,右y]，如[1,2,3,4]
 # sms_captcha.ocr.ocr_delay_time: OCR识别的延迟时间，如果没识别到就几秒后再次尝试，默认为5
 # sms_captcha.ocr.baidu_app_id: 百度通用文字识别应用的`app_id`
 # sms_captcha.ocr.baidu_api_key: 百度通用文字识别应用的`api_key`
 # sms_captcha.ocr.baidu_secret_key: 百度通用文字识别应用的`secret_key`
+# sms_captcha.ocr.baidu_fanyi_appid: 百度翻译图片翻译的`app_id`
+# sms_captcha.ocr.baidu_fanyi_appkey: 百度翻译图片翻译的`秘钥`
 # sms_captcha.ocr.aliyun_appcode: 阿里云通用文字识别应用的`AppCode`
 sms_captcha:
   is_ocr: false
@@ -52,6 +54,8 @@ sms_captcha:
     baidu_app_id: ""
     baidu_api_key: ""
     baidu_secret_key: ""
+    baidu_fanyi_appid: ""
+    baidu_fanyi_appkey: ""
     aliyun_appcode: ""
 
 # image_captcha 图形验证码相关

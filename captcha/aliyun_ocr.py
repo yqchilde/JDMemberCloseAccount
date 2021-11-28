@@ -17,11 +17,11 @@ class AliYunOCR(object):
     阿里云OCR识别类，用于帮助ios设备识别投屏后的短信验证码
     """
 
-    def __init__(self, _config):
+    def __init__(self, _config, debug=False):
         from utils.logger import Log
         self.logger = Log().logger
-
         self.api_url = "https://ocrapi-advanced.taobao.com/ocrservice/advanced"
+        self.debug = debug
         appcode = _config["aliyun_appcode"]
         if appcode == "":
             self.logger.warning("请在config.yaml中配置aliyun_appcode")
@@ -58,7 +58,6 @@ class AliYunOCR(object):
             sys.exit(1)
         else:
             ocr_ret = json.loads(resp.text)["content"].strip(" ")
-            self.logger.info("阿里云OCR识别结果：" + ocr_ret)
             return ocr_ret
 
     def aliyun_ocr(self, _range, delay_time=5):
@@ -72,6 +71,10 @@ class AliYunOCR(object):
         self.get_code_pic(_range)
         img = open('ios_code_pic.png', 'rb').read()
         ocr_ret = self.post_url(img)
+
+        # debug模式打印识别内容
+        if self.debug:
+            self.logger.info(ocr_ret)
 
         if ocr_ret != "":
             find_all = re.findall(r'\'[\d]{6}\'', ocr_ret)

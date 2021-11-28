@@ -68,6 +68,7 @@ class JDMemberCloseAccount(object):
         self.sms_captcha_cfg = get_config()["sms_captcha"]
         self.image_captcha_cfg = get_config()["image_captcha"]
         self.ocr_cfg = self.sms_captcha_cfg["ocr"]
+        self.debug = self.config["debug"]
 
         # 初始化selenium配置
         self.browser = get_browser(self.config)
@@ -80,18 +81,22 @@ class JDMemberCloseAccount(object):
                 from utils.listener import SmsSocket
                 self.sms = SmsSocket()
         elif self.sms_captcha_cfg["is_ocr"]:
-            if self.ocr_cfg["type"] == "":
+            self.ocr_type = self.ocr_cfg["type"]
+            if self.ocr_type == "":
                 WARN("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
                 sys.exit(1)
-            if self.ocr_cfg["type"] == "baidu":
+            if self.ocr_type == "baidu":
                 from captcha.baidu_ocr import BaiduOCR
-                self.baidu_ocr = BaiduOCR(self.ocr_cfg)
-            elif self.ocr_cfg["type"] == "aliyun":
+                self.baidu_ocr = BaiduOCR(self.ocr_cfg, self.debug)
+            elif self.ocr_type == "aliyun":
                 from captcha.aliyun_ocr import AliYunOCR
-                self.aliyun_ocr = AliYunOCR(self.ocr_cfg)
-            elif self.ocr_cfg["type"] == "easyocr":
+                self.aliyun_ocr = AliYunOCR(self.ocr_cfg, self.debug)
+            elif self.ocr_type == "easyocr":
                 from captcha.easy_ocr import EasyOCR
-                self.easy_ocr = EasyOCR()
+                self.easy_ocr = EasyOCR(self.debug)
+            elif self.ocr_type == "baidu_fanyi":
+                from captcha.baidu_fanyi import BaiduFanYi
+                self.baidu_fanyi = BaiduFanYi(self.ocr_cfg, self.debug)
         self.ws_conn_url = self.sms_captcha_cfg["ws_conn_url"]
         self.ws_timeout = self.sms_captcha_cfg["ws_timeout"]
 
@@ -330,15 +335,19 @@ class JDMemberCloseAccount(object):
                 INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
                 time.sleep(ocr_delay_time)
 
-                if self.ocr_cfg["type"] == "baidu":
+                if self.ocr_type == "baidu":
                     INFO("开始调用百度OCR识别")
                     sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
-                elif self.ocr_cfg["type"] == "aliyun":
+                elif self.ocr_type == "aliyun":
                     INFO("开始调用阿里云OCR识别")
                     sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
-                elif self.ocr_cfg["type"] == "easyocr":
+                elif self.ocr_type == "easyocr":
                     INFO("开始调用EasyOCR识别")
                     sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
+                elif self.ocr_type == "baidu_fanyi":
+                    INFO("开始调用百度翻译识别")
+                    sms_code = self.baidu_fanyi.baidu_fanyi(_range, ocr_delay_time)
+                INFO("验证码识别结果为：", sms_code)
         else:
             try:
                 if self.sms_captcha_cfg["jd_wstool"]:
@@ -651,7 +660,7 @@ class JDMemberCloseAccount(object):
                 except Exception as e:
                     ERROR("发生了一点小问题：", e.args)
 
-                    if self.config["debug"]:
+                    if self.debug:
                         import traceback
                         traceback.print_exc()
 
