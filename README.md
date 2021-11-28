@@ -80,38 +80,59 @@
            百度ocr (
            之前用过的用户还是免费500次/天的额度，新用户调整为1000次/月的额度，调整详情参考[这里](https://ai.baidu.com/support/news?action=detail&id=2390))
 
-                * 需要在`config.yaml`中配置如下参数：
+                * 需要在config.yaml中配置如下参数：
 
-                * `sms_captcha.is_ocr`设置为`true`
+                * sms_captcha.is_ocr设置为 true
 
-                * `sms_captcha.is_ocr.type`设置为`baidu`
+                * sms_captcha.is_ocr.type设置为 baidu
 
-                * `sms_captcha.is_ocr.baidu_app_id`补充完整
+                * sms_captcha.is_ocr.baidu_app_id补充完整
 
-                * `sms_captcha.is_ocr.baidu_api_key`补充完整
+                * sms_captcha.is_ocr.baidu_api_key补充完整
 
-                * `sms_captcha.is_ocr.baidu_secret_key`补充完整
+                * sms_captcha.is_ocr.baidu_secret_key补充完整
 
            阿里云ocr (
            用户新购0元500次，后续500次/0.01元，开通地址[阿里云市场](https://market.aliyun.com/products/57124001/cmapi028554.html?spm=5176.2020520132.101.2.608172181RzlnC#sku=yuncode2255400000))
 
-                * 同上，需要在`config.yaml`中配置如下参数：
+                * 同上，需要在config.yaml中配置如下参数：
 
-                * `sms_captcha.is_ocr`设置为`true`
+                * sms_captcha.is_ocr设置为 true
 
-                * `sms_captcha.is_ocr.type`设置为`aliyun`
+                * sms_captcha.is_ocr.type设置为 aliyun
 
-                * `sms_captcha.is_ocr.aliyun_appcode`补充完整
+                * sms_captcha.is_ocr.aliyun_appcode补充完整
 
            easyocr (免费，本地识别)
 
-                * 同上，需要在`config.yaml`中配置如下参数：
+                * 同上，需要在config.yaml中配置如下参数：
 
-                * `sms_captcha.is_ocr`设置为`true`
+                * sms_captcha.is_ocr设置为 true
 
-                * `sms_captcha.is_ocr.type`设置为`easyocr`
+                * sms_captcha.is_ocr.type设置为 easyocr
 
                 * 使用时注意框选识别的范围只显示6位数字验证码(现支持一整条完整短信的区域，当然范围越大识别速度也会相应增加，区域扩大是为了优化某些用户短信验证码6位数字每次位置不一致问题)（毕竟免费开源，识别条件有点苛刻）
+
+           百度翻译 (免费额度 10000次/每月，开通地址 [百度翻译开放平台](https://fanyi-api.baidu.com/register))
+
+           **开通教程：**
+            1. 打开 [百度翻译开放平台](https://fanyi-api.baidu.com/register) 注册个人开发者并实名认证
+
+            2. 打开 [开发者信息](https://fanyi-api.baidu.com/api/trans/product/desktop?req=developer) 查看appid 和 秘钥
+
+            3. 打开 [服务选择](https://fanyi-api.baidu.com/choose) 选择图片翻译服务开通
+
+           **配置信息：**
+
+                * 同上，需要在config.yaml中配置如下参数：
+
+                * sms_captcha.is_ocr设置为 true
+
+                * sms_captcha.is_ocr.type设置为 baidu_fanyi
+
+                * sms_captcha.is_ocr.baidu_fanyi_appid补充完整
+
+                * sms_captcha.is_ocr.baidu_fanyi_appkey补充完整
 
 3. 第二关：图形验证码（任选以下一种类型，默认采用本地识别）
 
@@ -224,7 +245,7 @@
       ，将坐标填入`ocr_range`，例`ocr_range: [100, 200, 300, 400]`，填完坐标后不要移动投屏软件的窗口
 
     * **mac**：参考windows，请注意，windows坐标原点\(0, 0)位于左上角，而mac坐标原点\(0, 0)位于左下角
-    
+
     * **Tips**：推荐使用[snipaste](https://zh.snipaste.com)截图软件查看屏幕坐标，屏幕左上角为原点
 
 
@@ -282,9 +303,9 @@ selenium:
 # shop.member_close_max_number: 设置本次运行注销的最大店铺数，默认为0，代表不限制
 # shop.wait_refresh_time: 乱码店铺挂载时间，默认为挂31分钟，可自行调整
 shop:
-  skip_shops: []
-  specify_shops: []
-  phone_tail_number: []
+  skip_shops: [ ]
+  specify_shops: [ ]
+  phone_tail_number: [ ]
   member_close_max_number: 0
   wait_refresh_time: 31
 
@@ -293,12 +314,14 @@ shop:
 # sms_captcha.jd_wstool: 是否调用jd_wstool工具监听验证码，默认为开启，如果不想开启，设置为false会调用内置websocket监听
 # sms_captcha.ws_conn_url: websocket链接地址，不用动
 # sms_captcha.ws_timeout: websocket接收验证码时间超时时间，超时会跳过当前店铺，进行下一个店铺，默认为60秒
-# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、easyocr
+# sms_captcha.ocr.type: ocr的类型，可选：baidu、aliyun、easyocr、baidu_fanyi
 # sms_captcha.ocr.ocr_range: 需要截取的投屏区域的验证码左上角和右下角坐标，顺序依次是 [左x,左y,右x,右y]，如[1,2,3,4]
 # sms_captcha.ocr.ocr_delay_time: OCR识别的延迟时间，如果没识别到就几秒后再次尝试，默认为5
 # sms_captcha.ocr.baidu_app_id: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`app_id`
 # sms_captcha.ocr.baidu_api_key: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`api_key`
 # sms_captcha.ocr.baidu_secret_key: 需要在[百度智能云](https://cloud.baidu.com/) 注册个账号，搜索文字识别项目，创建应用后的`secret_key`
+# sms_captcha.ocr.baidu_fanyi_appid: 百度翻译图片翻译的`app_id`，需要在[百度翻译](https://fanyi-api.baidu.com/register) 注册账号，开通图片翻译
+# sms_captcha.ocr.baidu_fanyi_appkey: 百度翻译图片翻译的`秘钥`，需要在[百度翻译](https://fanyi-api.baidu.com/register) 注册账号，开通图片翻译
 # sms_captcha.ocr.aliyun_appcode: 需要在[阿里云市场](https://market.aliyun.com/products/57124001/cmapi028554.html?spm=5176.2020520132.101.2.608172181RzlnC#sku=yuncode2255400000) 购买后的`AppCode`
 sms_captcha:
   is_ocr: false
@@ -312,6 +335,8 @@ sms_captcha:
     baidu_app_id: ""
     baidu_api_key: ""
     baidu_secret_key: ""
+    baidu_fanyi_appid: ""
+    baidu_fanyi_appkey: ""
     aliyun_appcode: ""
 
 # image_captcha 图形验证码相关
@@ -405,7 +430,8 @@ user-agent:
 
     * [WARNING] WebSocket监听时发生了问题 (22, '远程计算机拒绝网络连接。', None, 1225, None)
 
-    * [WARNING] WebSocket监听时发生了问题 ("Multiple exceptions: [Errno 61] Connect call failed ('::1', 5201, 0, 0), [Errno 61] Connect led ('127.0.0.1', 5201)",)
+    * [WARNING] WebSocket监听时发生了问题 ("Multiple exceptions: [Errno 61] Connect call failed ('::1', 5201, 0, 0), [Errno 61]
+      Connect led ('127.0.0.1', 5201)",)
 
 ## 测试
 

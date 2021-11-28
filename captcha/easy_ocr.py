@@ -15,9 +15,10 @@ class EasyOCR(object):
     EasyOCR识别类，用于帮助ios设备识别投屏后的短信验证码
     """
 
-    def __init__(self):
+    def __init__(self, debug=False):
         from utils.logger import Log
         self.logger = Log().logger
+        self.debug = debug
 
     @staticmethod
     def get_code_pic(_range, name='ios_code_pic.png'):
@@ -52,8 +53,9 @@ class EasyOCR(object):
         if len(find_all) != 1:
             find_all = re.findall(r'(您的验证码为[\d]{6})', str(result))
 
-        # 识别结果
-        self.logger.info("EasyOCR识别结果：" + str(result))
+        # debug模式打印识别内容
+        if self.debug:
+            self.logger.info(str(result))
 
         if len(find_all) == 1:
             code = find_all[0].strip("'")
