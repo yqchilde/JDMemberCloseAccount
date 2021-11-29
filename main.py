@@ -49,6 +49,35 @@ def WARN(*args):
 def ERROR(*args):
     logger.error(" ".join(map(str, args)))
 
+def gettext(url):
+    try:
+        resp = requests.get(url, timeout=60).text
+        if '该内容无法显示' in resp:
+            return gettext(url)
+        return resp
+    except Exception as e:
+        print(e)
+
+def getRemoteShopid():
+    global shopidList, venderidList
+    shopidList = []
+    venderidList = []
+    #url = base64.decodebytes(
+    #    b"aHR0cHM6Ly9naXRlZS5jb20vY3VydGlubHYvUHVibGljL3Jhdy9tYXN0ZXIvT3BlbkNhcmQvc2hvcGlkLnR4dA==")
+    url = 'https://gitee.com/curtinlv/Public/raw/master/OpenCard/shopid.txt'
+    try:
+        rShopid = gettext(url)
+        rShopid = rShopid.split("\n")
+        for i in rShopid:
+            if len(i) > 0:
+                shopidList.append(i.split(':')[0])
+                venderidList.append(i.split(':')[1])
+        return shopidList, venderidList
+    except:
+        print("无法从远程获取shopid")
+
+
+
 
 class JDMemberCloseAccount(object):
     """
@@ -529,7 +558,26 @@ class JDMemberCloseAccount(object):
         if card["brandName"] in self.need_skip_shops:
             self.need_skip_shops.remove(card["brandName"])
 
+    def GetCloudShopId(self):
+        """
+        获取云端店铺列表
+        :return:
+        """
+        if self.closedCloud:
+            return 1, ['']
+        self.closedCloud = 1
+        shopidList, venderidList = getRemoteShopid()
+
+        shoplist = []
+        print(f'获取到云端商铺信息:{str(len(shopidList))}条')
+
+        for id in shopidList:
+            shoplist.append({'brandId': id, 'brandName': id})
+        return 0, shoplist
+
     def main(self):
+		# 用于标记是否跑过云id退会
+        self.closedCloud = 0 
         # 打开京东
         self.browser.get("https://m.jd.com/")
 
@@ -561,8 +609,11 @@ class JDMemberCloseAccount(object):
             # 执行一遍刷新接口
             self.refresh_cache()
 
-            # 获取店铺列表
-            card_list = self.get_shop_cards()
+            state, card_list = self.GetCloudShopId()
+            if state == 1:
+                # 获取店铺列表
+                card_list = self.get_shop_cards()
+
             if len(card_list) == 0:
                 INFO("🎉 本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
                 sys.exit(0)
