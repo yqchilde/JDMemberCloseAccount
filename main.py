@@ -49,35 +49,6 @@ def WARN(*args):
 def ERROR(*args):
     logger.error(" ".join(map(str, args)))
 
-def gettext(url):
-    try:
-        resp = requests.get(url, timeout=60).text
-        if '该内容无法显示' in resp:
-            return gettext(url)
-        return resp
-    except Exception as e:
-        print(e)
-
-def getRemoteShopid():
-    global shopidList, venderidList
-    shopidList = []
-    venderidList = []
-    #url = base64.decodebytes(
-    #    b"aHR0cHM6Ly9naXRlZS5jb20vY3VydGlubHYvUHVibGljL3Jhdy9tYXN0ZXIvT3BlbkNhcmQvc2hvcGlkLnR4dA==")
-    url = 'https://gitee.com/curtinlv/Public/raw/master/OpenCard/shopid.txt'
-    try:
-        rShopid = gettext(url)
-        rShopid = rShopid.split("\n")
-        for i in rShopid:
-            if len(i) > 0:
-                shopidList.append(i.split(':')[0])
-                venderidList.append(i.split(':')[1])
-        return shopidList, venderidList
-    except:
-        print("无法从远程获取shopid")
-
-
-
 
 class JDMemberCloseAccount(object):
     """
@@ -163,6 +134,8 @@ class JDMemberCloseAccount(object):
         self.specify_shops = []
         # 页面失效打不开的店铺
         self.failure_store = []
+        # 云端列表拉取状态
+        self.closed_cloud = 1
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -558,26 +531,40 @@ class JDMemberCloseAccount(object):
         if card["brandName"] in self.need_skip_shops:
             self.need_skip_shops.remove(card["brandName"])
 
-    def GetCloudShopId(self):
+    def get_cloud_shop_ids(self):
         """
         获取云端店铺列表
         :return:
         """
-        if self.closedCloud:
-            return 1, ['']
-        self.closedCloud = 1
-        shopidList, venderidList = getRemoteShopid()
+        if self.closed_cloud:
+            return 1, [""]
 
-        shoplist = []
-        print(f'获取到云端商铺信息:{str(len(shopidList))}条')
+        shop_id_list, vender_id_list = [], []
+        shop_infos = []
 
-        for id in shopidList:
-            shoplist.append({'brandId': id, 'brandName': id})
-        return 0, shoplist
+        url = "https://gitee.com/curtinlv/Public/raw/master/OpenCard/shopid.txt"
+        try:
+            resp = requests.get(url, timeout=60).text
+            if "该内容无法显示" in resp:
+                return self.get_cloud_shop_ids()
+            shop_ids = resp.split("\n")
+            for shop_id in shop_ids:
+                if len(shop_id) > 0:
+                    shop_id_list.append(shop_id.split(":")[0])
+                    vender_id_list.append(shop_id.split(":")[1])
+
+            INFO("获取到云端商铺信息 %d 条" % len(shop_id_list))
+            for vender_id in vender_id_list:
+                # TODO: 利用shop_id 获取 shop name，思路已有，晚上回家实现
+                shop_infos.append({"brandId": vender_id, "brandName": vender_id})
+            return 0, shop_infos
+        except Exception as e:
+            ERROR("获取云端列表发生了一点小问题：", e.args)
 
     def main(self):
-		# 用于标记是否跑过云id退会
-        self.closedCloud = 0 
+        # 用于标记是否跑过云id退会
+        self.closed_cloud = 0
+
         # 打开京东
         self.browser.get("https://m.jd.com/")
 
@@ -609,7 +596,7 @@ class JDMemberCloseAccount(object):
             # 执行一遍刷新接口
             self.refresh_cache()
 
-            state, card_list = self.GetCloudShopId()
+            state, card_list = self.get_cloud_shop_ids()
             if state == 1:
                 # 获取店铺列表
                 card_list = self.get_shop_cards()
@@ -697,6 +684,12 @@ class JDMemberCloseAccount(object):
                         WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
                             (By.XPATH, "//p[text()='网络请求失败']")
                         ))
+
+                        # 云端列表失效页面无需黑名单处理
+                        if state == 0:
+                            INFO("非当前店铺会员，跳过")
+                            continue
+
                         INFO("当前店铺退会链接已失效(缓存导致)，执行清除卡包列表缓存策略后跳过")
 
                         if card["brandName"] in self.failure_store:
