@@ -28,7 +28,7 @@ shop:
   phone_tail_number: []
   member_close_max_number: 0
   wait_refresh_time: 31
-  add_remote_shop_data: false
+  add_remote_shop_data: true
 
 # sms_captcha 短信验证码相关
 # sms_captcha.is_ocr: 是否开启OCR模式，IOS设备必须开启，安卓非必须
