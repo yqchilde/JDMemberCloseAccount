@@ -134,8 +134,8 @@ class JDMemberCloseAccount(object):
         self.specify_shops = []
         # 页面失效打不开的店铺
         self.failure_store = []
-        # 云端列表拉取状态
-        self.closed_cloud = 1
+        # 云端数据执行状态
+        self.closed_cloud = 0
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -368,6 +368,7 @@ class JDMemberCloseAccount(object):
                     return False
                 else:
                     sms_code = json.loads(recv)["sms_code"]
+                INFO("验证码监听结果为：", sms_code)
             except OSError:
                 WARN("WebSocket监听时发生了问题，请检查是否开启外部jd_wstool工具或者使用内置的jd_wstool或者5201端口是否开放")
                 sys.exit(1)
@@ -536,35 +537,22 @@ class JDMemberCloseAccount(object):
         获取云端店铺列表
         :return:
         """
-        if self.closed_cloud:
+        if self.closed_cloud == 1:
             return 1, [""]
 
-        shop_id_list, vender_id_list = [], []
-        shop_infos = []
-
-        url = "https://gitee.com/curtinlv/Public/raw/master/OpenCard/shopid.txt"
+        url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop.json"
         try:
-            resp = requests.get(url, timeout=60).text
+            resp = requests.get(url, timeout=60).json()
             if "该内容无法显示" in resp:
                 return self.get_cloud_shop_ids()
-            shop_ids = resp.split("\n")
-            for shop_id in shop_ids:
-                if len(shop_id) > 0:
-                    shop_id_list.append(shop_id.split(":")[0])
-                    vender_id_list.append(shop_id.split(":")[1])
 
-            INFO("获取到云端商铺信息 %d 条" % len(shop_id_list))
-            for vender_id in vender_id_list:
-                # TODO: 利用shop_id 获取 shop name，思路已有，晚上回家实现
-                shop_infos.append({"brandId": vender_id, "brandName": vender_id})
-            return 0, shop_infos
+            INFO("获取到云端商铺信息 %d 条" % len(resp))
+            self.closed_cloud = 1
+            return 0, resp
         except Exception as e:
             ERROR("获取云端列表发生了一点小问题：", e.args)
 
     def main(self):
-        # 用于标记是否跑过云id退会
-        self.closed_cloud = 0
-
         # 打开京东
         self.browser.get("https://m.jd.com/")
 
@@ -653,7 +641,7 @@ class JDMemberCloseAccount(object):
                 continue
 
             INFO("🧐 本轮运行获取到", len(card_list), "家店铺会员信息")
-            for card in card_list:
+            for idx, card in enumerate(card_list):
                 # 判断本次运行数是否达到设置
                 if self.member_close_max_number != 0 and self.member_close_count >= self.member_close_max_number:
                     INFO("已注销店铺数达到配置中允许注销的最大次数，程序退出")
@@ -673,7 +661,11 @@ class JDMemberCloseAccount(object):
 
                 try:
                     # 打开注销页面
-                    INFO("开始注销店铺", card["brandName"])
+                    if "shopName" in card:
+                        INFO("开始注销第 %d 家 -> 店铺名: %s 品牌会员名: %s" % (idx + 1, card["shopName"], card["brandName"]))
+                    else:
+                        INFO("开始注销第 %d 家 -> 店铺名: %s 品牌会员名: %s" % (idx + 1, "未知店铺", card["brandName"]))
+
                     self.browser.get(
                         "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"]
                     )
