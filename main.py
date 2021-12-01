@@ -609,7 +609,10 @@ class JDMemberCloseAccount(object):
             # 执行一遍刷新接口
             self.refresh_cache()
 
-            state, card_list = self.GetCloudShopId()
+            if self.shop_cfg["cloud_shopid"] == True:
+                state, card_list = self.GetCloudShopId()
+            else:
+                state = 1
             if state == 1:
                 # 获取店铺列表
                 card_list = self.get_shop_cards()
