@@ -135,7 +135,7 @@ class JDMemberCloseAccount(object):
         # 页面失效打不开的店铺
         self.failure_store = []
         # 云端数据执行状态
-        self.closed_cloud = 0
+        self.add_remote_shop_data = self.shop_cfg["add_remote_shop_data"]
 
     def get_code_pic(self, name='code_pic.png'):
         """
@@ -537,8 +537,8 @@ class JDMemberCloseAccount(object):
         获取云端店铺列表
         :return:
         """
-        if self.closed_cloud == 1:
-            return 1, [""]
+        if not self.add_remote_shop_data:
+            return True, []
 
         url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop.json"
         try:
@@ -547,8 +547,8 @@ class JDMemberCloseAccount(object):
                 return self.get_cloud_shop_ids()
 
             INFO("获取到云端商铺信息 %d 条" % len(resp))
-            self.closed_cloud = 1
-            return 0, resp
+            self.add_remote_shop_data = False
+            return False, resp
         except Exception as e:
             ERROR("获取云端列表发生了一点小问题：", e.args)
 
@@ -585,7 +585,7 @@ class JDMemberCloseAccount(object):
             self.refresh_cache()
 
             state, card_list = self.get_cloud_shop_ids()
-            if state == 1:
+            if state:
                 # 获取店铺列表
                 card_list = self.get_shop_cards()
 
@@ -678,7 +678,7 @@ class JDMemberCloseAccount(object):
                         ))
 
                         # 云端列表失效页面无需黑名单处理
-                        if state == 0:
+                        if not state:
                             INFO("非当前店铺会员，跳过")
                             continue
 
