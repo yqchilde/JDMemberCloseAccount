@@ -1,22 +1,1 @@
-name: Gitee repos mirror periodic job
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Mirror the Github organization repos to Gitee.
-      uses: Yikun/hub-mirror-action@v0.12
-      with:
-        src: github/yqchilde
-        dst: gitee/yqchilde
-        dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-        dst_token:  ${{ secrets.GITEE_TOKEN }}
-        timeout: 600
-        force_update: true
-        static_list: "JDMemberCloseAccount"
+name: Gitee repos mirror periodic jobon:  push:    branches: [ main ]  pull_request:    branches: [ main ]jobs:  build:    runs-on: ubuntu-latest    steps:    - name: Mirror the Github organization repos to Gitee.      uses: Yikun/hub-mirror-action@v0.12      with:        src: github/yqchilde        dst: gitee/yqchilde        dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}        dst_token:  ${{ secrets.GITEE_TOKEN }}        timeout: 600        force_update: true        static_list: "JDMemberCloseAccount"

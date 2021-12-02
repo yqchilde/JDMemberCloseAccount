@@ -1,35 +1,1 @@
-name: Gitee repos mirror periodic job
-
-on:
-  push:
-    branches: [ dev ]
-  pull_request:
-    branches: [ dev ]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Checkout codes'
-          uses: actions/checkout@v2
-
-      - name: 'Generate version'
-        run: |
-          updated=$(date "+%Y-%m-%dT%H:%M:%SZ" -d "+8 hour")
-          echo -n "$updated" | md5sum | tr a-z A-Z | cut -d ' ' -f1 > utils/version
-
-      - name: 'Commit file'
-        id: commit
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          git diff --quiet && git diff --staged --quiet || git commit -am 'avoid being suspended'
-          echo ::set-output name=status::success
-
-      - name: 'GitHub push'
-        if: steps.commit.output.status != 'success'
-        uses: ad-m/github-push-action@v0.6.0
-        with:
-          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
-          branch: ${{ github.ref }}
+name: Gitee repos mirror periodic jobon:  push:    branches: [ dev ]  pull_request:    branches: [ dev ]jobs:  build:    runs-on: ubuntu-latest    steps:      - name: 'Checkout codes'          uses: actions/checkout@v2      - name: 'Generate version'        run: |          updated=$(date "+%Y-%m-%dT%H:%M:%SZ" -d "+8 hour")          echo -n "$updated" | md5sum | tr a-z A-Z | cut -d ' ' -f1 > utils/version      - name: 'Commit file'        id: commit        run: |          git config --local user.email "action@github.com"          git config --local user.name "GitHub Action"          git add .          git diff --quiet && git diff --staged --quiet || git commit -am 'avoid being suspended'          echo ::set-output name=status::success      - name: 'GitHub push'        if: steps.commit.output.status != 'success'        uses: ad-m/github-push-action@v0.6.0        with:          AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}          branch: ${{ github.ref }}
