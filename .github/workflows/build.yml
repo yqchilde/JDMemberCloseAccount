@@ -84,4 +84,4 @@ jobs:
         name: 京东全自动退会助手
         files: 'artifacts/**'
       env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.AUTH_TOKEN }}
