@@ -117,12 +117,22 @@ def get_browser(_config_, path_prefix=""):
     except WebDriverException as e:
         # 驱动问题
         if "This version of ChromeDriver only supports Chrome version" in e.args.__str__():
-            print("\r[%s] [ERROR] 浏览器驱动版本错误，请比对前三位版本号" %
+            print("\r[%s] [ERROR] 浏览器错误(chromedriver版本错误)，请比对前三位版本号" %
+                  (
+                      time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                  ))
+        elif "'chromedriver' executable needs to be in PATH" in e.args.__str__():
+            print("\r[%s] [ERROR] 浏览器错误，请检查你下载并解压好的驱动是否放在drivers目录下" %
+                  (
+                      time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                  ))
+        elif "unknown error: cannot find Chrome binary" in e.args.__str__():
+            print("\r[%s] [ERROR] 浏览器错误(Chrome浏览器可执行文件路径未成功识别)，请在配置文件中修改selenium.binary为浏览器可执行文件绝对路径" %
                   (
                       time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
                   ))
         else:
-            print("\r[%s] [ERROR] 浏览器错误, 请检查你下载并解压好的驱动是否放在drivers目录下; err: %s" %
+            print("\r[%s] [ERROR] 浏览器错误， 请检查你下载并解压好的驱动是否放在drivers目录下，如需帮助请及时反馈; err: %s" %
                   (
                       time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
                       e.args.__str__()

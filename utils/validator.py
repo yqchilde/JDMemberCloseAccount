@@ -13,6 +13,7 @@ key_list = [
     "shop.phone_tail_number",
     "shop.member_close_max_number",
     "shop.wait_refresh_time",
+    "shop.add_remote_shop_data",
     "sms_captcha.is_ocr",
     "sms_captcha.jd_wstool",
     "sms_captcha.ws_conn_url",

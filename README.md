@@ -286,7 +286,7 @@ debug: false
 # selenium 相关
 # selenium.browserType: 浏览器类型
 # selenium.headless: 无头模式，建议默认设置
-# selenium.binary: 可执行路径，如果驱动没有找到浏览器的话需要你手动配置
+# selenium.binary: 可执行路径，如果驱动没有找到浏览器的话需要你手动配置，路径 “\” 符号注意转义需要写成 "\\"
 # selenium.timeout: selenium操作超时时间，超过会跳过当前店铺，进行下一个店铺，默认为30秒
 # selenium.check_wait: selenium操作发送验证码和校验是否成功注销的等待时间，目的是跳过黑店，默认3秒
 selenium:
