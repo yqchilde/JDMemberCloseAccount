@@ -1,4 +1,4 @@
-name: Gitee repos mirror periodic job
+name: Sync to gitee
 
 on:
   push:
