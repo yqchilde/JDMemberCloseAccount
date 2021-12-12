@@ -148,7 +148,7 @@ class JDMemberCloseAccount(object):
         code_img = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='captcha_modal']//div")))
         location = code_img.location
         size = code_img.size
-        _range = (int(location['x']), int(location['y']), (int(location['x']) + int(size['width'])),
+        _range_ = (int(location['x']), int(location['y']), (int(location['x']) + int(size['width'])),
                   (int(location['y']) + int(size['height'])))
 
         # 将整个页面截图
@@ -164,7 +164,7 @@ class JDMemberCloseAccount(object):
         new_picture.save(name)
 
         # 剪裁图形验证码区域
-        code_pic = new_picture.crop(_range)
+        code_pic = new_picture.crop(_range_)
         code_pic.save(name)
         time.sleep(2)
         return code_img
@@ -338,23 +338,23 @@ class JDMemberCloseAccount(object):
                 WARN("请在config.yaml中配置 ocr_range")
                 sys.exit(1)
             else:
-                _range = (self.ocr_cfg["ocr_range"])
+                _range_ = (self.ocr_cfg["ocr_range"])
                 ocr_delay_time = self.ocr_cfg["ocr_delay_time"]
                 INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
                 time.sleep(ocr_delay_time)
 
                 if self.ocr_type == "baidu":
                     INFO("开始调用百度OCR识别")
-                    sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                    sms_code = self.baidu_ocr.baidu_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "aliyun":
                     INFO("开始调用阿里云OCR识别")
-                    sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
+                    sms_code = self.aliyun_ocr.aliyun_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "easyocr":
                     INFO("开始调用EasyOCR识别")
-                    sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
+                    sms_code = self.easy_ocr.easy_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "baidu_fanyi":
                     INFO("开始调用百度翻译识别")
-                    sms_code = self.baidu_fanyi.baidu_fanyi(_range, ocr_delay_time)
+                    sms_code = self.baidu_fanyi.baidu_fanyi(_range_, ocr_delay_time)
                 INFO("验证码识别结果为：", sms_code)
         else:
             try:
