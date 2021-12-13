@@ -148,8 +148,8 @@ class JDMemberCloseAccount(object):
         code_img = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='captcha_modal']//div")))
         location = code_img.location
         size = code_img.size
-        _range = (int(location['x']), int(location['y']), (int(location['x']) + int(size['width'])),
-                  (int(location['y']) + int(size['height'])))
+        _range_ = (int(location['x']), int(location['y']), (int(location['x']) + int(size['width'])),
+                   (int(location['y']) + int(size['height'])))
 
         # 将整个页面截图
         self.browser.save_screenshot(name)
@@ -164,7 +164,7 @@ class JDMemberCloseAccount(object):
         new_picture.save(name)
 
         # 剪裁图形验证码区域
-        code_pic = new_picture.crop(_range)
+        code_pic = new_picture.crop(_range_)
         code_pic.save(name)
         time.sleep(2)
         return code_img
@@ -238,7 +238,25 @@ class JDMemberCloseAccount(object):
             else:
                 ERROR("获取卡包列表接口返回None，请检查网络")
                 break
-        return card_list
+
+        # 添加店铺名字
+        url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop_all.json"
+        try:
+            resp = requests.get(url, timeout=30)
+            if "该内容无法显示" in resp.text:
+                return card_list
+
+            shop_list = resp.json()
+            for card in card_list:
+                for shop in shop_list:
+                    if card["brandName"] == shop["brandName"]:
+                        card["shopName"] = shop["shopName"]
+                        break
+            return card_list
+        except TimeoutError:
+            pass
+        finally:
+            return card_list
 
     def refresh_cache(self):
         """
@@ -338,23 +356,23 @@ class JDMemberCloseAccount(object):
                 WARN("请在config.yaml中配置 ocr_range")
                 sys.exit(1)
             else:
-                _range = (self.ocr_cfg["ocr_range"])
+                _range_ = (self.ocr_cfg["ocr_range"])
                 ocr_delay_time = self.ocr_cfg["ocr_delay_time"]
                 INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
                 time.sleep(ocr_delay_time)
 
                 if self.ocr_type == "baidu":
                     INFO("开始调用百度OCR识别")
-                    sms_code = self.baidu_ocr.baidu_ocr(_range, ocr_delay_time)
+                    sms_code = self.baidu_ocr.baidu_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "aliyun":
                     INFO("开始调用阿里云OCR识别")
-                    sms_code = self.aliyun_ocr.aliyun_ocr(_range, ocr_delay_time)
+                    sms_code = self.aliyun_ocr.aliyun_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "easyocr":
                     INFO("开始调用EasyOCR识别")
-                    sms_code = self.easy_ocr.easy_ocr(_range, ocr_delay_time)
+                    sms_code = self.easy_ocr.easy_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "baidu_fanyi":
                     INFO("开始调用百度翻译识别")
-                    sms_code = self.baidu_fanyi.baidu_fanyi(_range, ocr_delay_time)
+                    sms_code = self.baidu_fanyi.baidu_fanyi(_range_, ocr_delay_time)
                 INFO("验证码识别结果为：", sms_code)
         else:
             try:
@@ -481,6 +499,7 @@ class JDMemberCloseAccount(object):
                     self.wait.until(
                         EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
                     time.sleep(1)
+                    return False
             return False
 
         # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
@@ -542,13 +561,14 @@ class JDMemberCloseAccount(object):
 
         url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop.json"
         try:
-            resp = requests.get(url, timeout=60).json()
-            if "该内容无法显示" in resp:
+            resp = requests.get(url, timeout=60)
+            if "该内容无法显示" in resp.text:
                 return self.get_cloud_shop_ids()
 
-            INFO("获取到云端商铺信息 %d 条" % len(resp))
+            shop_list = resp.json()
+            INFO("获取到云端商铺信息 %d 条" % len(shop_list))
             self.add_remote_shop_data = False
-            return False, resp
+            return False, shop_list
         except Exception as e:
             ERROR("获取云端列表发生了一点小问题：", e.args)
 
