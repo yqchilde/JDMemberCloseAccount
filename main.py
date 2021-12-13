@@ -149,7 +149,7 @@ class JDMemberCloseAccount(object):
         location = code_img.location
         size = code_img.size
         _range_ = (int(location['x']), int(location['y']), (int(location['x']) + int(size['width'])),
-                  (int(location['y']) + int(size['height'])))
+                   (int(location['y']) + int(size['height'])))
 
         # 将整个页面截图
         self.browser.save_screenshot(name)
@@ -238,7 +238,25 @@ class JDMemberCloseAccount(object):
             else:
                 ERROR("获取卡包列表接口返回None，请检查网络")
                 break
-        return card_list
+
+        # 添加店铺名字
+        url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop_all.json"
+        try:
+            resp = requests.get(url, timeout=30)
+            if "该内容无法显示" in resp.text:
+                return card_list
+
+            shop_list = resp.json()
+            for card in card_list:
+                for shop in shop_list:
+                    if card["brandName"] == shop["brandName"]:
+                        card["shopName"] = shop["shopName"]
+                        break
+            return card_list
+        except TimeoutError:
+            pass
+        finally:
+            return card_list
 
     def refresh_cache(self):
         """
@@ -481,6 +499,7 @@ class JDMemberCloseAccount(object):
                     self.wait.until(
                         EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
                     time.sleep(1)
+                    return False
             return False
 
         # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
@@ -542,13 +561,14 @@ class JDMemberCloseAccount(object):
 
         url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop.json"
         try:
-            resp = requests.get(url, timeout=60).json()
-            if "该内容无法显示" in resp:
+            resp = requests.get(url, timeout=60)
+            if "该内容无法显示" in resp.text:
                 return self.get_cloud_shop_ids()
 
-            INFO("获取到云端商铺信息 %d 条" % len(resp))
+            shop_list = resp.json()
+            INFO("获取到云端商铺信息 %d 条" % len(shop_list))
             self.add_remote_shop_data = False
-            return False, resp
+            return False, shop_list
         except Exception as e:
             ERROR("获取云端列表发生了一点小问题：", e.args)
 
