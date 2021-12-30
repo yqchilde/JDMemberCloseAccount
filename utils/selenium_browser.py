@@ -23,6 +23,7 @@ def get_browser(_config_, path_prefix=""):
             # 防止在某些情况下报错`
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
+            chrome_options.add_argument("--incognito")  # 无痕模式
             chrome_options.add_experimental_option("excludeSwitches", ['enable-automation', 'enable-logging'])
             chrome_options.add_argument(f'user-agent={user_agent}')
             if binary != "":

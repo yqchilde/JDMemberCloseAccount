@@ -23,8 +23,9 @@ func test() {
 
 }
 
-func Run() error {
-	l, err := net.Listen("tcp", ":5201")
+func Run(portset) error {
+
+	l, err := net.Listen("tcp", ":"+str(portset))
 	if err != nil {
 		return err
 	}
@@ -76,7 +77,7 @@ func getInterIP() {
 	for _, addr := range inter {
 		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
 			if ipNet.IP.To4() != nil {
-				fmt.Printf("监听地址%d： %s://%s:%d\n", i, "http", ipNet.IP.To4().String(), 5201)
+				fmt.Printf("监听地址%d： %s://%s:%d\n", i, "http", ipNet.IP.To4().String(), portset)
 				i += 1
 			}
 		}
