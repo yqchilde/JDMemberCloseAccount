@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <author>XSC</author>
+ <class>JDMCA</class>
+ <widget class="QDialog" name="JDMCA">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>673</width>
+    <height>585</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>退会无脑工具</string>
+  </property>
+  <widget class="QPushButton" name="Btn_Run">
+   <property name="geometry">
+    <rect>
+     <x>537</x>
+     <y>527</y>
+     <width>131</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>跑</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>2</y>
+     <width>661</width>
+     <height>121</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>设置</string>
+   </property>
+   <widget class="QLabel" name="Cookie">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>42</y>
+      <width>54</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Cookie：</string>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="Txt_Cookie">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>62</y>
+      <width>641</width>
+      <height>51</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>453</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QCheckBox" name="Chk_Muilt">
+       <property name="text">
+        <string>多账号同退</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="Chk_Auto">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;开启自动退会，定时时间自己改config.yaml&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>定时自动退会</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="Chk_LocalMsg">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;使用内建的短信接收器，不要再运行jd_wstool，否则验证码接收失败。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>短信内部监听</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="Chk_CloudID">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;退隐藏店铺会员卡，浏览器会出现很多“网络请求失败”，请忽略&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>云店铺列表</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="Chk_Headless">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;不想看到浏览器的影子，就打钩。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>无头模式</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QTableWidget" name="KeyTable">
+   <property name="geometry">
+    <rect>
+     <x>6</x>
+     <y>127</y>
+     <width>661</width>
+     <height>391</height>
+    </rect>
+   </property>
+   <column>
+    <property name="text">
+     <string>端口</string>
+    </property>
+   </column>
+   <column>
+    <property name="text">
+     <string>Key</string>
+    </property>
+   </column>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>525</y>
+     <width>353</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <widget class="QPushButton" name="Btn_InstallPip">
+      <property name="text">
+       <string>安装依赖</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="Combox_mirror">
+      <item>
+       <property name="text">
+        <string>豆瓣</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>清华</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>腾讯</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>阿里</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="Txt_ModuleName"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="Btn_InstallPip_One">
+      <property name="text">
+       <string>安装</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>555</y>
+     <width>187</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <item>
+     <widget class="QPushButton" name="Btn_unInstallPip">
+      <property name="text">
+       <string>卸载依赖</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPushButton" name="Btn_downchromedriver">
+      <property name="text">
+       <string>下载chromedriver</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <tabstops>
+  <tabstop>Chk_Muilt</tabstop>
+  <tabstop>Chk_LocalMsg</tabstop>
+  <tabstop>Chk_Auto</tabstop>
+  <tabstop>Chk_CloudID</tabstop>
+  <tabstop>Chk_Headless</tabstop>
+  <tabstop>KeyTable</tabstop>
+  <tabstop>Btn_Run</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>

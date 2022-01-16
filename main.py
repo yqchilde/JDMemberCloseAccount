@@ -1,4 +1,3 @@
-import sys
 import copy
 import time
 import json
@@ -22,32 +21,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
-
-async def ws_conn(ws_conn_url, ws_timeout):
-    """
-    websocket连接
-    """
-    async with websockets.legacy.client.connect(ws_conn_url, compression=None) as websocket:
-        try:
-            recv = await asyncio.wait_for(websocket.recv(), ws_timeout)
-            return recv
-        except asyncio.TimeoutError:
-            return ""
-
-
 logger = Log().logger
-
-
-def INFO(*args):
-    logger.info(" ".join(map(str, args)))
-
-
-def WARN(*args):
-    logger.warning(" ".join(map(str, args)))
-
-
-def ERROR(*args):
-    logger.error(" ".join(map(str, args)))
 
 
 class JDMemberCloseAccount(object):
@@ -55,16 +29,35 @@ class JDMemberCloseAccount(object):
     京东全自动退店铺会员
     """
 
+    def INFO(self, *args):
+        s = ''
+        for item in list(map(str, args)):
+            s += item
+        logger.info("".join(self.pinname + " >> " + s))
+
+    def WARN(self, *args):
+        s = ''
+        for item in list(map(str, args)):
+            s += item
+        logger.warning("".join(self.pinname + " >> " + s))
+
+    def ERROR(self, *args):
+        s = ''
+        for item in list(map(str, args)):
+            s += item
+        logger.error("".join(self.pinname + " >> " + s))
+
     def __init__(self):
-        INFO("欢迎执行JD全自动退会程序，如有使用问题请加TG群https://t.me/jdMemberCloseAccount进行讨论")
-        INFO("↓  " * 30)
+        self.pinname = ''
+        self.INFO("欢迎执行JD全自动退会程序，如有使用问题请加TG群https://t.me/jdMemberCloseAccount进行讨论")
+        self.INFO("↓  " * 30)
 
         # 检查版本
-        INFO("开始检查项目是否有更新")
+        self.INFO("开始检查项目是否有更新")
         check_version(logger)
 
         # 检查配置
-        INFO("开始检查项目配置完整性")
+        self.INFO("开始检查项目配置完整性")
         verify_configuration(logger)
 
         # 初始化基础配置
@@ -85,12 +78,12 @@ class JDMemberCloseAccount(object):
         if not self.sms_captcha_cfg["is_ocr"]:
             if not self.sms_captcha_cfg["jd_wstool"]:
                 from utils.listener import SmsSocket
-                self.sms = SmsSocket()
+                self.sms = SmsSocket(int(get_config()["main"]["smsport"]))
         elif self.sms_captcha_cfg["is_ocr"]:
             self.ocr_type = self.ocr_cfg["type"]
             if self.ocr_type == "":
-                WARN("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
-                sys.exit(1)
+                self.WARN("当前已开启OCR模式，但是并未选择OCR类型，请在config.yaml补充ocr.type")
+                return
             if self.ocr_type == "baidu":
                 from captcha.baidu_ocr import BaiduOCR
                 self.baidu_ocr = BaiduOCR(self.ocr_cfg, self.debug)
@@ -116,8 +109,8 @@ class JDMemberCloseAccount(object):
         elif self.image_captcha_cfg["type"] == "yolov4":
             self.JDyolo = JDyolocaptcha(self.image_captcha_cfg)
         else:
-            WARN("请在config.yaml中补充image_captcha.type")
-            sys.exit(1)
+            self.WARN("请在config.yaml中补充image_captcha.type")
+            return
 
         # 初始化店铺变量
         # 错误店铺页面数量
@@ -226,17 +219,17 @@ class JDMemberCloseAccount(object):
                 ret = json.loads(resp.text)
                 if ret["code"] == "0":
                     if ret["message"] == "用户未登录":
-                        WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
-                        sys.exit(1)
+                        self.WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
+                        return
                     elif ret["message"] == "响应成功":
                         if len(ret["result"]["cardList"]) == 0:
                             break
                         card_list.extend(ret["result"]["cardList"])
                 else:
-                    ERROR(ret)
+                    self.ERROR(ret)
                     break
             else:
-                ERROR("获取卡包列表接口返回None，请检查网络")
+                self.ERROR("获取卡包列表接口返回None，请检查网络")
                 break
 
         # 添加店铺名字
@@ -294,8 +287,19 @@ class JDMemberCloseAccount(object):
         if ret["code"] == "0":
             return True
         else:
-            ERROR(ret)
+            self.ERROR(ret)
             return False
+
+    async def ws_conn(ws_conn_url, ws_timeout):
+        """
+        websocket连接
+        """
+        async with websockets.legacy.client.connect(ws_conn_url, compression=None) as websocket:
+            try:
+                recv = await asyncio.wait_for(websocket.recv(), ws_timeout)
+                return recv
+            except asyncio.TimeoutError:
+                return ""
 
     def close_member(self, card, flag=0):
         """
@@ -317,21 +321,21 @@ class JDMemberCloseAccount(object):
         if "*" not in phone[:4]:
             if flag == 0:
                 if "AARm5gnNkBWoE8tQA5n" in phone:
-                    INFO("当前店铺绑定手机号为%s，明显为无效号码，挂载到新标签页" % phone)
+                    self.INFO("当前店铺绑定手机号为%s，明显为无效号码，挂载到新标签页" % phone)
                     self.browser.execute_script('window.open("{}")'.format(page_link))
                     self.browser.switch_to.window(self.browser.current_window_handle)
                     self.wrong_store_page_count += 1
                 else:
-                    INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
+                    self.INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
             else:
-                INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
+                self.INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
 
             # 加入黑名单缓存
             if card not in self.black_list_shops:
                 self.record_black_list(card)
             return False
         elif self.shop_cfg['phone_tail_number'] and phone[-4:] not in self.shop_cfg['phone_tail_number']:
-            INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，程序加入黑名单后自动跳过" % phone)
+            self.INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，程序加入黑名单后自动跳过" % phone)
             # 加入黑名单缓存
             if card not in self.black_list_shops:
                 self.record_black_list(card)
@@ -353,46 +357,48 @@ class JDMemberCloseAccount(object):
         # ocr识别投屏验证码
         if self.sms_captcha_cfg["is_ocr"]:
             if len(self.ocr_cfg["ocr_range"]) != 4:
-                WARN("请在config.yaml中配置 ocr_range")
-                sys.exit(1)
+                self.WARN("请在config.yaml中配置 ocr_range")
+                return
             else:
                 _range_ = (self.ocr_cfg["ocr_range"])
                 ocr_delay_time = self.ocr_cfg["ocr_delay_time"]
-                INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
+                self.INFO("刚发短信，%d秒后识别验证码" % ocr_delay_time)
                 time.sleep(ocr_delay_time)
 
                 if self.ocr_type == "baidu":
-                    INFO("开始调用百度OCR识别")
+                    self.INFO("开始调用百度OCR识别")
                     sms_code = self.baidu_ocr.baidu_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "aliyun":
-                    INFO("开始调用阿里云OCR识别")
+                    self.INFO("开始调用阿里云OCR识别")
                     sms_code = self.aliyun_ocr.aliyun_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "easyocr":
-                    INFO("开始调用EasyOCR识别")
+                    self.INFO("开始调用EasyOCR识别")
                     sms_code = self.easy_ocr.easy_ocr(_range_, ocr_delay_time)
                 elif self.ocr_type == "baidu_fanyi":
-                    INFO("开始调用百度翻译识别")
+                    self.INFO("开始调用百度翻译识别")
                     sms_code = self.baidu_fanyi.baidu_fanyi(_range_, ocr_delay_time)
-                INFO("验证码识别结果为：", sms_code)
+                self.INFO("验证码识别结果为：", sms_code)
         else:
             try:
                 if self.sms_captcha_cfg["jd_wstool"]:
-                    recv = asyncio.get_event_loop().run_until_complete(ws_conn(self.ws_conn_url, self.ws_timeout))
+                    recv = asyncio.get_event_loop().run_until_complete(self.ws_conn(self.ws_conn_url, self.ws_timeout))
                 else:
                     recv = self.sms.get_code()
 
                 if recv == "":
-                    INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
+                    self.INFO("等待websocket推送短信验证码超时，即将跳过", card["brandName"])
+                    self.record_black_list(card)
                     return False
                 else:
                     sms_code = json.loads(recv)["sms_code"]
-                INFO("验证码监听结果为：", sms_code)
+                self.INFO("验证码监听结果为：", sms_code)
             except OSError:
-                WARN("WebSocket监听时发生了问题，请检查是否开启外部jd_wstool工具或者使用内置的jd_wstool或者5201端口是否开放")
-                sys.exit(1)
+                self.WARN("WebSocket监听时发生了问题，请检查是否开启外部jd_wstool工具或者使用内置的jd_wstool或者5201端口是否开放")
+                self.browser.close()
+                return
             except Exception as e:
-                WARN(e.__class__, e.args)
-                sys.exit(1)
+                self.WARN(e.__class__, e.args)
+                return
 
         # 输入短信验证码
         self.wait.until(EC.presence_of_element_located(
@@ -414,16 +420,16 @@ class JDMemberCloseAccount(object):
             pic_str, pic_id = "", ""
             if self.image_captcha_cfg["type"] == "cjy":
                 # 调用超级鹰API接口识别点触验证码
-                INFO("开始调用超级鹰识别验证码")
+                self.INFO("开始调用超级鹰识别验证码")
                 resp = self.cjy.post_pic(img, self.image_captcha_cfg["cjy_kind"])
                 if "pic_str" in resp and resp["pic_str"] == "":
-                    INFO("超级鹰验证失败，原因为：", resp["err_str"])
+                    self.INFO("超级鹰验证失败，原因为：", resp["err_str"])
                 else:
                     pic_str = resp["pic_str"]
                     pic_id = resp["pic_id"]
             elif self.image_captcha_cfg["type"] == "tj":
                 # 调用图鉴API接口识别点触验证码
-                INFO("开始调用图鉴识别验证码")
+                self.INFO("开始调用图鉴识别验证码")
                 resp = self.tj.post_pic(img, self.image_captcha_cfg["tj_type_id"])
                 pic_str = resp["result"]
                 pic_id = resp["id"]
@@ -450,7 +456,7 @@ class JDMemberCloseAccount(object):
                 WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
                     (By.XPATH, "//p[text()='验证失败，请重新验证']")
                 ))
-                INFO("验证码坐标识别出错，将上报平台处理")
+                self.INFO("验证码坐标识别出错，将上报平台处理")
 
                 # 上报错误的图片到平台
                 if self.image_captcha_cfg["type"] == "cjy":
@@ -473,10 +479,10 @@ class JDMemberCloseAccount(object):
                     (By.XPATH, '//*[@class="pcp_showPicture"]'))).get_attribute('src')
                 # 正在识别验证码
                 if self.image_captcha_cfg["type"] == "local":
-                    INFO("正在通过本地引擎识别")
+                    self.INFO("正在通过本地引擎识别")
                     res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
                 else:
-                    INFO("正在通过深度学习引擎识别")
+                    self.INFO("正在通过深度学习引擎识别")
                     res = self.JDyolo.JDyolo(cpc_img_path_base64, pcp_show_picture_path_base64)
                 if res[0]:
                     ActionChains(self.browser).move_to_element_with_offset(
@@ -495,7 +501,7 @@ class JDMemberCloseAccount(object):
                     except Exception as _:
                         return True
                 else:
-                    INFO("识别未果")
+                    self.INFO("识别未果")
                     self.wait.until(
                         EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
                     time.sleep(1)
@@ -505,28 +511,32 @@ class JDMemberCloseAccount(object):
         # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
         if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
             if not local_auto_identify_captcha_click():
-                INFO("验证码位置点击错误，尝试再试一次")
+                self.INFO("验证码位置点击错误，尝试再试一次")
                 if not local_auto_identify_captcha_click():
-                    INFO("验证码位置点击错误，跳过店铺")
+                    self.INFO("验证码位置点击错误，跳过店铺")
                     return False
         else:
             if not auto_identify_captcha_click():
-                INFO("验证码位置点击错误，尝试再试一次")
+                self.INFO("验证码位置点击错误，尝试再试一次")
                 if not auto_identify_captcha_click():
-                    INFO("验证码位置点击错误，跳过店铺")
+                    self.INFO("验证码位置点击错误，跳过店铺")
                     return False
 
         # 解绑成功页面
-        self.wait_check.until(EC.presence_of_element_located(
-            (By.XPATH, "//div[text()='解绑会员成功']")
-        ), f'解绑失败，黑店【{card["brandName"]}】跳过')
+        try:
+            self.wait_check.until(EC.presence_of_element_located(
+                (By.XPATH, "//div[text()='解绑会员成功']")
+            ), f'解绑失败，黑店【{card["brandName"]}】跳过')
+        except:
+            sms_t = self.sms.get_code()
+            print("可能是验证码时序没对上，丢弃一次验证码:" + sms_t)
 
         time.sleep(1)
         self.member_close_count += 1
         self.remove_black_list(card)
         if card["brandName"] in self.specify_shops:
             self.specify_shops.remove(card["brandName"])
-        INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
+        self.INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
         return True
 
     def record_black_list(self, card):
@@ -566,11 +576,11 @@ class JDMemberCloseAccount(object):
                 return self.get_cloud_shop_ids()
 
             shop_list = resp.json()
-            INFO("获取到云端商铺信息 %d 条" % len(shop_list))
+            self.INFO("获取到云端商铺信息 %d 条" % len(shop_list))
             self.add_remote_shop_data = False
             return False, shop_list
         except Exception as e:
-            ERROR("获取云端列表发生了一点小问题：", e.args)
+            self.ERROR("获取云端列表发生了一点小问题：", e.args)
 
     def main(self):
         # 打开京东
@@ -578,8 +588,17 @@ class JDMemberCloseAccount(object):
 
         # 检查Cookie配置
         if self.config["cookie"] == "":
-            WARN("请先在 config.yaml 里配置好cookie")
-            sys.exit(1)
+            self.WARN("请先在 config.yaml 里配置好cookie")
+            self.browser.close()
+            return
+
+        ck = str(self.config["cookie"]).split(";")
+        for item in ck:
+            if "pin" in item:
+                self.pinname = item.split("=")[1]
+        if '%' in self.pinname:
+            import urllib.parse
+            self.pinname = urllib.parse.unquote(self.pinname)
 
         # 写入Cookie
         self.browser.delete_all_cookies()
@@ -595,7 +614,7 @@ class JDMemberCloseAccount(object):
 
         # 指定注销店铺配置优先级最高，且self.specify_shops需浅拷贝
         if len(self.shop_cfg["specify_shops"]) > 0:
-            INFO("👀 发现已配置指定店铺，优先指定店铺，不执行需要跳过店铺")
+            self.INFO("👀 发现已配置指定店铺，优先指定店铺，不执行需要跳过店铺")
             self.specify_shops = copy.copy(self.shop_cfg["specify_shops"])
             self.need_skip_shops = []
 
@@ -610,23 +629,26 @@ class JDMemberCloseAccount(object):
                 card_list = self.get_shop_cards()
 
             if len(card_list) == 0:
-                INFO("🎉 本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
-                sys.exit(0)
+                self.INFO("🎉 本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
+                self.browser.close()
+                return
 
             # 如果剩下的卡包
             if len(self.shop_cfg["specify_shops"]) > 0 and len(self.specify_shops) == 0:
-                INFO("👋 指定店铺已全部注销完毕，程序即将退出")
-                sys.exit(0)
+                self.INFO("👋 指定店铺已全部注销完毕，程序即将退出")
+                self.browser.close()
+                return
 
             # 如果剩下的卡包全部都是黑名单中的，直接就结束
             # 每次比较新一轮的数量对比上一轮，即新的列表集合是否是旧的子集
             card_list_new = [item['brandId'] for item in card_list]
             card_list_black = [item['brandId'] for item in self.black_list_shops]
             if set(card_list_new) <= set(card_list_black):
-                INFO("芜湖，剩下的店铺全部都在程序黑名单中")
-                INFO("本次运行记录的黑名单店铺名字为", self.need_skip_shops)
-                INFO("🤔 剩下的店铺都是疑难杂症，请配置到黑名单中或联系客服解决，程序即将退出")
-                sys.exit(0)
+                self.INFO("芜湖，剩下的店铺全部都在程序黑名单中")
+                self.INFO("本次运行记录的黑名单店铺名字为", self.need_skip_shops)
+                self.INFO("🤔 剩下的店铺都是疑难杂症，请配置到黑名单中或联系客服解决，程序即将退出")
+                self.browser.close()
+                return
 
             # 如果乱码的有，先乱码等待
             if self.wrong_store_page_count > 0:
@@ -654,37 +676,38 @@ class JDMemberCloseAccount(object):
                         vender_id = self.browser.current_url[self.browser.current_url.rfind("venderId=") + 9:]
                         for card in self.black_list_shops:
                             if card["brandId"] == vender_id:
-                                INFO("开始从新标签页注销问题店铺", card["brandName"])
+                                self.INFO("开始从新标签页注销问题店铺", card["brandName"])
                                 if self.close_member(card, self.wrong_store_page_count):
                                     self.wrong_store_page_count -= 1
                                 self.browser.close()
                 continue
 
-            INFO("🧐 本轮运行获取到", len(card_list), "家店铺会员信息")
+            self.INFO("🧐 本轮运行获取到", len(card_list), "家店铺会员信息")
             for idx, card in enumerate(card_list):
                 # 判断本次运行数是否达到设置
                 if self.member_close_max_number != 0 and self.member_close_count >= self.member_close_max_number:
-                    INFO("已注销店铺数达到配置中允许注销的最大次数，程序退出")
-                    sys.exit(0)
+                    self.INFO("已注销店铺数达到配置中允许注销的最大次数，程序退出")
+                    self.browser.close()
+                    return
 
                 # 非指定店铺名字跳过
                 if len(self.shop_cfg["specify_shops"]) > 0:
                     if card["brandName"] not in self.shop_cfg["specify_shops"]:
-                        INFO("发现非指定注销的店铺，跳过", card["brandName"])
+                        self.INFO("发现非指定注销的店铺，跳过", card["brandName"])
                         continue
 
                 # 判断该店铺是否要跳过
                 if card["brandName"] in self.need_skip_shops:
-                    INFO("发现指定需要跳过的店铺，跳过", card["brandName"])
+                    self.INFO("发现指定需要跳过的店铺，跳过", card["brandName"])
                     self.record_black_list(card)
                     continue
 
                 try:
                     # 打开注销页面
                     if "shopName" in card:
-                        INFO("开始注销第 %d 家 -> 店铺名: %s 品牌会员名: %s" % (idx + 1, card["shopName"], card["brandName"]))
+                        self.INFO("开始注销第 %d 家 -> 店铺名: %s 品牌会员名: %s" % (idx + 1, card["shopName"], card["brandName"]))
                     else:
-                        INFO("开始注销第 %d 家 -> 店铺名: %s 品牌会员名: %s" % (idx + 1, "未知店铺", card["brandName"]))
+                        self.INFO("开始注销第 %d 家 -> 店铺名: %s 品牌会员名: %s" % (idx + 1, "未知店铺", card["brandName"]))
 
                     self.browser.get(
                         "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"]
@@ -699,15 +722,15 @@ class JDMemberCloseAccount(object):
 
                         # 云端列表失效页面无需黑名单处理
                         if not state:
-                            INFO("非当前店铺会员，跳过")
+                            self.INFO("非当前店铺会员，跳过")
                             continue
 
-                        INFO("当前店铺退会链接已失效(缓存导致)，执行清除卡包列表缓存策略后跳过")
+                        self.INFO("当前店铺退会链接已失效(缓存导致)，执行清除卡包列表缓存策略后跳过")
 
                         if card["brandName"] in self.failure_store:
                             self.record_black_list(card)
                             self.failure_store.remove(card["brandName"])
-                            INFO("当前店铺页面仍然失效，程序加入黑名单后自动跳过")
+                            self.INFO("当前店铺页面仍然失效，程序加入黑名单后自动跳过")
                             continue
                         else:
                             self.failure_store.append(card["brandName"])
@@ -720,13 +743,13 @@ class JDMemberCloseAccount(object):
                     if not self.close_member(card):
                         continue
                 except Exception as e:
-                    ERROR("发生了一点小问题：", e.args)
+                    self.ERROR("发生了一点小问题：", e.args)
 
                     if self.debug:
                         import traceback
                         traceback.print_exc()
 
-            INFO("本轮店铺已执行完，即将开始获取下一轮店铺")
+            self.INFO("本轮店铺已执行完，即将开始获取下一轮店铺")
 
 
 if __name__ == '__main__':

@@ -43,21 +43,22 @@ def get_inter_ip():
 
 class SmsSocket:
     @staticmethod
-    def _readme():
+    def _readme(port = 5201):
         font_color = ["\033[1;36m", "\033[0m"]
         print(
             f'{font_color[0] if sys.platform != "win32" else ""}{_readme}{font_color[1] if sys.platform != "win32" else ""}')
         for idx, val in enumerate(get_inter_ip()):
-            logger.info(f"监听地址{idx + 1}:\thttp://{val}:5201/publish?smsCode=123456")
+            logger.info(f"监听地址{idx + 1}:\thttp://{val}:" + str(port) + "/publish?smsCode=123456")
 
-    def __init__(self):
+    def __init__(self, port = 5201):
+        self.portset = port
         try:
             self.tcp_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.tcp_server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.tcp_server.bind(("", 5201))
+            self.tcp_server.bind(("", port))
 
             self.tcp_server.listen(128)
-            self._readme()
+            self._readme(port)
         except OSError:
             logger.warning("请确保你没有打开另外一个监听脚本或jd_tools   ")
 
@@ -82,6 +83,9 @@ class SmsSocket:
             return self.listener()
         except FunctionTimedOut:
             return ""
+
+    def clean_code(self):
+        cs, ca = self.tcp_server.accept()
 
 
 if __name__ == '__main__':
