@@ -1,4 +1,3 @@
-import sys
 import copy
 import time
 import json
@@ -21,8 +20,6 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-
-
 
 logger = Log().logger
 
@@ -595,7 +592,6 @@ class JDMemberCloseAccount(object):
             self.browser.close()
             return
 
-
         ck = str(self.config["cookie"]).split(";")
         for item in ck:
             if "pin" in item:
@@ -603,7 +599,6 @@ class JDMemberCloseAccount(object):
         if '%' in self.pinname:
             import urllib.parse
             self.pinname = urllib.parse.unquote(self.pinname)
-
 
         # 写入Cookie
         self.browser.delete_all_cookies()
