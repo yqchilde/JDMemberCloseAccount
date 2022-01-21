@@ -86,7 +86,7 @@ def getMessages():
                 receiveTime = getTime
                 code = getCode(getText)
                 printT(f"收到最新验证码: {code}")
-                if code != 0:
+                if code:
                     postCode(code)
 
 def run():
