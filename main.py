@@ -106,6 +106,8 @@ class JDMemberCloseAccount(object):
             self.tj = TuJian(self.image_captcha_cfg)
         elif self.image_captcha_cfg["type"] == "local":
             pass
+        elif self.image_captcha_cfg["type"] == "manual":
+            pass
         elif self.image_captcha_cfg["type"] == "yolov4":
             self.JDyolo = JDyolocaptcha(self.image_captcha_cfg)
         else:
@@ -515,6 +517,8 @@ class JDMemberCloseAccount(object):
                 if not local_auto_identify_captcha_click():
                     self.INFO("验证码位置点击错误，跳过店铺")
                     return False
+        elif self.image_captcha_cfg["type"] == "manual":
+            self.INFO("请手动过验证码")
         else:
             if not auto_identify_captcha_click():
                 self.INFO("验证码位置点击错误，尝试再试一次")
@@ -524,7 +528,7 @@ class JDMemberCloseAccount(object):
 
         # 解绑成功页面
         try:
-            self.wait_check.until(EC.presence_of_element_located(
+            self.wait.until(EC.presence_of_element_located(
                 (By.XPATH, "//div[text()='解绑会员成功']")
             ), f'解绑失败，黑店【{card["brandName"]}】跳过')
         except:
