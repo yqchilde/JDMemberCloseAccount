@@ -292,7 +292,7 @@ class JDMemberCloseAccount(object):
             self.ERROR(ret)
             return False
 
-    async def ws_conn(ws_conn_url, ws_timeout):
+    async def ws_conn(self, ws_conn_url, ws_timeout):
         """
         websocket连接
         """
