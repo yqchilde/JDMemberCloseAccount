@@ -348,6 +348,12 @@ class JDMemberCloseAccount(object):
             (By.XPATH, "//button[text()='发送验证码']")
         ), "发送短信验证码超时 " + card["brandName"]).click()
 
+        # 店铺未开通短信订阅
+        if WebDriverWait(self.browser, 2).until(EC.presence_of_element_located(
+                (By.XPATH, "//div[text()='店铺未开通短信订阅']"))):
+            self.INFO("店铺未开通短信订阅, 跳过")
+            return False
+
         # 判断是否发送成功，发送失败为黑店，直接跳过
         self.wait_check.until(EC.presence_of_element_located(
             (By.XPATH, "//div[text()='发送成功']")
@@ -404,7 +410,7 @@ class JDMemberCloseAccount(object):
 
         # 输入短信验证码
         self.wait.until(EC.presence_of_element_located(
-            (By.XPATH, "//input[@type='number']")
+            (By.XPATH, "//input[@type='tel']")
         ), "输入短信验证码超时 " + card["brandName"]).send_keys(sms_code)
         time.sleep(1)
 

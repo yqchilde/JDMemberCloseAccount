@@ -37,7 +37,7 @@ multi:
 # selenium.check_wait: selenium操作发送验证码和校验是否成功注销的等待时间，目的是跳过黑店，默认3秒
 selenium:
   browserType: "Chrome"
-  headless: true
+  headless: false
   binary: ""
   timeout: 30
   check_wait: 3
