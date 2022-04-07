@@ -94,6 +94,7 @@ func (cs *chatServer) subscribeHandler(w http.ResponseWriter, r *http.Request) {
 		cs.logf("%v", err)
 		return
 	}
+	log.Println("检测到python脚本已订阅该地址")
 	defer c.Close(websocket.StatusInternalError, "")
 
 	err = cs.subscribe(r.Context(), c)

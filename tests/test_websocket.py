@@ -18,7 +18,7 @@ def test_websocket(_config):
     while True:
         try:
             if _config["sms_captcha"]["jd_wstool"]:
-                recv = asyncio.get_event_loop().run_until_complete(
+                recv = asyncio.run(
                     ws_conn(_config["sms_captcha"]["ws_conn_url"], _config["sms_captcha"]["ws_timeout"])
                 )
             else:

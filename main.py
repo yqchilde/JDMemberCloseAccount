@@ -6,7 +6,7 @@ import requests
 import urllib3
 
 from PIL import Image
-import websockets.legacy.client
+from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
 from captcha.jd_captcha import JDcaptcha_base64
@@ -22,6 +22,18 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 logger = Log().logger
+
+
+async def ws_conn(ws_conn_url, ws_timeout):
+    """
+    websocket连接
+    """
+    async with connect(ws_conn_url) as websocket:
+        try:
+            recv = await asyncio.wait_for(websocket.recv(), ws_timeout)
+            return recv
+        except asyncio.TimeoutError:
+            return ""
 
 
 class JDMemberCloseAccount(object):
@@ -292,17 +304,6 @@ class JDMemberCloseAccount(object):
             self.ERROR(ret)
             return False
 
-    async def ws_conn(self, ws_conn_url, ws_timeout):
-        """
-        websocket连接
-        """
-        async with websockets.legacy.client.connect(ws_conn_url, compression=None) as websocket:
-            try:
-                recv = await asyncio.wait_for(websocket.recv(), ws_timeout)
-                return recv
-            except asyncio.TimeoutError:
-                return ""
-
     def close_member(self, card, flag=0):
         """
         进行具体店铺注销页面的注销操作
@@ -349,10 +350,15 @@ class JDMemberCloseAccount(object):
         ), "发送短信验证码超时 " + card["brandName"]).click()
 
         # 店铺未开通短信订阅
-        if WebDriverWait(self.browser, 2).until(EC.presence_of_element_located(
-                (By.XPATH, "//div[text()='店铺未开通短信订阅']"))):
-            self.INFO("店铺未开通短信订阅, 跳过")
-            return False
+        # noinspection PyBroadException
+        try:
+            if WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
+                    (By.XPATH, "//div[text()='店铺未开通短信订阅']")
+            )):
+                self.INFO("店铺未开通短信订阅，跳过")
+                return False
+        except Exception as _:
+            pass
 
         # 判断是否发送成功，发送失败为黑店，直接跳过
         self.wait_check.until(EC.presence_of_element_located(
@@ -389,7 +395,7 @@ class JDMemberCloseAccount(object):
         else:
             try:
                 if self.sms_captcha_cfg["jd_wstool"]:
-                    recv = asyncio.get_event_loop().run_until_complete(self.ws_conn(self.ws_conn_url, self.ws_timeout))
+                    recv = asyncio.run(ws_conn(self.ws_conn_url, self.ws_timeout))
                 else:
                     recv = self.sms.get_code()
 
@@ -726,9 +732,10 @@ class JDMemberCloseAccount(object):
                     # 检查当前店铺退会链接是否失效
                     # noinspection PyBroadException
                     try:
-                        WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
-                            (By.XPATH, "//p[text()='网络请求失败']")
-                        ))
+                        if WebDriverWait(self.browser, 1).until(EC.presence_of_element_located(
+                                (By.XPATH, "//p[text()='网络请求失败']"))):
+                            self.INFO("当前页面无效，跳过")
+                            continue
 
                         # 云端列表失效页面无需黑名单处理
                         if not state:
