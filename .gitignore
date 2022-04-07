@@ -2,19 +2,15 @@
 __pycharm__
 .idea/*
 */__pycache__*
+__pycache__/*
 
 # venv
 venv
 
-# drivers
-drivers/chromedriver
-
-# config.yaml.bak
-config.yaml.bak
-
-# logs
-logs
-
 # others
+drivers/chromedriver
+config.yaml.bak
+logs
 code_pic.png
 captcha_screenshot.png
+jd_wstool/jd_wstool
