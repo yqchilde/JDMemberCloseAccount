@@ -1,4 +1,5 @@
 import datetime
+
 import requests
 
 
@@ -11,7 +12,7 @@ def check_version(logger):
             return
         elif resp.status_code == 200:
             with open('./utils/version', 'r') as f:
-                local_version = f.read()
+                local_version = f.read().strip()
                 remote_version = resp.text.strip()
             if local_version != remote_version:
                 gitee_api = "https://gitee.com/api/v5/repos/yqchilde/JDMemberCloseAccount/commits?per_page=1"

@@ -2,13 +2,19 @@ import os
 import sys
 import asyncio
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from utils.logger import Log
+
+logger = Log().logger
+
 
 def test_websocket(_config):
     """
     测试websocket监听验证码转发
     :return:
     """
-    print("开始测试websocket监听验证码转发")
+    smsSocket = SmsSocket()
+    logger.info("短信验证码测试，请在手机上访问以上任一个监听地址测试连通性")
     while True:
         try:
             if _config["sms_captcha"]["jd_wstool"]:
@@ -16,8 +22,7 @@ def test_websocket(_config):
                     ws_conn(_config["sms_captcha"]["ws_conn_url"], _config["sms_captcha"]["ws_timeout"])
                 )
             else:
-                print(f"短信验证码测试，请在手机上访问以下任一个监听地址测试连通性")
-                recv = SmsSocket().listener()
+                recv = smsSocket.listener()
             if recv != "":
                 pass
         except Exception as e:
