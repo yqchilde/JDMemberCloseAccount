@@ -530,7 +530,7 @@ class JDMemberCloseAccount(object):
                     self.INFO("验证码位置点击错误，跳过店铺")
                     return False
         elif self.image_captcha_cfg["type"] == "manual":
-            self.INFO("请手动过验证码")
+            self.INFO("请手动画手势验证")
         else:
             if not auto_identify_captcha_click():
                 self.INFO("验证码位置点击错误，尝试再试一次")
