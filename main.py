@@ -45,19 +45,19 @@ class JDMemberCloseAccount(object):
         s = ''
         for item in list(map(str, args)):
             s += item
-        logger.info("".join(self.pinname + " >> " + s))
+        logger.info("".join(self.pinname + " >> " + s), stacklevel=2)
 
     def WARN(self, *args):
         s = ''
         for item in list(map(str, args)):
             s += item
-        logger.warning("".join(self.pinname + " >> " + s))
+        logger.warning("".join(self.pinname + " >> " + s), stacklevel=2)
 
     def ERROR(self, *args):
         s = ''
         for item in list(map(str, args)):
             s += item
-        logger.error("".join(self.pinname + " >> " + s))
+        logger.error("".join(self.pinname + " >> " + s), stacklevel=2)
 
     def __init__(self):
         self.pinname = ''
@@ -182,48 +182,47 @@ class JDMemberCloseAccount(object):
         :return: 返回店铺列表
         """
 
-        url = "https://api.m.jd.com/client.action?functionId=getWalletReceivedCardList_New&clientVersion=10.2.0&bui" \
-              "ld=90900&client=android&partner=xiaomi001&oaid=e02a70327f315862&eid=eidA24e181233bsdmxzC3hIpQF2nJhWG" \
-              "GLb/1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1/7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54/yNK&sdkVersion=30&l" \
-              "ang=zh_CN&harmonyOs=0&networkType=wifi&uts=0f31TVRjBSto8DL4K0ee85ZRt0rmw128U%2B6PiicSyj%2Bq9U2tA0gWy" \
-              "YjW29QZLyq5ebqz%2BLY0DD03RA0Pz%2B8PPqt%2FzmMyvdLqzrHQ4H1TLZ3qP0jDbUcDGjUcS0cJFuP%2F4Wb8%2Bi8BajbDrNw" \
-              "9yU5V6OumYiQALp8Jxh82E9QhngZT7ybL1zuXSzO%2BLvCgdg6BockZnd9hKMTFq4pY4oMMsg%3D%3D&uemps=0-0&ext=%7B%22" \
-              "prstate%22%3A%220%22%7D&ef=1&ep=%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22" \
-              "%2C%22ts%22%3A1634992423397%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22area%22%3A%22CJDpCJKmCP80CNG4EP" \
-              "81DNG0Cq%3D%3D%22%2C%22d_model%22%3A%22JJSmCNdAC1DN%22%2C%22wifiBssid%22%3A%22YzYmEWU5CzO1CJS0CzdrEN" \
-              "qmDwPvCNZsENZuCzu3D2S%3D%22%2C%22osVersion%22%3A%22CJO%3D%22%2C%22d_brand%22%3A%22WQvrb21f%22%2C%22s" \
-              "creen%22%3A%22CtS2DsenCNqm%22%2C%22uuid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%2C%22aid%22%3A%22C2H" \
-              "rYtvrCJZsZNu1ZJC4YG%3D%3D%22%2C%22openudid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%7D%2C%22ciphertyp" \
-              "e%22%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D&"
+        url = "https://api.m.jd.com/client.action?functionId=pg_channel_page_data&clientVersion=10.5.4&build=96906&" \
+              "client=android&partner=xiaomi001&eid=eidA29c38122dbscnLOukJcnSxGXmM7q8q4sHJyzsBER4ZMoPHrE1gJtF6wcNbX" \
+              "rYg%2Fu9DlsEyMD%2BbaiXUMYwzbRdUPT8JOYhPBQUfPtUNK8aC63XuVO&sdkVersion=25&lang=zh_CN&harmonyOs=0&netwo" \
+              "rkType=wifi&uts=0f31TVRjBSvb2atniorYKAvs8QZShfxapqLEl6BaFtR2Ow5FlIKfcOZ%2Fi4Bwd9%2BExyn53J0Yy3KJpl4Q" \
+              "z0r3eXiYxrHPVjZiNV56kh5v36F52BYAdI7Vdlphqe%2BIQeQODwtlVcCDkN9IysjqcvcpPNfRjo5ZR7t8YLc%2Fb6l4s8xrx08v" \
+              "ra9o6COClMtToR2UK%2FHO5tqrWZlgY0Xs6dZAPg%3D%3D&uemps=0-0&ext=%7B%22prstate%22%3A%220%22%2C%22pvcStu%" \
+              "22%3A%221%22%7D&ef=1&ep=%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22ts" \
+              "%22%3A1651377065445%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22osVersion%22%3A%22Dy4nBtS%3D%22%2C%22d_" \
+              "brand%22%3A%22WQvrb21f%22%2C%22wifiBssid%22%3A%22ZNOyYJunYJdvZWTtD2O4DNS4ZJOmY2DvCJO4ZNSnDNS%3D%22%2" \
+              "C%22screen%22%3A%22CtS2EMenCNqm%22%2C%22d_model%22%3A%22JJSmCNdAC1DN%22%2C%22aid%22%3A%22ZWY2DQPsZNL" \
+              "rZtvsCNHwCK%3D%3D%22%2C%22uuid%22%3A%22ZWY2DQPsZNLrZtvsCNHwCK%3D%3D%22%7D%2C%22ciphertype%22%3A5%2C%" \
+              "22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D&"
 
-        page_num = 8
+        page_num = 7
         var_name = locals()
-        var_name["sign_page1"] = "st=1634992661020&sign=83a87e33d52a73c3abf01217af277d7c&sv=101"
-        var_name["sign_page2"] = "st=1634992678131&sign=4da2fffa2375fd0f6f261ac70fcaad00&sv=102"
-        var_name["sign_page3"] = "st=1634992682728&sign=83815a83dedef47c5f908269aca3926c&sv=100"
-        var_name["sign_page4"] = "st=1634992686855&sign=f781c2707f70c8ffc98b28e091a56542&sv=121"
-        var_name["sign_page5"] = "st=1634992688025&sign=15680ac47fb873561fc9f38ff2411a5e&sv=122"
-        var_name["sign_page6"] = "st=1635177469421&sign=f9180d4e3989a78d07bf2dd4a276508c&sv=102"
-        var_name["sign_page7"] = "st=1635177470330&sign=de73d5da876afa061c61068d987c5f40&sv=100"
-        var_name["sign_page8"] = "st=1635177471053&sign=3305e1cf5833274f46169b4b8a811f4e&sv=100"
+        var_name["sign_page1"] = "st=1651377082988&sign=a9c0d37a3975b6484b581e1624ac38b4&sv=121"
+        var_name["sign_page2"] = "st=1651377086090&sign=1947fb06fc15c1a7f85088e16a86feb8&sv=121"
+        var_name["sign_page3"] = "st=1651377087990&sign=f67f877a27ac152b4d3e2afacdcbe602&sv=112"
+        var_name["sign_page4"] = "st=1651377089855&sign=00f8bfcd8cf66f65dc9a2ec7d54a37a0&sv=122"
+        var_name["sign_page5"] = "st=1651377091833&sign=203f4bd972015b9c2f6c2456a501c174&sv=100"
+        var_name["sign_page6"] = "st=1651377093949&sign=91c080f56e86bf35bb859b1f9bc23360&sv=101"
+        var_name["sign_page7"] = "st=1651377096838&sign=0943b62e309cb8c91d9afcebc4b53810&sv=102"
 
         headers = {
             'Host': 'api.m.jd.com',
             'cookie': self.config["cookie"],
             'charset': 'UTF-8',
-            'accept-encoding': 'br,gzip,deflate',
+            'accept-encoding': 'gzip,deflate',
             'user-agent': self.config["user-agent"][1],
             'cache-control': 'no-cache',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'content-length': '60'
+            'content-length': '185'
         }
 
         card_list = []
         urllib3.disable_warnings()
 
         for i in range(1, page_num + 1):
-            body = "body=%7B%22pageNum%22%3A{}%2C%22pageSize%22%3A10%2C%22v%22%3A%225.0%22%2C%22" \
-                   "version%22%3A1580659200%7D&".format(str(i))
+            body = "body=%7B%22paramData%22%3A%7B%22pageNum%22%3A{}%2C%22pageSize%22%3A10%2C%22token" \
+                   "%22%3A%2201aa0915-9972-425f-8e3d-0d4f0b058cc3%22%7D%2C%22v%22%3A%225.7%22%2C%22v" \
+                   "ersion%22%3A1580659200%7D&".format(str(i))
             resp = requests.request(
                 "POST",
                 url + var_name.get("sign_page" + str(i)), headers=headers, data=body,
@@ -231,17 +230,17 @@ class JDMemberCloseAccount(object):
             )
             if resp.content:
                 ret = json.loads(resp.text)
-                if ret["code"] == "0":
-                    if ret["message"] == "用户未登录":
-                        self.WARN("config.yaml中的cookie值有误，请确保pt_key和pt_pin都存在，如都存在请检查cookie是否失效")
-                        return
-                    elif ret["message"] == "响应成功":
-                        if len(ret["result"]["cardList"]) == 0:
-                            break
-                        card_list.extend(ret["result"]["cardList"])
-                else:
+                if "code" in ret:
                     self.ERROR(ret)
                     break
+                else:
+                    if ret["data"]["login"]:
+                        if not ret["data"]["floorDataValid"]["已领卡楼层"]["content"]:
+                            break
+                        card_list.extend(ret["data"]["floorInfoList"][0]["floorData"]["content"])
+                    else:
+                        self.WARN("config.yaml中的cookie值有误，请检查cookie是否失效")
+                        return
             else:
                 self.ERROR("获取卡包列表接口返回None，请检查网络")
                 break
@@ -270,39 +269,38 @@ class JDMemberCloseAccount(object):
         利用待领卡接口刷新卡包列表缓存
         :return:
         """
-        url = "https://api.m.jd.com/client.action?functionId=getWalletUnreceivedCardList_New&clientVersion=10.2.0&bu" \
-              "ild=90900&client=android&partner=xiaomi001&oaid=e02a70327f315862&eid=eidA24e181233bsdmxzC3hIpQF2nJhWG" \
-              "GLb/1JscxFOzBjvkqrXbFQyAXZmstKs0K6bUwkQ0D3s1/7MzLZ7JDdhztfcdZur9xPTxU1ahqtHWYb54/yNK&sdkVersion=30&la" \
-              "ng=zh_CN&harmonyOs=0&networkType=wifi&uts=0f31TVRjBSto8DL4K0ee85ZRt0rmw1282OyO9rnqi1tOb%2F8sm56Ob%2B2" \
-              "cXRa7tHz7%2Brbnij%2FrCELTlgkV7kZeS2bYJHn1VmbuhkPZ%2FEdKSyksnAupmrbGMSyCNb4zYaLOIo4Ctbtqd6Z9k3de%2BrTH" \
-              "Uc0aeSTgZ%2FZ47Z%2Fe5b%2F%2Bt24iEsGelW3oJAs9OMvTYGqyA5dS%2BPKX5oHybFC4iYH2FA%3D%3D&uemps=0-0&ext=%7B%" \
-              "22prstate%22%3A%220%22%7D&ef=1&ep=%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%2" \
-              "2%2C%22ts%22%3A1635004927990%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22area%22%3A%22CJDpCJKmCP80CNG4EP" \
-              "81DNG0Cq%3D%3D%22%2C%22d_model%22%3A%22JJSmCNdAC1DN%22%2C%22wifiBssid%22%3A%22YzYmEWU5CzO1CJS0CzdrENq" \
-              "mDwPvCNZsENZuCzu3D2S%3D%22%2C%22osVersion%22%3A%22CJO%3D%22%2C%22d_brand%22%3A%22WQvrb21f%22%2C%22scr" \
-              "een%22%3A%22CtS2DsenCNqm%22%2C%22uuid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%2C%22aid%22%3A%22C2HrYt" \
-              "vrCJZsZNu1ZJC4YG%3D%3D%22%2C%22openudid%22%3A%22C2HrYtvrCJZsZNu1ZJC4YG%3D%3D%22%7D%2C%22ciphertype%22" \
-              "%3A5%2C%22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D&st=1635004961154&" \
-              "sign=398298f4fbaf3e8218626e5c447c73f6&sv=100"
-        body = "body=%7B%22pageNum%22%3A1%2C%22pageSize%22%3A10%2C%22v%22%3A%225.0%22%2C%22version%22%3A1580659200%7D&"
+        url = "https://api.m.jd.com/client.action?functionId=pg_channel_page_data&clientVersion=10.5.4&build=96906&" \
+              "client=android&partner=xiaomi001&eid=eidA29c38122dbscnLOukJcnSxGXmM7q8q4sHJyzsBER4ZMoPHrE1gJtF6wcNbX" \
+              "rYg%2Fu9DlsEyMD%2BbaiXUMYwzbRdUPT8JOYhPBQUfPtUNK8aC63XuVO&sdkVersion=25&lang=zh_CN&harmonyOs=0&netwo" \
+              "rkType=wifi&uts=0f31TVRjBSvb2atniorYKAvs8QZShfxapqLEl6BaFtR2Ow5FlIKfcOZ%2Fi4Bwd9%2BExyn53J0Yy3KJpl4Q" \
+              "z0r3eXiYxrHPVjZiNV56kh5v36F52BYAdI7Vdlphqe%2BIQeQODwtlVcCDkN9IysjqcvcpPNfRjo5ZR7t8YLc%2Fb6l4s8xrx08v" \
+              "ra9o6COClMtToR2UK%2FHO5tqrWZlgY0Xs6dZAPg%3D%3D&uemps=0-0&ext=%7B%22prstate%22%3A%220%22%2C%22pvcStu%" \
+              "22%3A%221%22%7D&ef=1&ep=%7B%22hdid%22%3A%22JM9F1ywUPwflvMIpYPok0tt5k9kW4ArJEU3lfLhxBqw%3D%22%2C%22ts" \
+              "%22%3A1651377065445%2C%22ridx%22%3A-1%2C%22cipher%22%3A%7B%22osVersion%22%3A%22Dy4nBtS%3D%22%2C%22d_" \
+              "brand%22%3A%22WQvrb21f%22%2C%22wifiBssid%22%3A%22ZNOyYJunYJdvZWTtD2O4DNS4ZJOmY2DvCJO4ZNSnDNS%3D%22%2" \
+              "C%22screen%22%3A%22CtS2EMenCNqm%22%2C%22d_model%22%3A%22JJSmCNdAC1DN%22%2C%22aid%22%3A%22ZWY2DQPsZNL" \
+              "rZtvsCNHwCK%3D%3D%22%2C%22uuid%22%3A%22ZWY2DQPsZNLrZtvsCNHwCK%3D%3D%22%7D%2C%22ciphertype%22%3A5%2C%" \
+              "22version%22%3A%221.2.0%22%2C%22appname%22%3A%22com.jingdong.app.mall%22%7D&st=1651382963659&sign=2d" \
+              "b4445a57da3a46ebe198f8bb714cbb&sv=102"
+        body = "body=%7B%22paramData%22%3A%7B%22pageNum%22%3A1%2C%22pageSize%22%3A10%2C%22token%22%3A%2259b136b8-03" \
+               "47-493b-a7ce-cd0ee21f98f7%22%7D%2C%22v%22%3A%225.7%22%2C%22version%22%3A1580659200%7D&"
         headers = {
             'Host': 'api.m.jd.com',
             'cookie': self.config["cookie"],
             'charset': 'UTF-8',
-            'accept-encoding': 'br,gzip,deflate',
+            'accept-encoding': 'gzip,deflate',
             'user-agent': self.config["user-agent"][1],
             'cache-control': 'no-cache',
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'content-length': '102'
+            'content-length': '185'
         }
         urllib3.disable_warnings()
         resp = requests.request("POST", url, headers=headers, data=body, verify=False)
         ret = json.loads(resp.text)
-        if ret["code"] == "0":
-            return True
-        else:
+        if "code" in ret:
             self.ERROR(ret)
-            return False
+        else:
+            return True
 
     def close_member(self, card, flag=0):
         """

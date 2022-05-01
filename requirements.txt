@@ -2,11 +2,11 @@ requests~=2.27.1
 PyYAML~=6.0
 psutil~=5.9.0
 selenium~=4.1.3
-easyocr~=1.4.1
-Pillow~=8.2.0
+easyocr==1.4.2
+Pillow==9.1.0
 numpy~=1.22.3
 urllib3~=1.26.5
-baidu-aip==4.16.2
+baidu-aip==4.16.3
 websockets~=10.2
 opencv_python~=4.5.5.64
 func-timeout~=4.3.5

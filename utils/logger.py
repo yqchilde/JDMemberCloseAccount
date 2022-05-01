@@ -38,7 +38,7 @@ class Log(object):
             filename=log_path,
             encoding="utf-8"
         )
-        self.format_str = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s', '%Y-%m-%d %H:%M:%S')
+        self.format_str = logging.Formatter('[%(asctime)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s', '%Y-%m-%d %H:%M:%S')
         rotating_file_handler.setFormatter(self.format_str)
 
         # 终端输出
