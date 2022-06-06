@@ -47,15 +47,11 @@ selenium:
 # shop.specify_shops: 指定注销的店铺，指定店铺优先级大于需要跳过的店铺，多个店铺用英文逗号隔开，格式为["aag会员中心", "大自然品牌会员"]
 # shop.phone_tail_number: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过，支持多手机号，格式为["0123","1234"]
 # shop.member_close_max_number: 设置本次运行注销的最大店铺数，默认为0，代表不限制
-# shop.wait_refresh_time: 乱码店铺挂载时间，默认为挂31分钟，可自行调整
-# shop.add_remote_shop_data: 添加远端店铺数据，默认开启，如需关闭请设置为false，该设置需要更新至最新的macrodroid配置
 shop:
   skip_shops: []
   specify_shops: []
   phone_tail_number: []
   member_close_max_number: 0
-  wait_refresh_time: 31
-  add_remote_shop_data: true
 
 # sms_captcha 短信验证码相关
 # sms_captcha.is_ocr: 是否开启OCR模式，IOS设备必须开启，安卓非必须
@@ -88,7 +84,7 @@ sms_captcha:
     aliyun_appcode: ""
 
 # image_captcha 图形验证码相关
-# image_captcha.type: 图形验证码类型，可选：local、cjy、tj、yolov4、manual（manual为手动验证）
+# image_captcha.type: 图形验证码类型，可选：local、cjy、tj、manual（manual为手动验证）
 # image_captcha.cjy_username: 超级鹰账号，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_password: 超级鹰密码，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_soft_id: 超级鹰软件ID，仅在 image_captcha.type 为 cjy 时需要设置
@@ -96,11 +92,8 @@ sms_captcha:
 # image_captcha.tj_username: 图鉴账号，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_password: 图鉴密码，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_type_id: 图鉴验证码类型，仅在 image_captcha.type 为 tj 时需要设置，且该项目指定为 19
-# yolov4_weights: yolov4权重文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
-# yolov4_cfg: yolov4配置文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
-# yolov4_net_size: yolov4网络size，仅在 image_captcha.type 为 yolov4 时需要设置
 image_captcha:
-  type: "manual"
+  type: "tj"
   cjy_username: ""
   cjy_password: ""
   cjy_soft_id: ""
@@ -108,9 +101,6 @@ image_captcha:
   tj_username: ""
   tj_password: ""
   tj_type_id: 19
-  yolov4_weights: "yolov4/yolov4-tiny-custom.weights"
-  yolov4_cfg: "yolov4/yolov4-tiny-custom.cfg"
-  yolov4_net_size: 512
 
 # user-agent 用户代理，可自行配置
 user-agent:

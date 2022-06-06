@@ -12,8 +12,6 @@ key_list = [
     "shop.specify_shops",
     "shop.phone_tail_number",
     "shop.member_close_max_number",
-    "shop.wait_refresh_time",
-    "shop.add_remote_shop_data",
     "sms_captcha.is_ocr",
     "sms_captcha.jd_wstool",
     "sms_captcha.ws_conn_url",
@@ -36,9 +34,6 @@ key_list = [
     "image_captcha.tj_username",
     "image_captcha.tj_password",
     "image_captcha.tj_type_id",
-    "image_captcha.yolov4_weights",
-    "image_captcha.yolov4_cfg",
-    "image_captcha.yolov4_net_size",
     "user-agent",
 ]
 

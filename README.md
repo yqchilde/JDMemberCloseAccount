@@ -35,7 +35,7 @@
 
 ## 思路
 
-![项目思路](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/project_1.png)
+![项目思路](https://github.com/yqchilde/JDMemberCloseAccount/blob/main/doc/project_1.png)
 
 1. 利用selenium打开退会页面
 
@@ -134,15 +134,11 @@
 
                 * sms_captcha.is_ocr.baidu_fanyi_appkey补充完整
 
-3. 第二关：图形验证码（任选以下一种类型，默认采用本地识别）
+3. 第二关：图形验证码（任选以下一种类型，更新文档时，验证方式为滑块验证码或点选式验证码，**滑块已内置，仅需个人解决点选式**）
 
-    1. 本地识别（再也不用花钱了👍）
+    1. 本地识别
 
-        * 来自[@AntonVanke](https://github.com/AntonVanke)
-          大佬提供的 [JDCaptcha](https://github.com/AntonVanke/JDCaptcha) 项目(已集成)
-          ，[测试图在最后一张](https://github.com/yqchilde/JDMemberCloseAccount#screenshots)
-
-        * [@dd178](https://github.com/dd178) 使用 [yolov4](https://github.com/AlexeyAB/darknet) 训练的权重
+        * 2022-06-06更新文档：之前的本地识别皆已失效，需重新训练
 
     2. 收费的打码平台
 
@@ -177,7 +173,7 @@
 3. 下载对应的浏览器驱动
 
    `chrome`请打开`设置-关于chrome`查看浏览器的版本，然后去 [chromedriver](http://chromedriver.storage.googleapis.com/index.html)
-   下载对应的版本/系统驱动，[如图所示](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/screenshots/test_img5.png)
+   下载对应的版本/系统驱动，[如图所示](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/doc/test_img5.png)
    ，将解压出来的`chromedriver`文件放入项目的`drivers`目录下即可）
 
 ### 二、获取 jd_wstool 监听地址及选择 jd_wstool 工具（IOS未越狱跳过此步骤）
@@ -241,7 +237,7 @@
 2. 获取验证码区域的坐标
 
     * **windows**：按prtsc键（F12旁边）截图或其他软件截**全屏**，打开Windows附件*
-      画图，粘贴进去，切换铅笔工具，就可以在左下角查看坐标，坐标格式请查看[图片](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/screenshots/test_img3.png)
+      画图，粘贴进去，切换铅笔工具，就可以在左下角查看坐标，坐标格式请查看[图片](https://raw.githubusercontent.com/yqchilde/JDMemberCloseAccount/main/doc/test_img3.png)
       ，将坐标填入`ocr_range`，例`ocr_range: [100, 200, 300, 400]`，填完坐标后不要移动投屏软件的窗口
 
     * **mac**：参考windows，请注意，windows坐标原点\(0, 0)位于左上角，而mac坐标原点\(0, 0)位于左下角
@@ -265,13 +261,13 @@
 
 #### 3. 选择图形验证码识别方式（可跳过）
 
-* **深度学习识别（默认）：** `config.yaml`第66行改为`type: "yolov4"`
+* [x] 手动：`config.yaml`第96行改为`type: "manual"`
 
-* **本地识别：** `config.yaml`第66行改为`type: "local"`
+* [ ] 本地识别：~~`config.yaml`第96行改为`type: "local"`~~
 
-* **超级鹰（付费）：** `config.yaml`第66行改为`type: "cjy"`，并填写第67-69行
+* [x] 超级鹰（付费）：`config.yaml`第96行改为`type: "cjy"`，并填写第97-99行
 
-* **图鉴（付费）：** `config.yaml`第66行改为`type: "tj"`，并填写第71-72行
+* [x] 图鉴（付费）：`config.yaml`第96行改为`type: "tj"`，并填写第101-102行
 
 #### 👇👇👇本项目配置文件详细说明👇👇👇
 
@@ -301,15 +297,11 @@ selenium:
 # shop.specify_shops: 指定注销的店铺，指定店铺优先级大于需要跳过的店铺，多个店铺用英文逗号隔开，格式为["aag会员中心", "大自然品牌会员"]
 # shop.phone_tail_number: 手机后4位尾号，若填写将会校验店铺尾号是否是规定的，不符合就跳过，支持多手机号，格式为["0123","1234"]
 # shop.member_close_max_number: 设置本次运行注销的最大店铺数，默认为0，代表不限制
-# shop.wait_refresh_time: 乱码店铺挂载时间，默认为挂31分钟，可自行调整
-# shop.add_remote_shop_data: 添加远端店铺数据，默认开启，如需关闭请设置为false，该设置需要更新至最新的macrodroid配置
 shop:
   skip_shops: [ ]
   specify_shops: [ ]
   phone_tail_number: [ ]
   member_close_max_number: 0
-  wait_refresh_time: 31
-  add_remote_shop_data: true
 
 # sms_captcha 短信验证码相关
 # sms_captcha.is_ocr: 是否开启OCR模式，IOS设备必须开启，安卓非必须
@@ -342,7 +334,7 @@ sms_captcha:
     aliyun_appcode: ""
 
 # image_captcha 图形验证码相关
-# image_captcha.type: 图形验证码类型，可选：local、cjy、tj、yolov4
+# image_captcha.type: 图形验证码类型，可选：local、cjy、tj、manual（manual为手动验证）
 # image_captcha.cjy_username: 超级鹰账号，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_password: 超级鹰密码，仅在 image_captcha.type 为 cjy 时需要设置
 # image_captcha.cjy_soft_id: 超级鹰软件ID，仅在 image_captcha.type 为 cjy 时需要设置
@@ -350,11 +342,8 @@ sms_captcha:
 # image_captcha.tj_username: 图鉴账号，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_password: 图鉴密码，仅在 image_captcha.type 为 tj 时需要设置
 # image_captcha.tj_type_id: 图鉴验证码类型，仅在 image_captcha.type 为 tj 时需要设置，且该项目指定为 19
-# yolov4_weights: yolov4权重文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
-# yolov4_cfg: yolov4配置文件路径，仅在 image_captcha.type 为 yolov4 时需要设置
-# yolov4_net_size: yolov4网络size，仅在 image_captcha.type 为 yolov4 时需要设置
 image_captcha:
-  type: "yolov4"
+  type: "tj"
   cjy_username: ""
   cjy_password: ""
   cjy_soft_id: ""
@@ -362,9 +351,6 @@ image_captcha:
   tj_username: ""
   tj_password: ""
   tj_type_id: 19
-  yolov4_weights: "yolov4/yolov4-tiny-custom.weights"
-  yolov4_cfg: "yolov4/yolov4-tiny-custom.cfg"
-  yolov4_net_size: 512
 
 # user-agent 用户代理，可自行配置
 user-agent:
@@ -462,19 +448,19 @@ user-agent:
 ## ScreenShots
 
 <div align=center>
-<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img1.gif" width="600" />
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/doc/test_img1.gif" width="600" />
 </div>
 
 <div align=center>
-<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img2.gif" width="600" />
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/doc/test_img2.gif" width="600" />
 </div>
 
 <div align=center>
-<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img3.png" width="600" />
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/doc/test_img3.png" width="600" />
 </div>
 
 <div align=center>
-<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/screenshots/test_img4.png" width="800" />
+<img src="https://github.com/yqchilde/JDMemberCloseAccount/blob/main/doc/test_img4.png" width="800" />
 </div>
 
 <div align=center>

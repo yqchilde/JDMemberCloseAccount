@@ -9,8 +9,7 @@ from PIL import Image
 from websockets import connect
 from captcha.chaojiying import ChaoJiYing
 from captcha.tujian import TuJian
-from captcha.jd_captcha import JDcaptcha_base64
-from captcha.jd_yolo_captcha import JDyolocaptcha
+from captcha.jd_slide_captcha import JDSlideCaptcha
 from utils.logger import Log
 from utils.config import get_config
 from utils.validator import verify_configuration
@@ -41,26 +40,29 @@ class JDMemberCloseAccount(object):
     京东全自动退店铺会员
     """
 
+    # Info级别日志
     def INFO(self, *args):
         s = ''
         for item in list(map(str, args)):
             s += item
-        logger.info("".join(self.pinname + " >> " + s), stacklevel=2)
+        logger.info("".join(self.pin_name + " >> " + s), stacklevel=2)
 
+    # Warning级别日志
     def WARN(self, *args):
         s = ''
         for item in list(map(str, args)):
             s += item
-        logger.warning("".join(self.pinname + " >> " + s), stacklevel=2)
+        logger.warning("".join(self.pin_name + " >> " + s), stacklevel=2)
 
+    # Error级别日志
     def ERROR(self, *args):
         s = ''
         for item in list(map(str, args)):
             s += item
-        logger.error("".join(self.pinname + " >> " + s), stacklevel=2)
+        logger.error("".join(self.pin_name + " >> " + s), stacklevel=2)
 
     def __init__(self):
-        self.pinname = ''
+        self.pin_name = ''
         self.INFO("欢迎执行JD全自动退会程序，如有使用问题请加TG群https://t.me/jdMemberCloseAccount进行讨论")
         self.INFO("↓  " * 30)
 
@@ -111,7 +113,7 @@ class JDMemberCloseAccount(object):
         self.ws_conn_url = self.sms_captcha_cfg["ws_conn_url"]
         self.ws_timeout = self.sms_captcha_cfg["ws_timeout"]
 
-        # 初始化图形验证码配置
+        # 初始化图形验证码配置；滑块（本地过）+ 点选验证码（打码平台过）
         if self.image_captcha_cfg["type"] == "cjy":
             self.cjy = ChaoJiYing(self.image_captcha_cfg)
         elif self.image_captcha_cfg["type"] == "tj":
@@ -120,15 +122,11 @@ class JDMemberCloseAccount(object):
             pass
         elif self.image_captcha_cfg["type"] == "manual":
             pass
-        elif self.image_captcha_cfg["type"] == "yolov4":
-            self.JDyolo = JDyolocaptcha(self.image_captcha_cfg)
         else:
             self.WARN("请在config.yaml中补充image_captcha.type")
             return
 
         # 初始化店铺变量
-        # 错误店铺页面数量
-        self.wrong_store_page_count = 0
         # 黑名单店铺缓存
         self.black_list_shops = []
         # 会员关闭最大数量
@@ -141,16 +139,9 @@ class JDMemberCloseAccount(object):
         self.specify_shops = []
         # 页面失效打不开的店铺
         self.failure_store = []
-        # 云端数据执行状态
-        self.add_remote_shop_data = self.shop_cfg["add_remote_shop_data"]
 
+    # 获取验证码图像
     def get_code_pic(self, name='code_pic.png'):
-        """
-        获取验证码图像
-        :param name:
-        :return:
-        """
-
         # 确定验证码的左上角和右下角坐标
         code_img = self.wait.until(EC.presence_of_element_located((By.XPATH, "//div[@id='captcha_modal']//div")))
         location = code_img.location
@@ -176,12 +167,8 @@ class JDMemberCloseAccount(object):
         time.sleep(2)
         return code_img
 
+    # 获取加入店铺列表
     def get_shop_cards(self):
-        """
-        获取加入店铺列表
-        :return: 返回店铺列表
-        """
-
         url = "https://api.m.jd.com/client.action?functionId=pg_channel_page_data&clientVersion=10.5.4&build=96906&" \
               "client=android&partner=xiaomi001&eid=eidA29c38122dbscnLOukJcnSxGXmM7q8q4sHJyzsBER4ZMoPHrE1gJtF6wcNbX" \
               "rYg%2Fu9DlsEyMD%2BbaiXUMYwzbRdUPT8JOYhPBQUfPtUNK8aC63XuVO&sdkVersion=25&lang=zh_CN&harmonyOs=0&netwo" \
@@ -264,11 +251,8 @@ class JDMemberCloseAccount(object):
         finally:
             return card_list
 
+    # 利用待领卡接口刷新卡包列表缓存
     def refresh_cache(self):
-        """
-        利用待领卡接口刷新卡包列表缓存
-        :return:
-        """
         url = "https://api.m.jd.com/client.action?functionId=pg_channel_page_data&clientVersion=10.5.4&build=96906&" \
               "client=android&partner=xiaomi001&eid=eidA29c38122dbscnLOukJcnSxGXmM7q8q4sHJyzsBER4ZMoPHrE1gJtF6wcNbX" \
               "rYg%2Fu9DlsEyMD%2BbaiXUMYwzbRdUPT8JOYhPBQUfPtUNK8aC63XuVO&sdkVersion=25&lang=zh_CN&harmonyOs=0&netwo" \
@@ -302,40 +286,136 @@ class JDMemberCloseAccount(object):
         else:
             return True
 
-    def close_member(self, card, flag=0):
-        """
-        进行具体店铺注销页面的注销操作
-        card: 具体店铺数据对象
-        flag: 乱码页面挂载状态
-        """
+    # 滑块移动
+    def slider_move(self, slider, track):
+        tracks = []
+        current = 0
+        mid = track * 4 / 5
+        t = 0.7
+        v = 0
 
-        # 页面链接
-        page_link = "https://shopmember.m.jd.com/member/memberCloseAccount?venderId=" + card["brandId"]
+        while current < track:
+            if current < mid:
+                a = 2
+            else:
+                a = -3
+            v0 = v
+            v = v0 + a * t
+            move = v0 * t + 1 / 2 * a * t * t
+            current += move
+            tracks.append(round(move))
 
+        ActionChains(self.browser).click_and_hold(slider).perform()
+
+        for x in tracks:
+            ActionChains(self.browser).move_by_offset(xoffset=x, yoffset=0).perform()
+        time.sleep(0.5)
+        ActionChains(self.browser).release().perform()
+
+    # 过滑块验证方法
+    def slider_verify(self):
+        # 获取元素
+        cpc_img_path_base64 = self.wait.until(EC.presence_of_element_located(
+            (By.XPATH, "(//div[@class='captcha_body']//img)[2]"))).get_attribute('src'). \
+            replace("data:image/jpg;base64,", "")
+        pcp_show_picture_path_base64 = self.wait.until(EC.presence_of_element_located(
+            (By.XPATH, "//img[@id='cpc_img']/following-sibling::img[1]"))).get_attribute('src'). \
+            replace("data:image/png;base64,", "")
+        bg = self.browser.find_element(By.XPATH, "(//div[@class='captcha_body']//img)[2]")
+
+        # 正在识别验证码
+        self.INFO("正在通过滑块验证识别")
+        res = JDSlideCaptcha().detect(cpc_img_path_base64, pcp_show_picture_path_base64)
+        if res:
+            w1 = bg.size.get("width")
+            res = res * w1
+            ele = self.browser.find_element(by=By.XPATH, value="//div[@class='bg-blue']/following-sibling::img[1]")
+            self.browser.switch_to.window(self.browser.window_handles[0])
+            self.slider_move(ele, res)
+
+            # 滑块验证码验证失败尝试重试
+            time.sleep(1)
+            try:
+                if WebDriverWait(self.browser, 1).until(
+                        EC.presence_of_element_located((By.XPATH, "//div[@class='sp_msg']//img[1]"))):
+                    return False
+            except Exception as _:
+                self.INFO("检测到滑块验证码切换为点选验证码")
+                return True
+        else:
+            self.INFO("滑块验证识别失败，请反馈给作者")
+            self.wait.until(
+                EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
+            time.sleep(1)
+            return False
+
+    # 过点选验证
+    def click_on_verify(self):
+        # 分割图形验证码
+        code_img = self.get_code_pic()
+        img = open('code_pic.png', 'rb').read()
+
+        pic_str, pic_id = "", ""
+        if self.image_captcha_cfg["type"] == "cjy":
+            # 调用超级鹰API接口识别点触验证码
+            self.INFO("开始调用超级鹰识别验证码")
+            resp = self.cjy.post_pic(img, self.image_captcha_cfg["cjy_kind"])
+            if "pic_str" in resp and resp["pic_str"] == "":
+                self.INFO("超级鹰验证失败，原因为：", resp["err_str"])
+            else:
+                pic_str = resp["pic_str"]
+                pic_id = resp["pic_id"]
+        elif self.image_captcha_cfg["type"] == "tj":
+            # 调用图鉴API接口识别点触验证码
+            self.INFO("开始调用图鉴识别验证码")
+            resp = self.tj.post_pic(img, self.image_captcha_cfg["tj_type_id"])
+            pic_str = resp["result"]
+            pic_id = resp["id"]
+
+        # 处理要点击的坐标
+        all_list = []
+        xy_list = []
+        x = int(pic_str.split(',')[0])
+        xy_list.append(x)
+        y = int(pic_str.split(',')[1])
+        xy_list.append(y)
+        all_list.append(xy_list)
+
+        # 循环遍历点击图片
+        for i in all_list:
+            x = i[0]
+            y = i[1]
+            ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
+
+        # 点击确定按钮
+        self.wait.until(EC.presence_of_element_located((By.XPATH, "//button[text()='确定']"))).click()
+
+        # 图形验证码坐标点击错误尝试重试
+        # noinspection PyBroadException
+        try:
+            WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
+                (By.XPATH, "//p[text()='验证失败，请重新验证']")
+            ))
+            self.INFO("验证码坐标识别出错，将上报平台处理")
+
+            # 上报错误的图片到平台
+            if self.image_captcha_cfg["type"] == "cjy":
+                self.cjy.report_error(pic_id)
+            elif self.image_captcha_cfg["type"] == "tj":
+                self.tj.report_error(pic_id)
+            return False
+        except Exception as _:
+            return True
+
+    # 进行具体店铺注销页面的注销操作
+    def close_member(self, card):
         # 检查手机尾号是否正确
         phone = self.wait.until(
             EC.presence_of_element_located(
                 (By.XPATH, "//div[text()='手机号']/following-sibling::div[1]")
             )
         ).text
-
-        if "*" not in phone[:4]:
-            if flag == 0:
-                if "AARm5gnNkBWoE8tQA5n" in phone:
-                    self.INFO("当前店铺绑定手机号为%s，明显为无效号码，挂载到新标签页" % phone)
-                    self.browser.execute_script('window.open("{}")'.format(page_link))
-                    self.browser.switch_to.window(self.browser.current_window_handle)
-                    self.wrong_store_page_count += 1
-                else:
-                    self.INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
-            else:
-                self.INFO("当前店铺绑定手机号为%s，明显为无效号码，程序加入黑名单后自动跳过" % phone)
-
-            # 加入黑名单缓存
-            if card not in self.black_list_shops:
-                self.record_black_list(card)
-            return False
-        elif self.shop_cfg['phone_tail_number'] and phone[-4:] not in self.shop_cfg['phone_tail_number']:
+        if self.shop_cfg['phone_tail_number'] and phone[-4:] not in self.shop_cfg['phone_tail_number']:
             self.INFO("当前店铺绑定手机号为%s，尾号≠配置中设置的尾号，程序加入黑名单后自动跳过" % phone)
             # 加入黑名单缓存
             if card not in self.black_list_shops:
@@ -351,8 +431,7 @@ class JDMemberCloseAccount(object):
         # noinspection PyBroadException
         try:
             if WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
-                    (By.XPATH, "//div[text()='店铺未开通短信订阅']")
-            )):
+                    (By.XPATH, "//div[text()='店铺未开通短信订阅']"))):
                 self.INFO("店铺未开通短信订阅，跳过")
                 return False
         except Exception as _:
@@ -423,117 +502,22 @@ class JDMemberCloseAccount(object):
             (By.XPATH, "//div[text()='注销会员']")
         ), "点击注销按钮超时 " + card["brandName"]).click()
 
-        # 利用打码平台识别图形验证码并模拟点击
-        def auto_identify_captcha_click():
-            # 分割图形验证码
-            code_img = self.get_code_pic()
-            img = open('code_pic.png', 'rb').read()
-
-            pic_str, pic_id = "", ""
-            if self.image_captcha_cfg["type"] == "cjy":
-                # 调用超级鹰API接口识别点触验证码
-                self.INFO("开始调用超级鹰识别验证码")
-                resp = self.cjy.post_pic(img, self.image_captcha_cfg["cjy_kind"])
-                if "pic_str" in resp and resp["pic_str"] == "":
-                    self.INFO("超级鹰验证失败，原因为：", resp["err_str"])
-                else:
-                    pic_str = resp["pic_str"]
-                    pic_id = resp["pic_id"]
-            elif self.image_captcha_cfg["type"] == "tj":
-                # 调用图鉴API接口识别点触验证码
-                self.INFO("开始调用图鉴识别验证码")
-                resp = self.tj.post_pic(img, self.image_captcha_cfg["tj_type_id"])
-                pic_str = resp["result"]
-                pic_id = resp["id"]
-
-            # 处理要点击的坐标
-            all_list = []
-            xy_list = []
-            x = int(pic_str.split(',')[0])
-            xy_list.append(x)
-            y = int(pic_str.split(',')[1])
-            xy_list.append(y)
-            all_list.append(xy_list)
-
-            # 循环遍历点击图片
-            for i in all_list:
-                x = i[0]
-                y = i[1]
-                ActionChains(self.browser).move_to_element_with_offset(code_img, x, y).click().perform()
-                time.sleep(1)
-
-            # 图形验证码坐标点击错误尝试重试
-            # noinspection PyBroadException
-            try:
-                WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
-                    (By.XPATH, "//p[text()='验证失败，请重新验证']")
-                ))
-                self.INFO("验证码坐标识别出错，将上报平台处理")
-
-                # 上报错误的图片到平台
-                if self.image_captcha_cfg["type"] == "cjy":
-                    self.cjy.report_error(pic_id)
-                elif self.image_captcha_cfg["type"] == "tj":
-                    self.tj.report_error(pic_id)
-                return False
-            except Exception as _:
-                return True
-
-        # 本地识别图形验证码并模拟点击
-        def local_auto_identify_captcha_click():
-            for _ in range(4):
-                cpc_img = self.wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]')))
-                zoom = cpc_img.size['height'] / 170
-                cpc_img_path_base64 = self.wait.until(
-                    EC.presence_of_element_located((By.XPATH, '//*[@id="cpc_img"]'))).get_attribute(
-                    'src').replace("data:image/jpeg;base64,", "")
-                pcp_show_picture_path_base64 = self.wait.until(EC.presence_of_element_located(
-                    (By.XPATH, '//*[@class="pcp_showPicture"]'))).get_attribute('src')
-                # 正在识别验证码
-                if self.image_captcha_cfg["type"] == "local":
-                    self.INFO("正在通过本地引擎识别")
-                    res = JDcaptcha_base64(cpc_img_path_base64, pcp_show_picture_path_base64)
-                else:
-                    self.INFO("正在通过深度学习引擎识别")
-                    res = self.JDyolo.JDyolo(cpc_img_path_base64, pcp_show_picture_path_base64)
-                if res[0]:
-                    ActionChains(self.browser).move_to_element_with_offset(
-                        cpc_img, int(res[1][0] * zoom),
-                        int(res[1][1] * zoom)
-                    ).click().perform()
-
-                    # 图形验证码坐标点击错误尝试重试
-                    # noinspection PyBroadException
-                    try:
-                        WebDriverWait(self.browser, 3).until(EC.presence_of_element_located(
-                            (By.XPATH, "//p[text()='验证失败，请重新验证']")
-                        ))
-                        time.sleep(1)
-                        return False
-                    except Exception as _:
-                        return True
-                else:
-                    self.INFO("识别未果")
-                    self.wait.until(
-                        EC.presence_of_element_located((By.XPATH, '//*[@class="jcap_refresh"]'))).click()
-                    time.sleep(1)
-                    return False
-            return False
-
-        # 识别点击，如果有一次失败将再次尝试一次，再失败就跳过
-        if self.image_captcha_cfg["type"] in ["local", "yolov4"]:
-            if not local_auto_identify_captcha_click():
-                self.INFO("验证码位置点击错误，尝试再试一次")
-                if not local_auto_identify_captcha_click():
-                    self.INFO("验证码位置点击错误，跳过店铺")
-                    return False
-        elif self.image_captcha_cfg["type"] == "manual":
-            self.INFO("请手动画手势验证")
+        # 通过滑块验证或点选验证码
+        if self.image_captcha_cfg["type"] == "manual":
+            self.INFO("请手动通过滑块验证或点选验证码")
         else:
-            if not auto_identify_captcha_click():
-                self.INFO("验证码位置点击错误，尝试再试一次")
-                if not auto_identify_captcha_click():
-                    self.INFO("验证码位置点击错误，跳过店铺")
+            # 执行滑块验证
+            if not self.slider_verify():
+                self.INFO("滑块验证码识别错误，尝试再试一次")
+                if not self.slider_verify():
+                    self.INFO("滑块验证码识别错误，跳过店铺")
+                    return False
+
+            # 执行点选验证码验证
+            if not self.click_on_verify():
+                self.INFO("点选验证码识别错误，尝试再试一次")
+                if not self.click_on_verify():
+                    self.INFO("点选验证码识别错误，跳过店铺")
                     return False
 
         # 解绑成功页面
@@ -553,48 +537,19 @@ class JDMemberCloseAccount(object):
         self.INFO("👌 本次运行已成功注销店铺会员数量为：", self.member_close_count)
         return True
 
+    # 记录黑名单店铺
     def record_black_list(self, card):
-        """
-        记录黑名单店铺
-        :param card:
-        :return:
-        """
         if card not in self.black_list_shops:
             self.black_list_shops.append(card)
         if card["brandName"] not in self.need_skip_shops:
             self.need_skip_shops.append(card["brandName"])
 
+    # 移除黑名单店铺
     def remove_black_list(self, card):
-        """
-        移除黑名单店铺
-        :param card:
-        :return:
-        """
         if card in self.black_list_shops:
             self.black_list_shops.remove(card)
         if card["brandName"] in self.need_skip_shops:
             self.need_skip_shops.remove(card["brandName"])
-
-    def get_cloud_shop_ids(self):
-        """
-        获取云端店铺列表
-        :return:
-        """
-        if not self.add_remote_shop_data:
-            return True, []
-
-        url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop.json"
-        try:
-            resp = requests.get(url, timeout=60)
-            if "该内容无法显示" in resp.text:
-                return self.get_cloud_shop_ids()
-
-            shop_list = resp.json()
-            self.INFO("获取到云端商铺信息 %d 条" % len(shop_list))
-            self.add_remote_shop_data = False
-            return False, shop_list
-        except Exception as e:
-            self.ERROR("获取云端列表发生了一点小问题：", e.args)
 
     def main(self):
         # 打开京东
@@ -609,10 +564,10 @@ class JDMemberCloseAccount(object):
         ck = str(self.config["cookie"]).split(";")
         for item in ck:
             if "pin" in item:
-                self.pinname = item.split("=")[1]
-        if '%' in self.pinname:
+                self.pin_name = item.split("=")[1]
+        if '%' in self.pin_name:
             import urllib.parse
-            self.pinname = urllib.parse.unquote(self.pinname)
+            self.pin_name = urllib.parse.unquote(self.pin_name)
 
         # 写入Cookie
         self.browser.delete_all_cookies()
@@ -637,10 +592,8 @@ class JDMemberCloseAccount(object):
             # 执行一遍刷新接口
             self.refresh_cache()
 
-            state, card_list = self.get_cloud_shop_ids()
-            if state:
-                # 获取店铺列表
-                card_list = self.get_shop_cards()
+            # 获取店铺列表
+            card_list = self.get_shop_cards()
 
             if len(card_list) == 0:
                 self.INFO("🎉 本次运行获取到的店铺数为0个，判断为没有需要注销的店铺，即将退出程序")
@@ -663,38 +616,6 @@ class JDMemberCloseAccount(object):
                 self.INFO("🤔 剩下的店铺都是疑难杂症，请配置到黑名单中或联系客服解决，程序即将退出")
                 self.browser.close()
                 return
-
-            # 如果乱码的有，先乱码等待
-            if self.wrong_store_page_count > 0:
-                # 二次缓存中已经在黑名单的店铺，那就直接切换标签页进行处理
-                wait_refresh_time = self.shop_cfg["wait_refresh_time"]
-                loop_for_wait_time = int(wait_refresh_time * 60)
-                while loop_for_wait_time:
-                    print("\r[%s] [INFO] 挂载乱码店铺中(总时间为%s分钟)，页面还需等待: %s秒" %
-                          (
-                              time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-                              wait_refresh_time,
-                              str(loop_for_wait_time)), end=''
-                          )
-                    time.sleep(1)
-                    loop_for_wait_time -= 1
-
-                print("\n[%s] [INFO] 开始刷新页面进行再次尝试乱码页面" %
-                      time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-                now_handle = self.browser.current_window_handle
-                for handles in self.browser.window_handles:
-                    if now_handle != handles:
-                        self.browser.switch_to.window(handles)
-                        self.browser.refresh()
-                        time.sleep(3)
-                        vender_id = self.browser.current_url[self.browser.current_url.rfind("venderId=") + 9:]
-                        for card in self.black_list_shops:
-                            if card["brandId"] == vender_id:
-                                self.INFO("开始从新标签页注销问题店铺", card["brandName"])
-                                if self.close_member(card, self.wrong_store_page_count):
-                                    self.wrong_store_page_count -= 1
-                                self.browser.close()
-                continue
 
             self.INFO("🧐 本轮运行获取到", len(card_list), "家店铺会员信息")
             for idx, card in enumerate(card_list):
@@ -734,12 +655,6 @@ class JDMemberCloseAccount(object):
                                 (By.XPATH, "//p[text()='网络请求失败']"))):
                             self.INFO("当前页面无效，跳过")
                             continue
-
-                        # 云端列表失效页面无需黑名单处理
-                        if not state:
-                            self.INFO("非当前店铺会员，跳过")
-                            continue
-
                         self.INFO("当前店铺退会链接已失效(缓存导致)，执行清除卡包列表缓存策略后跳过")
 
                         if card["brandName"] in self.failure_store:
