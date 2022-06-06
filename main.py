@@ -233,7 +233,7 @@ class JDMemberCloseAccount(object):
                 break
 
         # 添加店铺名字
-        url = "https://gitee.com/yqchilde/Scripts/raw/main/jd/shop_all.json"
+        url = "https://ghproxy.fsofso.com/https://github.com/yqchilde/Scripts/blob/main/jd/shop_all.json"
         try:
             resp = requests.get(url, timeout=30)
             if "该内容无法显示" in resp.text:
